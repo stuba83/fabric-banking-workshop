@@ -1,0 +1,199 @@
+{
+  "anomalies": {
+    "channel_blank": 360,
+    "channel_whitespace_lowercase": 720,
+    "exact_duplicates": 288,
+    "invalid_account": 24,
+    "invalid_timestamp": 24,
+    "negative_amount": 24
+  },
+  "cleaning_rules": [
+    "Deduplicar por transaccion_id; exigir payload identico antes de eliminar.",
+    "Poner en cuarentena cuenta inexistente, fecha_hora invalida o monto negativo.",
+    "Normalizar canal con strip y upper; vacio se convierte en NO_INFORMADO.",
+    "Calcular finanzas solo sobre las 72000 transacciones limpias."
+  ],
+  "counts": {
+    "calendario.csv": 183,
+    "clientes.csv": 1200,
+    "creditos.csv": 400,
+    "cuentas.csv": 1800,
+    "productos.csv": 5,
+    "sucursales.csv": 7,
+    "transacciones.csv": 72360
+  },
+  "csv_format": {
+    "decimal_places": 2,
+    "delimiter": ",",
+    "encoding": "utf-8-sig",
+    "line_terminator": "\\n"
+  },
+  "currency": "CRC",
+  "expected_accounting": {
+    "credit_cents": "1497615362779",
+    "credit_crc": "14976153627.79",
+    "debit_cents": "453037383190",
+    "debit_crc": "4530373831.90",
+    "final_cents": "1275253996337",
+    "final_crc": "12752539963.37",
+    "opening_cents": "230676016748",
+    "opening_crc": "2306760167.48"
+  },
+  "expected_analytics": {
+    "monthly_transaction_counts": {
+      "2026-04": 11198,
+      "2026-05": 11422,
+      "2026-06": 11757,
+      "2026-07": 12093,
+      "2026-08": 12541,
+      "2026-09": 12989
+    },
+    "most_used_channel": "BANCA_MOVIL",
+    "normalized_channel_counts": {
+      "ATM": 8576,
+      "BANCA_MOVIL": 41521,
+      "NO_INFORMADO": 360,
+      "SUCURSAL": 7218,
+      "WEB": 14325
+    },
+    "salary_count": 6298,
+    "salary_payday_count": 5386,
+    "salary_payday_share": "0.855192",
+    "september_to_april_count_ratio": "1.159939"
+  },
+  "expected_cleaning": {
+    "blanks": 360,
+    "clean": 72000,
+    "duplicates": 288,
+    "normalize": 720,
+    "quarantine": 72,
+    "quarantine_by_reason": {
+      "invalid_account": 24,
+      "invalid_timestamp": 24,
+      "negative_amount": 24
+    },
+    "raw": 72360
+  },
+  "files": {
+    "calendario.csv": {
+      "headers": [
+        "fecha",
+        "anio",
+        "trimestre",
+        "mes",
+        "nombre_mes",
+        "dia_mes",
+        "dia_semana",
+        "nombre_dia",
+        "es_fin_semana"
+      ],
+      "row_count": 183,
+      "sha256": "d4210301ed071b42e20ef7ee040625610df94a1f82098a08a1c921f1e88773d8",
+      "size_bytes": 7606
+    },
+    "clientes.csv": {
+      "headers": [
+        "cliente_id",
+        "nombre_sintetico",
+        "fecha_alta",
+        "segmento",
+        "grupo_edad",
+        "provincia",
+        "sucursal_id"
+      ],
+      "row_count": 1200,
+      "sha256": "aa08d19a3a308922aa7748fe42a7aa64e9259df6fb307c313e7c2882cac7fbf0",
+      "size_bytes": 91082
+    },
+    "creditos.csv": {
+      "headers": [
+        "credito_id",
+        "cliente_id",
+        "producto_id",
+        "fecha_desembolso",
+        "fecha_corte",
+        "moneda",
+        "monto_original",
+        "saldo_capital",
+        "tasa_anual_pct",
+        "plazo_meses",
+        "dias_mora"
+      ],
+      "row_count": 400,
+      "sha256": "c0e14ea78be25ac615244af974e92d1299415e1edd4a8d6201a25af0cabef5d8",
+      "size_bytes": 34576
+    },
+    "cuentas.csv": {
+      "headers": [
+        "cuenta_id",
+        "cliente_id",
+        "producto_id",
+        "fecha_apertura",
+        "moneda",
+        "saldo_inicial"
+      ],
+      "row_count": 1800,
+      "sha256": "4564835b8a8a289683ddf1f0adb8521b629e4ad1344787018661b8f1b8b57126",
+      "size_bytes": 93012
+    },
+    "productos.csv": {
+      "headers": [
+        "producto_id",
+        "nombre_sintetico",
+        "familia",
+        "moneda"
+      ],
+      "row_count": 5,
+      "sha256": "f1bb632b70d87de163f0e22e16c776911e6803b550a2f7d2f70fe9260cccbd2f",
+      "size_bytes": 260
+    },
+    "sucursales.csv": {
+      "headers": [
+        "sucursal_id",
+        "nombre_sintetico",
+        "provincia"
+      ],
+      "row_count": 7,
+      "sha256": "18f33bcc3c946ac3d2533af016c774437bacc34caafcad1ce037f2e24ff3a334",
+      "size_bytes": 300
+    },
+    "transacciones.csv": {
+      "headers": [
+        "transaccion_id",
+        "cuenta_id",
+        "fecha_hora",
+        "tipo_transaccion",
+        "direccion",
+        "canal",
+        "monto",
+        "moneda",
+        "estado"
+      ],
+      "row_count": 72360,
+      "sha256": "3d98785e9fa9d0ec1c3e0ad80c57b6ee1ae393ddb1659e3bfd79b7f37088229a",
+      "size_bytes": 6593074
+    }
+  },
+  "generator_version": 1,
+  "is_synthetic": true,
+  "limitations": [
+    "Todos los registros e identificadores son ficticios; no corresponden a ninguna entidad real.",
+    "Nombres de productos y sucursales son ficticios, no comerciales.",
+    "Las transferencias pueden ser externas; no constituyen doble partida interna balanceada.",
+    "Todas las cuentas estan activas durante el periodo; saldo inicial al 2026-04-01.",
+    "Los saldos iniciales se dimensionan para evitar saldos negativos en todo prefijo temporal.",
+    "Los creditos son una fotografia simple de cartera, no un cuadro de amortizacion.",
+    "El saldo de creditos no se concilia con movimientos de las cuentas.",
+    "No hay conversion de moneda ni cuentas o numeros de enrutamiento bancario reales.",
+    "Patrones didacticos impuestos por diseno; no representan causalidad ni comportamiento real.",
+    "La cuenta de plazo se simplifica como cuenta activa; no modela bloqueos ni vencimientos.",
+    "La semilla reproduce esta version en Python 3.14; no se promete igualdad entre versiones mayores."
+  ],
+  "period": {
+    "end": "2026-09-30",
+    "start": "2026-04-01"
+  },
+  "seed": 20261022,
+  "timestamp_convention": "Hora local UTC-6, sin sufijo de zona horaria",
+  "timezone": "America/Costa_Rica"
+}

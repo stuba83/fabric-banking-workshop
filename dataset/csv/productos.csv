@@ -1,0 +1,6 @@
+﻿producto_id,nombre_sintetico,familia,moneda
+PRD01,Producto sintetico 01,AHORRO,CRC
+PRD02,Producto sintetico 02,CORRIENTE,CRC
+PRD03,Producto sintetico 03,PLAZO,CRC
+PRD04,Producto sintetico 04,CREDITO_PERSONAL,CRC
+PRD05,Producto sintetico 05,CREDITO_PYME,CRC
