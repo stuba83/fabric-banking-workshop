@@ -209,7 +209,7 @@ El facilitador mencionará, sin ejercicio ni evidencia, otros controles que depe
 | Agregar descripción y promover el modelo | Sello **Promoted** visible en el catálogo |
 | Responder las preguntas de comprensión | Respuestas con sus propias palabras |
 
-Usar la [plantilla de evidencias](evidencias.md). Las evidencias las completa cada participante y se conservan dentro de la organización.
+Usar la [plantilla de evidencias](evidencias.md). Las evidencias las completa cada participante y se conservan dentro de la organización. La práctica continúa en la [Sesión 5: cierre y revisión de entregables](../sesion-05/guia.md).
 
 ## 7. Bloqueos frecuentes
 

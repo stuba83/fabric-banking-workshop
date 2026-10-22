@@ -4,6 +4,19 @@ Material de práctica en español para equipos de ingeniería de datos que se in
 
 El recorrido de referencia es: **CSV → Lakehouse / bronce → datos depurados / plata → tablas de consumo / oro → modelo semántico → Power BI**.
 
+## Cómo funciona el entrenamiento
+
+Son **cinco sesiones en vivo de una hora**, virtuales y grabadas, con un modelo de **aula invertida**: la sesión en vivo sirve para acelerar, resolver bloqueos y dar criterio; el aprendizaje real ocurre en la práctica entre sesiones, con ejercicios dirigidos sobre datos sintéticos.
+
+| Aspecto | Detalle |
+|---|---|
+| Duración | Cinco sesiones de 60 minutos exactos. **Las sesiones no se extienden**: arrancan y cierran en la hora pactada |
+| Compromiso entre sesiones | Aproximadamente 45–60 minutos de trabajo activo por sesión, más los tiempos de ejecución y espera. Los accionables deben estar completos antes de cada sesión |
+| Punto focal técnico | Una persona del equipo, idealmente la de más experiencia, resuelve las dudas de primer nivel y consolida hasta tres dudas prioritarias por sesión |
+| Asistencia | Si la mayoría del equipo no puede asistir, es mejor mover la sesión que dictarla a medias |
+| Evidencias | Cada participante completa su copia de la plantilla de evidencias y la conserva dentro de su organización; no se entrega al facilitador |
+| Resultado al cierre | Cada participante habrá recorrido el flujo completo en Fabric —ingesta, depuración y organización por capas, un modelo semántico con seguridad por filas, gobernanza y reportes en Power BI— con su trabajo documentado en su propia carpeta |
+
 ## Empezar
 
 1. Revisar los [requisitos del laboratorio](docs/requisitos.md).
@@ -15,36 +28,32 @@ El recorrido de referencia es: **CSV → Lakehouse / bronce → datos depurados 
    ```
 
 3. Leer la [guía del dataset](dataset/README.md) y el [diccionario de datos](dataset/diccionario.md).
-4. Completar el pre-work de la [Sesión 1: fundamentos](docs/sesion-01/guia.md).
-5. Registrar los resultados propios en una copia de la [plantilla de evidencias](docs/sesion-01/evidencias.md), conservada dentro de la organización, no en este repositorio público.
-6. Con las fuentes preparadas, continuar con la [Sesión 2: ingesta y pipelines](docs/sesion-02/guia.md) y después con la [Sesión 3: capa plata](docs/sesion-03/guia.md).
+4. Seguir las cinco sesiones **en orden**, según la ruta siguiente. Cada guía abre con su **pre-work** y cierra con los **accionables**, los **bloqueos frecuentes** y un enlace a la sesión siguiente.
+5. Registrar los resultados propios en una copia de la plantilla de evidencias de cada sesión, conservada dentro de la organización, no en este repositorio público.
 
-No hace falta instalar Python para usar los CSV en Fabric.
+No hace falta instalar Python para usar los CSV y los notebooks en Fabric.
 
-## Material disponible
+## Ruta de las cinco sesiones
 
-| Material | Contenido |
-|---|---|
-| [Requisitos](docs/requisitos.md) | Capacidad, Power BI Pro, roles, carpeta individual y nomenclatura |
-| [Sesión 1](docs/sesion-01/guia.md) | Pre-work, agenda de 60 minutos, primera carga manual y accionables |
-| [Evidencias](docs/sesion-01/evidencias.md) | Plantilla vacía para que cada participante documente su práctica |
-| [Sesión 2](docs/sesion-02/guia.md) | Ingesta CSV a tablas bronce mediante un notebook orquestado por pipeline |
-| [Evidencias S2](docs/sesion-02/evidencias.md) | Conteos, reejecución y recuperación tras una prueba de error |
-| [Notebook S2](notebooks/02_ingesta_bronce.ipynb) | Notebook PySpark importable, sin conexión a un tenant preconfigurada |
-| [Sesión 3](docs/sesion-03/guia.md) | Capa plata: tipos, cuarentena, duplicadas y una tabla oro, con verificación en T-SQL |
-| [Evidencias S3](docs/sesion-03/evidencias.md) | Conteos medidos, reejecución, prueba de error y decisiones de calidad |
-| [Notebook S3](notebooks/03_plata_silver.ipynb) | Notebook PySpark importable que transforma bronce en plata y oro |
-| [Sesión 4](docs/sesion-04/guia.md) | Modelo semántico Direct Lake, reporte, seguridad por filas y gobernanza |
-| [Evidencias S4](docs/sesion-04/evidencias.md) | Medidas, roles probados con «Probar como rol», linaje y elemento promovido |
-| [Dataset](dataset/README.md) | Siete CSV, reglas de calidad, valores de control y scripts reproducibles |
+| Sesión | Tema | Guía | Evidencias | Material |
+|---|---|---|---|---|
+| 1 | Fundamentos de Fabric y primera carga manual | [Guía](docs/sesion-01/guia.md) | [Plantilla](docs/sesion-01/evidencias.md) | [Dataset](dataset/README.md) |
+| 2 | Ingesta CSV a tablas bronce con un pipeline | [Guía](docs/sesion-02/guia.md) | [Plantilla](docs/sesion-02/evidencias.md) | [Notebook S2](notebooks/02_ingesta_bronce.ipynb) |
+| 3 | Capa plata: tipos, cuarentena, duplicadas y tabla oro | [Guía](docs/sesion-03/guia.md) | [Plantilla](docs/sesion-03/evidencias.md) | [Notebook S3](notebooks/03_plata_silver.ipynb) |
+| 4 | Modelo semántico Direct Lake, reporte, seguridad por filas y gobernanza | [Guía](docs/sesion-04/guia.md) | [Plantilla](docs/sesion-04/evidencias.md) | Medidas DAX en la guía |
+| 5 | Cierre: revisión de entregables y siguientes pasos | [Guía](docs/sesion-05/guia.md) | [Plantilla](docs/sesion-05/evidencias.md) | — |
 
-**Esta versión incluye las sesiones 1 a 4.** El laboratorio de cierre aún no está incluido. No contiene un calendario ni compromisos de acompañamiento para una organización particular.
+Material de apoyo: [requisitos del laboratorio](docs/requisitos.md), [guía del dataset](dataset/README.md) y [diccionario de datos](dataset/diccionario.md).
+
+**Esta versión incluye las cinco sesiones.** No contiene un calendario ni compromisos de acompañamiento para una organización particular.
 
 En la Sesión 2, el pipeline ejecuta una actividad Notebook que carga seis CSV en tablas Delta bronce. No usa Copy Data ni fuentes externas. Conserva duplicados y errores deliberados como texto para tratarlos en la siguiente sesión. El reemplazo es por lote completo y requiere confirmar explícitamente el Lakehouse y el prefijo de destino; no ejecutar sobre producción.
 
 En la Sesión 3, una segunda actividad Notebook lee esas seis tablas, aplica tipos y reglas de calidad, aparta los duplicados y los registros inválidos, y publica seis tablas plata, dos de auditoría y una tabla oro. No escribe nada si las tablas bronce o los controles no cuadran, y los resultados se comprueban con T-SQL en el SQL analytics endpoint.
 
 En la Sesión 4, cada participante crea un modelo semántico Direct Lake sobre las tablas plata, un reporte de una página y dos roles de seguridad por filas que verifica con «Probar como rol»; después revisa el linaje y el catálogo de OneLake y promueve su modelo. Los pasos en el editor web no se prueban automáticamente: deben comprobarse en el tenant del participante.
+
+La Sesión 5 no introduce una práctica nueva: revisa las evidencias, repite el flujo de punta a punta, consolida los bloqueos y prepara el paso del laboratorio a un proyecto real.
 
 ## Datos sintéticos
 

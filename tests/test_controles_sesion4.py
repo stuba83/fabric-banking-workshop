@@ -103,6 +103,20 @@ class ControlesSesion4Tests(unittest.TestCase):
         self.assertNotIn("sucursal_id", columnas)
         self.assertNotIn("provincia", columnas)
 
+    def test_session5_documents_quote_the_end_to_end_controls(self) -> None:
+        guia = (ROOT / "docs" / "sesion-05" / "guia.md").read_text(encoding="utf-8")
+        evidencias = (ROOT / "docs" / "sesion-05" / "evidencias.md").read_text(encoding="utf-8")
+        filas = self.medidos["filas"]
+        heredia = f"{self.por_sucursal['SUC04'][0]:,}".replace(",", ".")
+        for texto in (guia, evidencias):
+            self.assertIn("72.360", texto)
+            self.assertIn("72.000", texto)
+            self.assertIn(heredia, texto)
+        self.assertIn(f"{filas['silver_transacciones_duplicadas']}", guia)
+        self.assertIn(f"{filas['gold_transacciones_mes_canal']} filas en oro", guia)
+        self.assertIn(_formato(Decimal(self.medidos["monto_creditos"])), evidencias)
+        self.assertIn(_formato(Decimal(self.medidos["monto_debitos"])), evidencias)
+
 
 if __name__ == "__main__":
     unittest.main()
