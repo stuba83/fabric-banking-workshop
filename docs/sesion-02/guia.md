@@ -191,7 +191,7 @@ Las seis escrituras **no forman una transacción única**. Un error tardío pued
 | Preparar las reglas para la siguiente sesión | Identificar duplicados, las tres causas de cuarentena y normalización de canal, sin aplicarlas aún |
 | Completar las evidencias y revisarlas con el punto focal | Resultados medidos y hasta tres dudas prioritarias consolidadas |
 
-Usar la [plantilla de evidencias](evidencias.md). La prueba negativa cambia un parámetro, **no elimina archivos ni altera los CSV originales**.
+Usar la [plantilla de evidencias](evidencias.md). La prueba negativa cambia un parámetro, **no elimina archivos ni altera los CSV originales**. La práctica continúa en la [Sesión 3: capa plata](../sesion-03/guia.md).
 
 ## 7. Bloqueos frecuentes
 

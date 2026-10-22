@@ -1,16 +1,15 @@
-"""Render the self-contained Fabric notebook from the reusable source module."""
+"""Render the self-contained Fabric notebooks from their reusable source modules."""
 
 from __future__ import annotations
 
 import argparse
 import json
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_PATH = ROOT / "notebooks" / "ingesta_bronce.py"
-NOTEBOOK_PATH = ROOT / "notebooks" / "02_ingesta_bronce.ipynb"
 
 INTRO = """# Sesión 2 — Ingesta Bronze
 
@@ -33,6 +32,78 @@ anteriores podrían haberse reemplazado. Corrige el problema y vuelve a ejecutar
 el lote completo. No es una estrategia de lectura escalable para CSV de varios
 GB; este conjunto didáctico completo es menor de 7 MB.
 """
+
+
+INTRO_PLATA = """# Sesión 3 — Capa plata y tabla oro
+
+Este notebook transforma las seis tablas Bronze de la Sesión 2 en tablas Silver
+tipadas y publica una tabla Gold de consumo; el pipeline de Data Factory solo
+orquesta su ejecución después de la ingesta. Las tablas Bronze no se modifican.
+
+Antes de ejecutar, fija los parámetros a los valores de tu entorno (por ejemplo,
+`AB_Lakehouse`, `AB`, `SI`). El Lakehouse predeterminado debe estar adjunto a este
+notebook, en el mismo workspace, con las seis tablas Bronze del mismo prefijo.
+
+El notebook valida primero las tablas Bronze, aplica los tipos, separa las copias
+exactas y los registros inválidos (cada uno con un único motivo), y comprueba los
+controles esperados. Si algo falla, no escribe nada. Después escribe seis tablas
+Silver, dos tablas de auditoría (cuarentena y duplicadas) y una tabla Gold, y
+verifica el conteo, el esquema y el contenido de cada una antes de informar
+`status: success`.
+
+`SI` autoriza reemplazar únicamente las nueve tablas con el prefijo elegido. Las
+escrituras Delta de varias tablas no son atómicas: si una falla, las anteriores
+podrían haberse reemplazado. Corrige el problema y vuelve a ejecutar el lote
+completo. Las tablas pequeñas se leen en la memoria del proceso conductor por
+claridad didáctica; no es un patrón para GB o TB.
+"""
+
+
+@dataclass(frozen=True)
+class NotebookSpec:
+    source_path: Path
+    notebook_path: Path
+    cell_prefix: str
+    intro: str
+    execution_cell: str
+
+
+NOTEBOOKS = (
+    NotebookSpec(
+        source_path=ROOT / "notebooks" / "ingesta_bronce.py",
+        notebook_path=ROOT / "notebooks" / "02_ingesta_bronce.ipynb",
+        cell_prefix="session2",
+        intro=INTRO,
+        execution_cell=(
+            "import notebookutils\n"
+            "\n"
+            "resultado = ejecutar_ingesta(\n"
+            "    spark,\n"
+            "    notebookutils.runtime.context,\n"
+            "    p_lakehouse_esperado,\n"
+            "    p_prefijo,\n"
+            "    p_confirmar_reemplazo,\n"
+            ")\n"
+        ),
+    ),
+    NotebookSpec(
+        source_path=ROOT / "notebooks" / "plata_silver.py",
+        notebook_path=ROOT / "notebooks" / "03_plata_silver.ipynb",
+        cell_prefix="session3",
+        intro=INTRO_PLATA,
+        execution_cell=(
+            "import notebookutils\n"
+            "\n"
+            "resultado = ejecutar_plata(\n"
+            "    spark,\n"
+            "    notebookutils.runtime.context,\n"
+            "    p_lakehouse_esperado,\n"
+            "    p_prefijo,\n"
+            "    p_confirmar_reemplazo,\n"
+            ")\n"
+        ),
+    ),
+)
 
 
 def _markdown_cell(cell_id: str, text: str) -> dict[str, object]:
@@ -59,34 +130,23 @@ def _code_cell(
     }
 
 
-def render_notebook() -> str:
-    source = SOURCE_PATH.read_text(encoding="utf-8")
+def render_notebook(spec: NotebookSpec) -> str:
+    source = spec.source_path.read_text(encoding="utf-8")
     parameter_cell = (
         "p_lakehouse_esperado = ''\n"
         "p_prefijo = ''\n"
         "p_confirmar_reemplazo = 'NO'\n"
     )
-    execution_cell = (
-        "import notebookutils\n"
-        "\n"
-        "resultado = ejecutar_ingesta(\n"
-        "    spark,\n"
-        "    notebookutils.runtime.context,\n"
-        "    p_lakehouse_esperado,\n"
-        "    p_prefijo,\n"
-        "    p_confirmar_reemplazo,\n"
-        ")\n"
-    )
     notebook = {
         "cells": [
-            _markdown_cell("session2-intro", INTRO),
+            _markdown_cell(f"{spec.cell_prefix}-intro", spec.intro),
             _code_cell(
-                "session2-parameters",
+                f"{spec.cell_prefix}-parameters",
                 parameter_cell,
                 {"tags": ["parameters"]},
             ),
-            _code_cell("session2-definitions", source),
-            _code_cell("session2-execution", execution_cell),
+            _code_cell(f"{spec.cell_prefix}-definitions", source),
+            _code_cell(f"{spec.cell_prefix}-execution", spec.execution_cell),
         ],
         "metadata": {
             "kernelspec": {
@@ -107,26 +167,29 @@ def main() -> int:
     parser.add_argument(
         "--check",
         action="store_true",
-        help="fail if the notebook is missing or differs from the rendered source",
+        help="fail if a notebook is missing or differs from its rendered source",
     )
     args = parser.parse_args()
-    expected = render_notebook()
 
     if args.check:
-        if not NOTEBOOK_PATH.is_file():
-            print(f"Notebook is missing: {NOTEBOOK_PATH}", file=sys.stderr)
+        failed = False
+        for spec in NOTEBOOKS:
+            if not spec.notebook_path.is_file():
+                print(f"Notebook is missing: {spec.notebook_path}", file=sys.stderr)
+                failed = True
+            elif spec.notebook_path.read_text(encoding="utf-8") != render_notebook(spec):
+                print(f"Notebook is stale: {spec.notebook_path}", file=sys.stderr)
+                failed = True
+        if failed:
             return 1
-        observed = NOTEBOOK_PATH.read_text(encoding="utf-8")
-        if observed != expected:
-            print(f"Notebook is stale: {NOTEBOOK_PATH}", file=sys.stderr)
-            return 1
-        print("Notebook is synchronized.")
+        print("Notebooks are synchronized.")
         return 0
 
-    NOTEBOOK_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with NOTEBOOK_PATH.open("w", encoding="utf-8", newline="\n") as notebook_file:
-        notebook_file.write(expected)
-    print(f"Rendered {NOTEBOOK_PATH}")
+    for spec in NOTEBOOKS:
+        spec.notebook_path.parent.mkdir(parents=True, exist_ok=True)
+        with spec.notebook_path.open("w", encoding="utf-8", newline="\n") as notebook_file:
+            notebook_file.write(render_notebook(spec))
+        print(f"Rendered {spec.notebook_path}")
     return 0
 
 

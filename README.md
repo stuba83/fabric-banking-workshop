@@ -17,7 +17,7 @@ El recorrido de referencia es: **CSV → Lakehouse / bronce → datos depurados 
 3. Leer la [guía del dataset](dataset/README.md) y el [diccionario de datos](dataset/diccionario.md).
 4. Completar el pre-work de la [Sesión 1: fundamentos](docs/sesion-01/guia.md).
 5. Registrar los resultados propios en una copia de la [plantilla de evidencias](docs/sesion-01/evidencias.md), conservada dentro de la organización, no en este repositorio público.
-6. Con las fuentes preparadas, continuar con la [Sesión 2: ingesta y pipelines](docs/sesion-02/guia.md).
+6. Con las fuentes preparadas, continuar con la [Sesión 2: ingesta y pipelines](docs/sesion-02/guia.md) y después con la [Sesión 3: capa plata](docs/sesion-03/guia.md).
 
 No hace falta instalar Python para usar los CSV en Fabric.
 
@@ -31,11 +31,16 @@ No hace falta instalar Python para usar los CSV en Fabric.
 | [Sesión 2](docs/sesion-02/guia.md) | Ingesta CSV a tablas bronce mediante un notebook orquestado por pipeline |
 | [Evidencias S2](docs/sesion-02/evidencias.md) | Conteos, reejecución y recuperación tras una prueba de error |
 | [Notebook S2](notebooks/02_ingesta_bronce.ipynb) | Notebook PySpark importable, sin conexión a un tenant preconfigurada |
+| [Sesión 3](docs/sesion-03/guia.md) | Capa plata: tipos, cuarentena, duplicadas y una tabla oro, con verificación en T-SQL |
+| [Evidencias S3](docs/sesion-03/evidencias.md) | Conteos medidos, reejecución, prueba de error y decisiones de calidad |
+| [Notebook S3](notebooks/03_plata_silver.ipynb) | Notebook PySpark importable que transforma bronce en plata y oro |
 | [Dataset](dataset/README.md) | Siete CSV, reglas de calidad, valores de control y scripts reproducibles |
 
-**Esta versión incluye las sesiones 1 y 2.** Los laboratorios de transformación a plata/oro, modelado y reportes aún no están incluidos. No contiene un calendario ni compromisos de acompañamiento para una organización particular.
+**Esta versión incluye las sesiones 1, 2 y 3.** Los laboratorios de modelado semántico y reportes aún no están incluidos. No contiene un calendario ni compromisos de acompañamiento para una organización particular.
 
 En la Sesión 2, el pipeline ejecuta una actividad Notebook que carga seis CSV en tablas Delta bronce. No usa Copy Data ni fuentes externas. Conserva duplicados y errores deliberados como texto para tratarlos en la siguiente sesión. El reemplazo es por lote completo y requiere confirmar explícitamente el Lakehouse y el prefijo de destino; no ejecutar sobre producción.
+
+En la Sesión 3, una segunda actividad Notebook lee esas seis tablas, aplica tipos y reglas de calidad, aparta los duplicados y los registros inválidos, y publica seis tablas plata, dos de auditoría y una tabla oro. No escribe nada si las tablas bronce o los controles no cuadran, y los resultados se comprueban con T-SQL en el SQL analytics endpoint.
 
 ## Datos sintéticos
 
@@ -86,9 +91,9 @@ python .\dataset\validar_dataset.py
 
 `--overwrite` reemplaza únicamente las salidas generadas del dataset. Conservar aparte cualquier modificación que se quiera mantener. El workflow de GitHub comprueba validación y regeneración sin diferencias.
 
-### Notebook de la Sesión 2
+### Notebooks de las Sesiones 2 y 3
 
-El código fuente está en [`notebooks/ingesta_bronce.py`](notebooks/ingesta_bronce.py). Para mantener sincronizado el notebook importable y ejecutar las pruebas locales:
+El código fuente está en [`notebooks/ingesta_bronce.py`](notebooks/ingesta_bronce.py) (Sesión 2) y [`notebooks/plata_silver.py`](notebooks/plata_silver.py) (Sesión 3). Para mantener sincronizados los notebooks importables y ejecutar las pruebas locales:
 
 ```powershell
 python .\tools\sincronizar_notebook.py
@@ -96,7 +101,7 @@ python .\tools\sincronizar_notebook.py --check
 python -m unittest discover -s tests -v
 ```
 
-El participante importa el `.ipynb` en **Fabric PySpark**, adjunta su Lakehouse y configura su pipeline según la guía. No necesita instalar Python localmente. El runtime de Fabric aporta Spark; la versión 3.14 indicada arriba corresponde al generador local del dataset.
+El participante importa cada `.ipynb` en **Fabric PySpark**, adjunta su Lakehouse y configura su pipeline según la guía. No necesita instalar Python localmente. El runtime de Fabric aporta Spark; la versión 3.14 indicada arriba corresponde al generador local del dataset.
 
 Las pruebas locales comprueban la lógica y los contratos documentados, pero no acreditan una ejecución en un tenant. La importación, identidad ejecutora, parámetros del pipeline y persistencia Delta requieren la comprobación de integración en Fabric.
 
