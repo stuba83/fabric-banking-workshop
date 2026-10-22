@@ -170,6 +170,7 @@ El equipo conserva las evidencias en su ubicación interna acordada y facilita a
 
 ## Referencias
 
+- [Continuar con la Sesión 2: ingesta y pipelines](../sesion-02/guia.md).
 - [Módulo introductorio de Microsoft Learn](https://learn.microsoft.com/en-us/training/modules/introduction-end-analytics-use-microsoft-fabric/).
 - [Tutorial oficial de creación de un Lakehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/tutorial-build-lakehouse). Usar como referencia de navegación: el tutorial completo emplea otro dataset y otro flujo de ingesta; no es un ejercicio adicional asignado.
 - [Requisitos del laboratorio](../requisitos.md).

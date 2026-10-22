@@ -17,6 +17,10 @@ jobs:
           python-version: "3.14"
       - name: Validate committed dataset
         run: python .\dataset\validar_dataset.py
+      - name: Check importable notebook matches source
+        run: python .\tools\sincronizar_notebook.py --check
+      - name: Test bronze ingestion contracts
+        run: python -m unittest discover -s tests -v
       - name: Regenerate with the fixed seed
         run: python .\dataset\generar_dataset.py --overwrite
       - name: Validate regenerated dataset

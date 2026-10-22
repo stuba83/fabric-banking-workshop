@@ -17,6 +17,7 @@ El recorrido de referencia es: **CSV → Lakehouse / bronce → datos depurados 
 3. Leer la [guía del dataset](dataset/README.md) y el [diccionario de datos](dataset/diccionario.md).
 4. Completar el pre-work de la [Sesión 1: fundamentos](docs/sesion-01/guia.md).
 5. Registrar los resultados propios en una copia de la [plantilla de evidencias](docs/sesion-01/evidencias.md), conservada dentro de la organización, no en este repositorio público.
+6. Con las fuentes preparadas, continuar con la [Sesión 2: ingesta y pipelines](docs/sesion-02/guia.md).
 
 No hace falta instalar Python para usar los CSV en Fabric.
 
@@ -27,9 +28,14 @@ No hace falta instalar Python para usar los CSV en Fabric.
 | [Requisitos](docs/requisitos.md) | Capacidad, Power BI Pro, roles, carpeta individual y nomenclatura |
 | [Sesión 1](docs/sesion-01/guia.md) | Pre-work, agenda de 60 minutos, primera carga manual y accionables |
 | [Evidencias](docs/sesion-01/evidencias.md) | Plantilla vacía para que cada participante documente su práctica |
+| [Sesión 2](docs/sesion-02/guia.md) | Ingesta CSV a tablas bronce mediante un notebook orquestado por pipeline |
+| [Evidencias S2](docs/sesion-02/evidencias.md) | Conteos, reejecución y recuperación tras una prueba de error |
+| [Notebook S2](notebooks/02_ingesta_bronce.ipynb) | Notebook PySpark importable, sin conexión a un tenant preconfigurada |
 | [Dataset](dataset/README.md) | Siete CSV, reglas de calidad, valores de control y scripts reproducibles |
 
-**Esta versión incluye el material de la Sesión 1.** La guía sitúa la ingesta con pipelines, la transformación, el modelado y los reportes como pasos posteriores del recorrido; sus laboratorios específicos aún no están incluidos. No contiene un calendario ni compromisos de acompañamiento para una organización particular.
+**Esta versión incluye las sesiones 1 y 2.** Los laboratorios de transformación a plata/oro, modelado y reportes aún no están incluidos. No contiene un calendario ni compromisos de acompañamiento para una organización particular.
+
+En la Sesión 2, el pipeline ejecuta una actividad Notebook que carga seis CSV en tablas Delta bronce. No usa Copy Data ni fuentes externas. Conserva duplicados y errores deliberados como texto para tratarlos en la siguiente sesión. El reemplazo es por lote completo y requiere confirmar explícitamente el Lakehouse y el prefijo de destino; no ejecutar sobre producción.
 
 ## Datos sintéticos
 
@@ -79,6 +85,20 @@ python .\dataset\validar_dataset.py
 ```
 
 `--overwrite` reemplaza únicamente las salidas generadas del dataset. Conservar aparte cualquier modificación que se quiera mantener. El workflow de GitHub comprueba validación y regeneración sin diferencias.
+
+### Notebook de la Sesión 2
+
+El código fuente está en [`notebooks/ingesta_bronce.py`](notebooks/ingesta_bronce.py). Para mantener sincronizado el notebook importable y ejecutar las pruebas locales:
+
+```powershell
+python .\tools\sincronizar_notebook.py
+python .\tools\sincronizar_notebook.py --check
+python -m unittest discover -s tests -v
+```
+
+El participante importa el `.ipynb` en **Fabric PySpark**, adjunta su Lakehouse y configura su pipeline según la guía. No necesita instalar Python localmente. El runtime de Fabric aporta Spark; la versión 3.14 indicada arriba corresponde al generador local del dataset.
+
+Las pruebas locales comprueban la lógica y los contratos documentados, pero no acreditan una ejecución en un tenant. La importación, identidad ejecutora, parámetros del pipeline y persistencia Delta requieren la comprobación de integración en Fabric.
 
 ## Uso responsable
 
