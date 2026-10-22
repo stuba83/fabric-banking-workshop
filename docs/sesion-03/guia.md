@@ -220,7 +220,7 @@ Ambos guardan datos Delta en OneLake. El Lakehouse se desarrolla con Spark y su 
 | Documentar tres decisiones de calidad | Regla, decisión y razón, con sus propias palabras |
 | Interpretar la tabla oro | Dos o tres líneas sobre la evolución por mes y por canal, sin atribuir causas: los datos son sintéticos |
 
-Usar la [plantilla de evidencias](evidencias.md). La prueba negativa cambia un parámetro: **no se eliminan archivos ni tablas bronce**.
+Usar la [plantilla de evidencias](evidencias.md). La prueba negativa cambia un parámetro: **no se eliminan archivos ni tablas bronce**. La práctica continúa en la [Sesión 4: modelo semántico y seguridad](../sesion-04/guia.md).
 
 ## 7. Bloqueos frecuentes
 

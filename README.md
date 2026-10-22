@@ -34,13 +34,17 @@ No hace falta instalar Python para usar los CSV en Fabric.
 | [Sesión 3](docs/sesion-03/guia.md) | Capa plata: tipos, cuarentena, duplicadas y una tabla oro, con verificación en T-SQL |
 | [Evidencias S3](docs/sesion-03/evidencias.md) | Conteos medidos, reejecución, prueba de error y decisiones de calidad |
 | [Notebook S3](notebooks/03_plata_silver.ipynb) | Notebook PySpark importable que transforma bronce en plata y oro |
+| [Sesión 4](docs/sesion-04/guia.md) | Modelo semántico Direct Lake, reporte, seguridad por filas y gobernanza |
+| [Evidencias S4](docs/sesion-04/evidencias.md) | Medidas, roles probados con «Probar como rol», linaje y elemento promovido |
 | [Dataset](dataset/README.md) | Siete CSV, reglas de calidad, valores de control y scripts reproducibles |
 
-**Esta versión incluye las sesiones 1, 2 y 3.** Los laboratorios de modelado semántico y reportes aún no están incluidos. No contiene un calendario ni compromisos de acompañamiento para una organización particular.
+**Esta versión incluye las sesiones 1 a 4.** El laboratorio de cierre aún no está incluido. No contiene un calendario ni compromisos de acompañamiento para una organización particular.
 
 En la Sesión 2, el pipeline ejecuta una actividad Notebook que carga seis CSV en tablas Delta bronce. No usa Copy Data ni fuentes externas. Conserva duplicados y errores deliberados como texto para tratarlos en la siguiente sesión. El reemplazo es por lote completo y requiere confirmar explícitamente el Lakehouse y el prefijo de destino; no ejecutar sobre producción.
 
 En la Sesión 3, una segunda actividad Notebook lee esas seis tablas, aplica tipos y reglas de calidad, aparta los duplicados y los registros inválidos, y publica seis tablas plata, dos de auditoría y una tabla oro. No escribe nada si las tablas bronce o los controles no cuadran, y los resultados se comprueban con T-SQL en el SQL analytics endpoint.
+
+En la Sesión 4, cada participante crea un modelo semántico Direct Lake sobre las tablas plata, un reporte de una página y dos roles de seguridad por filas que verifica con «Probar como rol»; después revisa el linaje y el catálogo de OneLake y promueve su modelo. Los pasos en el editor web no se prueban automáticamente: deben comprobarse en el tenant del participante.
 
 ## Datos sintéticos
 
