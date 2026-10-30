@@ -27,11 +27,11 @@ Si tu región queda fuera de EE. UU. y la UE, el administrador puede necesitar h
 
 | Sección | Contenido |
 |---|---|
-| 1. Configuración | Ajuste temporal del runtime 2.0 (`nest_asyncio`) o nada en el 1.3; en pipelines, usa un Environment |
-| 2. Comprobar la capacidad | Una llamada mínima; si falla, se omite lo demás |
+| 1. Configuración | Instala `nest_asyncio` (ajuste temporal del runtime 2.0) y `openai` con una celda `%pip`, **solo en sesiones interactivas**; en pipelines, usa un Environment |
+| 2. Comprobar la capacidad | Una llamada mínima; si falla, el mensaje distingue «falta `nest_asyncio`» de «la capacidad no lo permite» |
 | 3. Funciones de IA | `analyze_sentiment`, `classify`, `extract`, `summarize`, `translate` y `similarity` sobre 12 comentarios **sintéticos** |
-| 4. `generate_response` | Redactar una explicación en lenguaje claro de por qué el modelo de B3 marcó una cuenta |
-| 5. LLM desde el código | Cliente del SDK de OpenAI ya autenticado; SynapseML para volúmenes grandes; recurso propio con `aifunc.setup` |
+| 4. `generate_response` | Redactar una explicación en lenguaje claro de por qué el modelo de B3 marcó una cuenta; un *prompt* ambiguo produce explicaciones confusas |
+| 5. LLM desde el código | `openai.AzureOpenAI` con el cliente HTTP de Fabric, sin clave; SynapseML para volúmenes grandes; recurso propio con `aifunc.setup` |
 | 6. Copilot | Panel de chat, comandos en celda y una **biblioteca de *prompts*** para el ciclo de ML |
 | 7. Agente de datos | Cómo se prepara y qué preguntar |
 | 8. Uso responsable | Validación, datos, determinismo, costo y el papel de la IA |
@@ -64,11 +64,17 @@ Las nueve funciones de IA son `analyze_sentiment`, `classify`, `embed`, `extract
 
 | Síntoma | Revisar |
 |---|---|
-| `Funciones de IA NO disponibles` | Capacidad **Trial**, ajuste de inquilino de Copilot y Azure OpenAI, o región; coordina con el administrador |
-| `No module named 'synapse.ml.aifunc'` | Notebook de PySpark en un runtime de Fabric; en el runtime 2.0 instala `nest_asyncio` en su propia celda |
+| `Funciones de IA NO disponibles: RuntimeError: This event loop is already running` | **No es la capacidad.** En el runtime 2.0 falta `nest_asyncio`: ejecuta la celda `%pip` de la sección 1 (o agrégalo a un Environment) |
+| `Funciones de IA NO disponibles` con otro error | Capacidad **Trial**, ajuste de inquilino de Copilot y Azure OpenAI, o región; coordina con el administrador |
+| La sesión se cancela con `System_Cancelled_Session_Statements_Failed` al ejecutar por API o pipeline | La celda `%pip` no funciona fuera de una sesión interactiva; instala `nest-asyncio` y `openai` en un **Environment** |
+| `No module named 'openai'` | Tampoco viene en el runtime 2.0; instálalo con la celda `%pip` o en un Environment |
+| `'coroutine' object has no attribute 'choices'` o `no attribute 'client_sync'` | No uses `aifunc.session.client`: es asíncrono. Usa `openai.AzureOpenAI` con `get_openai_httpx_sync_client` |
+| `No module named 'synapse.ml.aifunc'` | Notebook de PySpark en un runtime de Fabric |
 | Error con `temperature` en el runtime 1.3 | Fija `p_runtime_2_0 = 'NO'`: el ajuste de temperatura es solo para el runtime 2.0 |
 | El panel de Copilot no abre | Private Link, capacidad sin F2 o ajuste de inquilino |
 | Las funciones son lentas o costosas | Prueba con pocas filas y revisa el consumo de CU en la aplicación de métricas de la capacidad |
+
+**Lo observado en Fabric (30 de octubre de 2026, capacidad F8, runtime 2.0).** Con `nest_asyncio` y `openai` instalados, las nueve funciones probadas y el LLM desde código **respondieron correctamente, en español**. Dos ejemplos para validar: `extract` llegó a devolver «más de una hora» como si fuera un monto, y un *prompt* ambiguo («transacciones del mes 21») hizo que el modelo leyera un conteo como un número de mes. Las salidas **varían entre ejecuciones**.
 
 ## Siguiente
 

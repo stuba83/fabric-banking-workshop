@@ -28,12 +28,13 @@ p_runtime_2_0 = 'SI'
 # %% [markdown]
 # ## 1. Configuración según el runtime
 #
-# - **Runtime 1.3:** sin instalación para la mayoría de los usos.
-# - **Runtime 2.0 (Spark 4.1):** hay un ajuste **temporal** documentado: instalar `nest_asyncio` en una celda aparte (reinicia Python) y fijar unos valores del modelo. Si tu runtime es 1.3, deja `p_runtime_2_0 = 'NO'`.
-# - En ejecuciones de **pipeline o programadas**, no uses `%pip`: agrega `nest-asyncio` a un **Environment** y publícalo.
+# - **Runtime 1.3:** sin instalación para la mayoría de los usos de las funciones de IA.
+# - **Runtime 2.0 (Spark 4.1):** hay un ajuste **temporal** documentado: instalar `nest_asyncio` (**no viene preinstalado**) y fijar unos valores del modelo. Sin él, las funciones fallan con `RuntimeError: This event loop is already running`. Si tu runtime es 1.3, deja `p_runtime_2_0 = 'NO'`.
+# - **`openai`** tampoco viene preinstalado; solo lo necesita la sección 5 (el LLM desde código).
+# - **Solo en sesiones interactivas.** `%pip` reinicia Python y **no funciona en ejecuciones de pipeline, programadas o lanzadas por API** (la sesión se cancela). En esos casos agrega `nest-asyncio` y `openai` a un **Environment** y publícalo.
 
 # %%
-%pip install -q nest_asyncio 2>/dev/null
+%pip install -q nest_asyncio openai 2>/dev/null
 
 # %%
 import notebookutils
@@ -46,7 +47,7 @@ nombres = nombres_ml(p_prefijo)
 # %% [markdown]
 # ## 2. Comprobar que la capacidad lo permite
 #
-# Una llamada mínima. Si falla, no es un error del notebook: la capacidad o el inquilino no tienen habilitadas las funciones de IA.
+# Una llamada mínima. Si falla, el mensaje dice por qué: **`event loop is already running`** significa que falta `nest_asyncio` en el runtime 2.0 (sección 1); cualquier otro error suele indicar que la capacidad (por ejemplo, Trial) o el inquilino no tienen habilitadas las funciones de IA.
 
 # %%
 import pandas as pd
@@ -63,14 +64,18 @@ def probar_ia():
     try:
         resultado = pd.Series(["Excelente servicio, muchas gracias."]).ai.analyze_sentiment()
         return True, str(resultado.iloc[0])
-    except Exception as error:  # capacidad Trial, ajustes de inquilino o región
+    except Exception as error:  # falta nest_asyncio, capacidad Trial, ajustes de inquilino o región
         return False, f"{type(error).__name__}: {error}"
 
 
 ia_disponible, detalle = probar_ia()
 print("Funciones de IA disponibles:" if ia_disponible else "Funciones de IA NO disponibles:", detalle)
 if not ia_disponible:
-    print("Se omiten las celdas de IA. Requiere capacidad F2 o superior y los ajustes de inquilino de Copilot y Azure OpenAI.")
+    if "event loop is already running" in detalle:
+        print("Falta nest_asyncio (runtime 2.0): ejecuta la celda %pip de la sección 1 en una sesión interactiva "
+              "o agrégalo a un Environment. No es un problema de capacidad.")
+    else:
+        print("Se omiten las celdas de IA. Requiere capacidad F2 o superior y los ajustes de inquilino de Copilot y Azure OpenAI.")
 
 # %% [markdown]
 # ## 3. Funciones de IA sobre texto
@@ -98,6 +103,8 @@ print(len(comentarios), "comentarios sintéticos")
 
 # %% [markdown]
 # **Sentimiento, tema y entidades.** `analyze_sentiment` devuelve `positive`, `negative`, `neutral` o `mixed` (o tus propias etiquetas). `classify` asigna **una** de las etiquetas que le des (conviene dar al menos dos). `extract` devuelve un **DataFrame** con una columna por entidad pedida.
+#
+# **Valida lo que devuelve.** En una de las ejecuciones de referencia, `extract` encontró bien «45.000 colones» como monto, pero en otro comentario devolvió «más de una hora» como si fuera un monto (era una duración); en otra ejecución ese error no apareció. Las salidas **varían entre ejecuciones**, y los modelos aciertan casi siempre y fallan con seguridad: revisa una muestra.
 
 # %%
 if ia_disponible:
@@ -141,37 +148,49 @@ if ia_disponible:
             puntuacion.sort_values("probabilidad_alta_actividad", ascending=False).head(5)
             .merge(features[[CLAVE, CORTE, "tx_mes_corte", "tx_mes_previo", "pct_banca_movil"]], on=[CLAVE, CORTE])
         )
+        top["probabilidad_pct"] = (top["probabilidad_alta_actividad"] * 100).round(0).astype(int)
+        top["pct_movil"] = (top["pct_banca_movil"] * 100).round(0).astype(int)
         top["explicacion"] = top.ai.generate_response(
             prompt=(
                 "Eres analista de datos. En dos frases en español, explica a un gerente por qué la cuenta {cuenta_id} "
-                "se marcó con probabilidad {probabilidad_alta_actividad} de tener alta actividad el mes siguiente. "
-                "Usa solo estos datos: transacciones del mes {tx_mes_corte}, del mes previo {tx_mes_previo} y "
-                "proporción de banca móvil {pct_banca_movil}. No inventes información."
+                "se marcó con {probabilidad_pct} % de probabilidad de tener alta actividad el mes siguiente. "
+                "Datos de la cuenta: transacciones en el último mes = {tx_mes_corte}; transacciones en el mes anterior = "
+                "{tx_mes_previo}; porcentaje de sus movimientos hechos por banca móvil = {pct_movil} %. "
+                "Usa solo esos datos y no inventes información."
             ),
             is_prompt_template=True,
         )
         display(top[[CLAVE, "probabilidad_alta_actividad", "explicacion"]])
 
 # %% [markdown]
+# **Un *prompt* ambiguo produce explicaciones confusas.** En una ejecución de referencia, una primera versión de este *prompt* decía «transacciones del mes {tx_mes_corte}», y el modelo lo leyó como un **número de mes**: «21 transacciones en el mes 21». Nombrar cada dato sin ambigüedad («transacciones en el último mes = …») lo corrige. Lee las cinco explicaciones y compáralas con los datos antes de confiar en ellas.
+
+# %% [markdown]
 # ## 5. Un LLM desde el código
 #
 # Para casos que las funciones de IA no cubren, Fabric ofrece los modelos **Azure OpenAI integrados** (por ejemplo `gpt-5.1` y `gpt-5-mini`, y `text-embedding-ada-002`) **sin claves ni recursos propios**. Dos caminos:
 #
-# - **Cliente del SDK de OpenAI**, ya autenticado: `aifunc.session.client_sync` (y `client_async`). Se usa la API de *respuestas*; `store=True` y `previous_response_id` no están soportados.
+# - **Cliente `openai.AzureOpenAI` con el cliente HTTP de Fabric** (`get_openai_httpx_sync_client`, de `synapse.ml.fabric.credentials`): ya autenticado, sin clave. Requiere el paquete `openai` (sección 1). Se usa la API de *respuestas*; `store=True` y `previous_response_id` no están soportados. **No uses `aifunc.session.client`**: en el runtime 2.0 es un cliente **asíncrono** y una llamada directa devuelve una corrutina.
 # - **SynapseML**, para Spark: `OpenAIPrompt`, `OpenAIEmbedding`, `OpenAIChatCompletion` y `OpenAIResponses` en `synapse.ml.services.openai` (runtime 1.3 o superior, vista previa). Úsalo cuando el volumen pida procesar en paralelo.
 
 # %%
 if ia_disponible:
-    cliente = aifunc.session.client_sync
-    respuesta = cliente.responses.create(
-        model="gpt-5-mini",
-        input=(
-            "En tres viñetas, ¿qué riesgos hay al usar variables acumuladas en el monitoreo de deriva "
-            "de un modelo? Responde en español."
-        ),
-        store=False,
-    )
-    print(getattr(respuesta, "output_text", respuesta))
+    try:
+        import openai
+        from synapse.ml.fabric.credentials import get_openai_httpx_sync_client
+    except ImportError as error:
+        print(f"Falta un paquete ({error}). Ejecuta la celda %pip de la sección 1 o agrega openai a un Environment.")
+    else:
+        cliente = openai.AzureOpenAI(http_client=get_openai_httpx_sync_client(), api_version="2025-04-01-preview")
+        respuesta = cliente.responses.create(
+            model="gpt-5-mini",
+            input=(
+                "En tres viñetas, ¿qué riesgos hay al usar variables acumuladas en el monitoreo de deriva "
+                "de un modelo? Responde en español."
+            ),
+            store=False,
+        )
+        print(getattr(respuesta, "output_text", respuesta))
 
 # %% [markdown]
 # **Tu propio modelo o recurso.** Si tu organización ya tiene un recurso de Microsoft Foundry (Azure OpenAI) o una puerta de enlace APIM, las funciones de IA pueden usarlo con `aifunc.setup(cliente)`, con un `OpenAI(base_url="https://<recurso>.openai.azure.com/openai/v1", api_key=...)`. **Nunca pegues la clave en el notebook**: léela de **Azure Key Vault**. La documentación de Learn no confirma si esta opción funciona en una capacidad Trial; compruébalo en tu tenant. Las funciones basadas en *embeddings* (`embed`, `similarity`) no se soportan con un recurso propio.

@@ -61,7 +61,7 @@ Para equipos que quieren ver el ciclo completo de machine learning en Fabric, in
 | B5 | IA en notebooks: funciones de IA, LLM, Copilot y agente de datos | [Guía](docs/bonus-ml/modulo-5-ia.md) | [B5](notebooks/bonus_ml/B5_ia_en_notebooks.ipynb) |
 | — | Plantilla de evidencias | [Plantilla](docs/bonus-ml/evidencias.md) | — |
 
-B1 a B4 funcionan en una capacidad **Trial**. **B5 y la IA de Data Wrangler requieren una capacidad de pago (F2 o superior)**: Copilot, las funciones de IA y el agente de datos no están soportados en Trial. Los pasos del bonus no se han ejecutado en un tenant de Fabric: la guía indica qué se verificó y qué no.
+B1 a B4 funcionan en una capacidad **Trial**. **B5 y la IA de Data Wrangler requieren una capacidad de pago (F2 o superior)**: Copilot, las funciones de IA y el agente de datos no están soportados en Trial. Las Sesiones 2 y 3 y los notebooks B1 a B5 se ejecutaron de principio a fin en un tenant de Fabric (capacidad F8, runtime 2.0) y sus controles coincidieron; los pasos de la interfaz no se han verificado. La guía indica qué se verificó y qué no.
 
 En la Sesión 2, el pipeline ejecuta una actividad Notebook que carga seis CSV en tablas Delta bronce. No usa Copy Data ni fuentes externas. Conserva duplicados y errores deliberados como texto para tratarlos en la siguiente sesión. El reemplazo es por lote completo y requiere confirmar explícitamente el Lakehouse y el prefijo de destino; no ejecutar sobre producción.
 

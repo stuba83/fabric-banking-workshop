@@ -88,7 +88,7 @@ Qué ofrece Fabric hoy, qué estado tiene según Microsoft Learn y si funciona e
 
 - Sesión 3 completada: las nueve tablas existen en tu Lakehouse con sus conteos medidos. Sesión 4 recomendada, para la reconciliación con semantic link (B1) y el paso a Power BI (B3).
 - Un notebook de **PySpark** (no uno de Python puro) con tu Lakehouse como **predeterminado**.
-- Runtime de Fabric **1.3 o 2.0**. Según las páginas de runtime de octubre de 2026, el 2.0 es el predeterminado en los workspaces nuevos y el 1.3 entra en soporte de largo plazo; otras páginas aún lo describen como opcional, así que **confirma cuál usa tu workspace**. Las bibliotecas que usa el bonus (`pandas`, `scikit-learn`, `mlflow`, `flaml`) vienen en el runtime; **confirma con `import flaml`** y revisa las versiones, porque difieren entre runtimes (por ejemplo, scikit-learn 1.2.2 en el 1.3 y 1.6.1 en el 2.0).
+- Runtime de Fabric **1.3 o 2.0**. Según las páginas de runtime de octubre de 2026, el 2.0 es el predeterminado en los workspaces nuevos (así fue en la prueba) y el 1.3 entra en soporte de largo plazo; otras páginas aún lo describen como opcional, así que **confirma cuál usa tu workspace**. Las bibliotecas que usa el bonus (`pandas`, `scikit-learn`, `mlflow`, `flaml`) vienen en el runtime; sus versiones difieren entre runtimes (en el 2.0 de la prueba: pandas 2.3.3, scikit-learn 1.6.1, MLflow 2.22 y FLAML 2.5; en el 1.3 se documenta scikit-learn 1.2.2). **No** vienen preinstalados `nest_asyncio` ni `openai`, que solo necesita B5.
 - Licencia Power BI Pro para el paso de Power BI de B3, igual que en la Sesión 4.
 - **Capacidad F2 o superior** solo para B5 (y la IA de Data Wrangler).
 
@@ -141,8 +141,9 @@ Mide estos valores tú mismo y regístralos en las evidencias. Los **conteos** s
 
 ## Estado de verificación
 
-- **Verificado localmente** (Python 3.14, pandas 3.x, scikit-learn 1.9, MLflow 3.17, FLAML 2.7, con Spark y las APIs de IA simulados): el módulo de funciones, el ciclo MLOps completo con MLflow real (promoción, reejecución idempotente, reversión, deriva y desempeño), las celdas de B1 a B4 y el flujo de B5. Los controles de esta guía se calcularon con el dataset del repositorio y las pruebas los comprueban.
-- **No verificado en un tenant de Fabric:** la ejecución en el runtime de Fabric (con otras versiones de bibliotecas), `PREDICT` y `MLFlowTransformer`, semantic link, las funciones de IA, Copilot, el agente de datos y los pasos de la interfaz (Data Wrangler, asistente de la versión, endpoints). Hazlo **primero tú, como prueba de humo**, y registra lo que cambie. Si algo difiere, abre una incidencia **sin datos de tu organización**.
+- **Verificado en un tenant de Fabric** (30 de octubre de 2026; capacidad F8 de pago; workspace nuevo con runtime 2.0, Python 3.13, pandas 2.3.3, scikit-learn 1.6.1, MLflow 2.22 y FLAML 2.5): las **Sesiones 2 y 3** y los notebooks **B1 a B5** se ejecutaron de principio a fin lanzándolos por API con parámetros. Los conteos de las Sesiones 2 y 3 coincidieron exactamente con los de las guías, la hora de `fecha_hora` se conservó sin cambios, `PREDICT` coincidió con pandas en las 1.800 cuentas, el AUC real del mes anterior fue 0,8466 (el mismo valor que en las pruebas locales) y las funciones de IA y el LLM desde código respondieron en español.
+- **Verificado localmente** (Python 3.14, pandas 3.x, scikit-learn 1.9, MLflow 3.17, FLAML 2.7, con Spark y las APIs de IA simulados): el módulo de funciones, el ciclo MLOps completo con MLflow real (promoción, reejecución idempotente, reversión, deriva y desempeño), las celdas de B1 a B5 y los controles de esta guía, que las pruebas comprueban contra el dataset.
+- **No verificado en un tenant de Fabric:** los pasos que dependen de la **interfaz** (Data Wrangler, el asistente de la versión, los endpoints, Copilot y el agente de datos), la reconciliación de semantic link **contra un modelo semántico real** (solo se comprobó que la biblioteca importa y responde), el comportamiento de la celda `%pip` en una sesión **interactiva** y el comportamiento en una capacidad **Trial** (la prueba usó una capacidad de pago). Hazlo **primero tú, como prueba de humo**, y registra lo que cambie. Si algo difiere, abre una incidencia **sin datos de tu organización**.
 
 ## Bloqueos frecuentes
 
@@ -153,7 +154,9 @@ Mide estos valores tú mismo y regístralos en las evidencias. Los **conteos** s
 | `No module named 'flaml'` o falta otra biblioteca | El runtime o el Environment adjunto; instala en un **Environment** (no con `%pip` en una ejecución de pipeline) |
 | `ModuleNotFoundError: synapse.ml.predict` o `sempy` | Que el notebook sea de **PySpark** y que el runtime sea el de Fabric, no uno local |
 | `PREDICT` falla o devuelve otro resultado | Que el modelo tenga **firma** y sea un sabor soportado; que el modelo no venga de AutoML con `use_spark=True` |
-| Las funciones de IA fallan | Capacidad **Trial** o ajustes de inquilino de Copilot y Azure OpenAI; B5 lo detecta y omite las celdas |
+| Las funciones de IA fallan con `RuntimeError: This event loop is already running` | No es la capacidad: en el runtime 2.0 falta `nest_asyncio` (y `openai` para el LLM desde código). Instálalos con la celda `%pip` de B5 o en un Environment |
+| Las funciones de IA fallan con otro error | Capacidad **Trial** o ajustes de inquilino de Copilot y Azure OpenAI; B5 lo detecta y omite las celdas |
+| `System_Cancelled_Session_Statements_Failed` al ejecutar B5 por API o pipeline | La celda `%pip` solo funciona en una sesión **interactiva**; para ejecuciones automáticas, instala las bibliotecas en un **Environment** |
 | El ciclo de B4 falla con `expected a champion model` | El retador se rechazó por debajo del piso de calidad y no hay campeón previo; revisa los datos de B1 |
 | El reporte o el modelo semántico no cuadran con el notebook | Reconcilia con semantic link (B1) y revisa las relaciones de la Sesión 4 |
 | La ejecución es lenta | Capacidad compartida, sesiones activas y el tiempo de AutoML; reduce `p_presupuesto_automl_s` |

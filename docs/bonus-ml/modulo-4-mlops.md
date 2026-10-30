@@ -43,7 +43,7 @@ datos (features) → compuerta de calidad → entrenar retador → ¿mejora al c
 
 | # | Escenario | Qué debes observar |
 |---|---|---|
-| 1 | **Cierre de agosto.** El ciclo solo ve cortes hasta agosto y no conoce la etiqueta del corte que puntúa | Sin campeón, el retador supera el piso: se promueve y queda como versión 1 |
+| 1 | **Cierre de agosto.** El ciclo solo ve cortes hasta agosto y no conoce la etiqueta del corte que puntúa | Sin campeón, el retador supera el piso: se promueve y se registra. El **número de versión** depende de las que registró B3 (con una ejecución de B3, será la 2) |
 | 2 | **Cierre de septiembre.** Hay campeón; llegan las etiquetas de agosto | La decisión suele ser `mantener`. Se mide el **AUC real** de lo que el campeón predijo en agosto |
 | 3 | **Reejecución** con los mismos datos | Mismas filas y ninguna versión nueva; si no cuadra, el notebook se detiene |
 | 4 | **Deriva simulada** (actividad × 1,6) | Las variables de actividad superan PSI 0,25; la recomendación es `revisar`, no `reentrenar` |
@@ -70,7 +70,7 @@ No reentrena solo por deriva (lo decide una persona), no hace pruebas A/B y no v
 
 | Control | Esperado |
 |---|---|
-| Versión 1 tras el escenario 1 | Promovida; en la tabla de control, un evento `promocion` |
+| Primera promoción tras el escenario 1 | Un evento `promocion` en la tabla de control, con la versión que registró el ciclo (si ejecutaste B3 una vez, la versión 2; el campeón del ciclo ignora las versiones que registró B3) |
 | Filas de `ab_gold_ml_puntuacion_actividad` al terminar | 3.600 (1.800 de agosto y 1.800 de septiembre) |
 | Filas de `ab_ml_monitoreo_deriva` | 32 (16 variables × 2 cortes); las de septiembre con `simulada = 0` |
 | `ab_ml_monitoreo_desempeno` | 1 fila: predicciones de agosto evaluadas con las etiquetas de septiembre; AUC ≈ 0,85 |

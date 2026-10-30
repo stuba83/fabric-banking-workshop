@@ -74,7 +74,7 @@ print("Modo:", p_modo)
 #
 # Se simula que estamos al **cierre de agosto**. El ciclo solo ve cortes hasta agosto y **no conoce la etiqueta del corte que puntúa** (la actividad de septiembre aún no ocurre). Es la regla de *corrección en el tiempo*: una ejecución retrospectiva no puede ver el futuro.
 #
-# Como aún no hay campeón, el retador solo debe superar un **piso de calidad** (AUC ≥ 0,70). Se promueve y se registra como versión 1.
+# Como aún no hay campeón, el retador solo debe superar un **piso de calidad** (AUC ≥ 0,70). Se promueve y queda como la primera promoción de la tabla de control. Su **número de versión** depende de cuántas versiones haya registrado antes B3 (si ejecutaste B3 una vez, será la versión 2).
 
 # %%
 if p_modo == "guiado":

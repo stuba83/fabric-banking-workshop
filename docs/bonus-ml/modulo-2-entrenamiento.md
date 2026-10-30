@@ -49,7 +49,7 @@ Los tamaños son exactos; las métricas, **aproximadas** (dependen de las versio
 |---|---|
 | Filas de entrenamiento, validación, prueba y por puntuar | 3.600, 1.800, 1.800 y 1.800 |
 | Prevalencia (entrenamiento, validación, prueba) | ≈ 0,32, 0,35 y 0,36 |
-| Corridas en el experimento | Baseline, `logreg`, `rf`, `hgb` y AutoML |
+| Corridas en el experimento | Baseline, `logreg`, `rf`, `hgb` y AutoML, **más decenas de corridas automáticas** (las pruebas internas de FLAML y del ajuste de `C`, con nombres como `keen_candle_…`). Filtra por `tags.mlflow.runName` |
 | AUC de validación del baseline | ≈ 0,81 |
 | AUC de validación de los tres modelos | ≈ 0,84 a 0,86 |
 | AUC de prueba del modelo elegido | ≈ 0,83 a 0,85 |

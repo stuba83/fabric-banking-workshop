@@ -61,7 +61,7 @@ class SintaxisDeLosNotebooksTests(unittest.TestCase):
             for codigo in notebook_percent.celdas_codigo(fuente):
                 if _es_magia(codigo):
                     with self.subTest(notebook=fuente.name):
-                        self.assertRegex(codigo.strip(), r"^%pip install -q [\w.\-]+( 2>/dev/null)?$")
+                        self.assertRegex(codigo.strip(), r"^%pip install -q [\w.\-]+( [\w.\-]+)*( 2>/dev/null)?$")
 
     def test_markdown_cells_follow_the_percent_format(self) -> None:
         for fuente in _fuentes_percent():
@@ -277,10 +277,11 @@ def _registrar_accesores_ia() -> None:
 
     class Disponibilidad:
         activa = True
+        mensaje = "AI functions are not supported on a trial capacity"
 
     def _exigir() -> None:
         if not Disponibilidad.activa:
-            raise RuntimeError("AI functions are not supported on a trial capacity")
+            raise RuntimeError(Disponibilidad.mensaje)
 
     @pd.api.extensions.register_series_accessor("ai")
     class _ServiciosSerie:
@@ -332,10 +333,22 @@ def _aifunc_simulado() -> tuple[dict[str, types.ModuleType], _ClienteSimulado]:
     modulo.default_conf = types.SimpleNamespace(
         model_deployment_name=None, reasoning_effort=None, temperature=1.0, progress_bar_mode=None
     )
-    modulo.session = types.SimpleNamespace(client_sync=cliente)
+    # En el runtime 2.0 `aifunc.session.client` es asincrono: el notebook no debe usarlo.
+    modulo.session = types.SimpleNamespace(client=object())
+    fabric_pkg = types.ModuleType("synapse.ml.fabric")
+    credenciales = types.ModuleType("synapse.ml.fabric.credentials")
+    credenciales.get_openai_httpx_sync_client = lambda: object()
+    paquete_openai = types.ModuleType("openai")
+    paquete_openai.AzureOpenAI = lambda **kwargs: cliente
     sinapsis.ml = ml_pkg
     ml_pkg.aifunc = modulo
-    return {"synapse": sinapsis, "synapse.ml": ml_pkg, "synapse.ml.aifunc": modulo}, cliente
+    ml_pkg.fabric = fabric_pkg
+    fabric_pkg.credentials = credenciales
+    return {
+        "synapse": sinapsis, "synapse.ml": ml_pkg, "synapse.ml.aifunc": modulo,
+        "synapse.ml.fabric": fabric_pkg, "synapse.ml.fabric.credentials": credenciales,
+        "openai": paquete_openai,
+    }, cliente
 
 
 @unittest.skipUnless(LIBRERIAS, "requires pandas, numpy and scikit-learn")
@@ -350,7 +363,9 @@ class B5Tests(unittest.TestCase):
 
     def setUp(self) -> None:
         self.disponibilidad.activa = True
+        self.mensaje_original = self.disponibilidad.mensaje
         self.addCleanup(setattr, self.disponibilidad, "activa", True)
+        self.addCleanup(setattr, self.disponibilidad, "mensaje", self.mensaje_original)
         self.spark = _spark_con_silver()
 
     def _tablas_de_ml(self) -> None:
@@ -403,6 +418,23 @@ class B5Tests(unittest.TestCase):
         self.assertEqual(list(espacio["comentarios"].columns), ["comentario"])
         self.assertNotIn("top", espacio)
         self.assertEqual(cliente.llamadas, [])
+
+    def test_a_missing_nest_asyncio_is_not_reported_as_a_capacity_problem(self) -> None:
+        self.disponibilidad.activa = False
+        self.disponibilidad.mensaje = "This event loop is already running"
+        modulos, _ = _aifunc_simulado()
+        _, registro = ejecutar_notebook(self.fuente, self.parametros, self.spark, extra_modulos=modulos)
+        self.assertIn("Falta nest_asyncio", registro.texto)
+        self.assertIn("No es un problema de capacidad", registro.texto)
+        self.assertNotIn("Requiere capacidad F2", registro.texto)
+
+    def test_the_llm_call_uses_the_synchronous_azure_client_not_the_async_session_client(self) -> None:
+        modulos, cliente = _aifunc_simulado()
+        ejecutar_notebook(self.fuente, self.parametros, self.spark, extra_modulos=modulos)
+        self.assertEqual(len(cliente.llamadas), 1)
+        codigo = "\n".join(notebook_percent.celdas_codigo(self.fuente))
+        self.assertNotIn("client_sync", codigo)
+        self.assertNotIn("aifunc.session", codigo)
 
     def test_missing_ml_tables_only_skip_the_prediction_explanations(self) -> None:
         modulos, _ = _aifunc_simulado()
