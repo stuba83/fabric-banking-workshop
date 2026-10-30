@@ -8,8 +8,13 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import notebook_percent
+from notebook_percent import NotebookPercent
+
 
 ROOT = Path(__file__).resolve().parents[1]
+BONUS = ROOT / "notebooks" / "bonus_ml"
 
 INTRO = """# Sesión 2 — Ingesta Bronze
 
@@ -106,6 +111,16 @@ NOTEBOOKS = (
 )
 
 
+# Notebooks narrativos del bonus de ML, escritos en formato percent (# %%).
+PERCENT_NOTEBOOKS: tuple[NotebookPercent, ...] = (
+    NotebookPercent(BONUS / "b1_preparacion_datos.py", BONUS / "B1_preparacion_datos.ipynb", "bonus-b1"),
+    NotebookPercent(BONUS / "b2_entrenamiento_mlflow.py", BONUS / "B2_entrenamiento_mlflow.ipynb", "bonus-b2"),
+    NotebookPercent(BONUS / "b3_registro_puntuacion.py", BONUS / "B3_registro_puntuacion.ipynb", "bonus-b3"),
+    NotebookPercent(BONUS / "b4_mlops.py", BONUS / "B4_mlops.ipynb", "bonus-b4"),
+    NotebookPercent(BONUS / "b5_ia_en_notebooks.py", BONUS / "B5_ia_en_notebooks.ipynb", "bonus-b5"),
+)
+
+
 def _markdown_cell(cell_id: str, text: str) -> dict[str, object]:
     return {
         "cell_type": "markdown",
@@ -162,6 +177,13 @@ def render_notebook(spec: NotebookSpec) -> str:
     return json.dumps(notebook, ensure_ascii=False, indent=1) + "\n"
 
 
+def _esperados() -> dict[Path, str]:
+    esperados = {spec.notebook_path: render_notebook(spec) for spec in NOTEBOOKS}
+    for nb in PERCENT_NOTEBOOKS:
+        esperados[nb.destino] = notebook_percent.renderizar(nb.fuente, nb.prefijo)
+    return esperados
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -170,26 +192,27 @@ def main() -> int:
         help="fail if a notebook is missing or differs from its rendered source",
     )
     args = parser.parse_args()
+    esperados = _esperados()
 
     if args.check:
         failed = False
-        for spec in NOTEBOOKS:
-            if not spec.notebook_path.is_file():
-                print(f"Notebook is missing: {spec.notebook_path}", file=sys.stderr)
+        for ruta, texto in esperados.items():
+            if not ruta.is_file():
+                print(f"Notebook is missing: {ruta}", file=sys.stderr)
                 failed = True
-            elif spec.notebook_path.read_text(encoding="utf-8") != render_notebook(spec):
-                print(f"Notebook is stale: {spec.notebook_path}", file=sys.stderr)
+            elif ruta.read_text(encoding="utf-8") != texto:
+                print(f"Notebook is stale: {ruta}", file=sys.stderr)
                 failed = True
         if failed:
             return 1
         print("Notebooks are synchronized.")
         return 0
 
-    for spec in NOTEBOOKS:
-        spec.notebook_path.parent.mkdir(parents=True, exist_ok=True)
-        with spec.notebook_path.open("w", encoding="utf-8", newline="\n") as notebook_file:
-            notebook_file.write(render_notebook(spec))
-        print(f"Rendered {spec.notebook_path}")
+    for ruta, texto in esperados.items():
+        ruta.parent.mkdir(parents=True, exist_ok=True)
+        with ruta.open("w", encoding="utf-8", newline="\n") as notebook_file:
+            notebook_file.write(texto)
+        print(f"Rendered {ruta}")
     return 0
 
 

@@ -45,7 +45,23 @@ No hace falta instalar Python para usar los CSV y los notebooks en Fabric.
 
 Material de apoyo: [requisitos del laboratorio](docs/requisitos.md), [guía del dataset](dataset/README.md) y [diccionario de datos](dataset/diccionario.md).
 
-**Esta versión incluye las cinco sesiones.** No contiene un calendario ni compromisos de acompañamiento para una organización particular.
+**Esta versión incluye las cinco sesiones y un bonus opcional de ciencia de datos y ML.** No contiene un calendario ni compromisos de acompañamiento para una organización particular.
+
+## Bonus: ciencia de datos y ciclo de vida de ML
+
+Para equipos que quieren ver el ciclo completo de machine learning en Fabric, incluido **MLOps**, y las capacidades de **IA** (funciones de IA, LLM, Copilot y agente de datos). Se apoya en las tablas plata de la Sesión 3, no forma parte de las cinco sesiones ni de sus evidencias, y usa el mismo dataset sintético.
+
+| Módulo | Tema | Guía | Notebook |
+|---|---|---|---|
+| — | **Visión general, mapa de capacidades de Fabric y qué funciona en Trial** | [Guía del bonus](docs/bonus-ml/guia.md) | — |
+| B1 | Preparar datos: Data Wrangler, features sin fuga de datos y semantic link | [Guía](docs/bonus-ml/modulo-1-preparacion.md) | [B1](notebooks/bonus_ml/B1_preparacion_datos.ipynb) |
+| B2 | Entrenar y comparar con MLflow; AutoML; hiperparámetros; explicabilidad | [Guía](docs/bonus-ml/modulo-2-entrenamiento.md) | [B2](notebooks/bonus_ml/B2_entrenamiento_mlflow.ipynb) |
+| B3 | Registrar el modelo, puntuar por lotes con `PREDICT` y llevarlo a Power BI | [Guía](docs/bonus-ml/modulo-3-registro-puntuacion.md) | [B3](notebooks/bonus_ml/B3_registro_puntuacion.ipynb) |
+| B4 | MLOps: ciclo repetible, compuerta de promoción, monitoreo de deriva y reversión | [Guía](docs/bonus-ml/modulo-4-mlops.md) | [B4](notebooks/bonus_ml/B4_mlops.ipynb) |
+| B5 | IA en notebooks: funciones de IA, LLM, Copilot y agente de datos | [Guía](docs/bonus-ml/modulo-5-ia.md) | [B5](notebooks/bonus_ml/B5_ia_en_notebooks.ipynb) |
+| — | Plantilla de evidencias | [Plantilla](docs/bonus-ml/evidencias.md) | — |
+
+B1 a B4 funcionan en una capacidad **Trial**. **B5 y la IA de Data Wrangler requieren una capacidad de pago (F2 o superior)**: Copilot, las funciones de IA y el agente de datos no están soportados en Trial. Los pasos del bonus no se han ejecutado en un tenant de Fabric: la guía indica qué se verificó y qué no.
 
 En la Sesión 2, el pipeline ejecuta una actividad Notebook que carga seis CSV en tablas Delta bronce. No usa Copy Data ni fuentes externas. Conserva duplicados y errores deliberados como texto para tratarlos en la siguiente sesión. El reemplazo es por lote completo y requiere confirmar explícitamente el Lakehouse y el prefijo de destino; no ejecutar sobre producción.
 
@@ -104,14 +120,21 @@ python .\dataset\validar_dataset.py
 
 `--overwrite` reemplaza únicamente las salidas generadas del dataset. Conservar aparte cualquier modificación que se quiera mantener. El workflow de GitHub comprueba validación y regeneración sin diferencias.
 
-### Notebooks de las Sesiones 2 y 3
+### Notebooks de las Sesiones 2 y 3 y del bonus de ML
 
-El código fuente está en [`notebooks/ingesta_bronce.py`](notebooks/ingesta_bronce.py) (Sesión 2) y [`notebooks/plata_silver.py`](notebooks/plata_silver.py) (Sesión 3). Para mantener sincronizados los notebooks importables y ejecutar las pruebas locales:
+El código fuente está en [`notebooks/ingesta_bronce.py`](notebooks/ingesta_bronce.py) (Sesión 2) y [`notebooks/plata_silver.py`](notebooks/plata_silver.py) (Sesión 3). Los notebooks del bonus se escriben como archivos `.py` con celdas `# %%` en [`notebooks/bonus_ml`](notebooks/bonus_ml), junto con el código compartido [`ml_actividad.py`](notebooks/bonus_ml/ml_actividad.py). Para mantener sincronizados los notebooks importables y ejecutar las pruebas locales:
 
 ```powershell
 python .\tools\sincronizar_notebook.py
 python .\tools\sincronizar_notebook.py --check
 python -m unittest discover -s tests -v
+```
+
+Las pruebas del bonus necesitan bibliotecas adicionales y **se omiten si no están instaladas**: `pandas`, `numpy` y `scikit-learn` para el módulo de funciones, y además `mlflow-skinny` y `flaml[automl]` para los notebooks de B2 a B4. Para ejecutarlas todas, en un entorno virtual:
+
+```powershell
+python -m pip install pandas numpy scikit-learn mlflow-skinny "flaml[automl]"
+python -m unittest tests.test_ml_actividad tests.test_mlops_actividad tests.test_notebooks_bonus -v
 ```
 
 El participante importa cada `.ipynb` en **Fabric PySpark**, adjunta su Lakehouse y configura su pipeline según la guía. No necesita instalar Python localmente. El runtime de Fabric aporta Spark; la versión 3.14 indicada arriba corresponde al generador local del dataset.

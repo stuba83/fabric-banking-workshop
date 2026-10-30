@@ -77,7 +77,7 @@ El laboratorio simplifica a propósito. Estas son las simplificaciones principal
 
 La demostración de **Copilot en Fabric** depende de la capacidad y del tenant, y requiere un entorno compatible distinto del laboratorio. Si el facilitador la muestra, es desde su propio ambiente y **no forma parte de las evidencias**.
 
-Este recorrido no cubre ciencia de datos ni modelos de aprendizaje automático. Tampoco describe una implementación productiva.
+Este recorrido no cubre ciencia de datos ni modelos de aprendizaje automático. Para eso existe el [bonus de ciencia de datos y ML](../bonus-ml/guia.md), opcional, que usa las tablas plata de la Sesión 3. Tampoco describe una implementación productiva.
 
 ## 4. Matriz de entregables
 

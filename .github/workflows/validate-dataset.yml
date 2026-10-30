@@ -27,3 +27,15 @@ jobs:
         run: python .\dataset\validar_dataset.py
       - name: Check reproducibility
         run: git --no-pager diff --exit-code -- dataset
+
+  ml-bonus:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install the data science libraries
+        run: python -m pip install --disable-pip-version-check pandas numpy scikit-learn mlflow-skinny "flaml[automl]"
+      - name: Test the data science bonus
+        run: python -m unittest tests.test_ml_actividad tests.test_mlops_actividad tests.test_notebooks_bonus tests.test_bonus_docs -v
