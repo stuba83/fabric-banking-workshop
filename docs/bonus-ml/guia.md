@@ -1,7 +1,7 @@
 # Bonus — Ciencia de datos y ciclo de vida de ML en Microsoft Fabric
 
 **Audiencia:** Ingenieros de datos y analistas que quieren ver el ciclo completo de machine learning en Fabric, incluido MLOps y las capacidades de IA para ciencia de datos  
-**Formato:** Cinco módulos de trabajo individual, cada uno con un notebook importable  
+**Formato:** Seis módulos de trabajo individual (B1 a B6), cada uno con un notebook importable  
 **Dedicación orientativa:** de 45 a 90 minutos por módulo  
 **Verificado contra Microsoft Learn:** 30 de octubre de 2026
 
@@ -16,6 +16,7 @@ Al terminar, cada participante podrá:
 3. **Registrar una versión** del modelo, **puntuar por lotes** con `PREDICT` y dejar el resultado listo para Power BI.
 4. **Operar el ciclo** con una regla de promoción, monitoreo de deriva y desempeño real, y reversión auditable.
 5. **Saber qué capacidades de IA existen** en Fabric (funciones de IA, LLM, Copilot, agente de datos), qué requiere cada una y qué **no funciona en una capacidad Trial**.
+6. **Llevar un modelo de uso en línea** al ciclo de vida: detectar transacciones atípicas **sin etiquetas**, elegir el algoritmo con experimentos, calcular las mismas variables al entrenar y al servir, puntuar una transacción por el *endpoint* y monitorear sin etiquetas.
 
 ## El caso
 
@@ -36,7 +37,9 @@ Es una clasificación binaria sobre las tablas plata. Cada fila de la tabla de *
 
 > **Los datos son sintéticos.** Las métricas sirven para practicar el ciclo de vida. No las interpretes como el rendimiento de un modelo real, ni uses estos valores como referencia para otro conjunto de datos.
 
-## Ruta de los cinco módulos
+**Un segundo caso, en B6.** B1 a B4 trabajan con un modelo supervisado que se usa por lotes. El [módulo B6](modulo-6-anomalias-en-linea.md) agrega un modelo de uso **en línea**: detectar transacciones atípicas **sin etiquetas** (una fila por transacción), medido con anomalías **inyectadas** de tres tipos, registrado y servido por lotes y por el *endpoint* del modelo.
+
+## Ruta de los seis módulos
 
 | Módulo | Tema | Guía | Notebook | Trial | Dedicación |
 |---|---|---|---|---|---|
@@ -45,6 +48,7 @@ Es una clasificación binaria sobre las tablas plata. Cada fila de la tabla de *
 | **B3** | Registrar el modelo, puntuar por lotes con `PREDICT` y llevarlo a Power BI | [Guía](modulo-3-registro-puntuacion.md) | [B3](../../notebooks/bonus_ml/B3_registro_puntuacion.ipynb) | Sí | 45–60 min |
 | **B4** | MLOps: ciclo repetible, compuerta de promoción, monitoreo y reversión | [Guía](modulo-4-mlops.md) | [B4](../../notebooks/bonus_ml/B4_mlops.ipynb) | Sí | 60–90 min |
 | **B5** | IA en notebooks: funciones de IA, LLM, Copilot y agente de datos | [Guía](modulo-5-ia.md) | [B5](../../notebooks/bonus_ml/B5_ia_en_notebooks.ipynb) | **No** (requiere F2 o superior) | 20 min de lectura; 45–60 min con capacidad de pago |
+| **B6** | Detectar transacciones atípicas sin etiquetas y puntuar en línea con el *endpoint* | [Guía](modulo-6-anomalias-en-linea.md) | [B6](../../notebooks/bonus_ml/B6_anomalias_en_linea.ipynb) | Sí, salvo la llamada al *endpoint* (vista previa) | 60–75 min |
 
 Registra tus resultados en una copia de la [plantilla de evidencias](evidencias.md), conservada dentro de tu organización.
 
@@ -54,13 +58,14 @@ Qué ofrece Fabric hoy, qué estado tiene según Microsoft Learn y si funciona e
 
 | Capacidad | Para qué sirve | Estado según Learn | ¿Trial? | Dónde se practica |
 |---|---|---|---|---|
-| **Notebooks** (Spark y Python) | Explorar, entrenar y orquestar | General | Sí | B1–B5 |
+| **Notebooks** (Spark y Python) | Explorar, entrenar y orquestar | General | Sí | B1–B6 |
 | **Data Wrangler** (pandas y Spark) | Explorar y limpiar con una interfaz visual que **genera código** | No indicado | Sí | B1 |
 | ↳ IA en Data Wrangler (*AI enrichments*, Copilot) | Transformaciones descritas en lenguaje natural | Vista previa | **No** (F2+) | B1 y B5 (solo descripción) |
 | **Experimentos con MLflow** | Registrar y comparar corridas; *autologging* | No indicado (integración con el hub de monitoreo en vista previa) | Sí | B2 |
 | **Modelos de ML** (registro) | Versiones, etiquetas y firma de cada modelo | No indicado | Sí | B3 y B4 |
-| **`PREDICT`** y asistente «Apply model» | Puntuación por lotes en Spark, SQL o UDF | No indicado | Sí | B3 |
-| **Endpoints en tiempo real** | Servir una versión de modelo por una API | Vista previa | No indicado (compruébalo en tu tenant) | B3 (descripción) |
+| **`PREDICT`** y asistente «Apply model» | Puntuación por lotes en Spark, SQL o UDF | No indicado | Sí | B3 y B6 |
+| **Endpoints en tiempo real** | Servir una versión de modelo por una API | Vista previa | No indicado (compruébalo en tu tenant) | B3 (descripción) y B6 (llamada real) |
+| **Detección de anomalías sin etiquetas** (scikit-learn: `LocalOutlierFactor`, `IsolationForest`) | Marcar lo que se aleja de lo normal, con el umbral guardado dentro del modelo | General (biblioteca del runtime) | Sí | B6 |
 | **AutoML** (FLAML, en código) | Probar modelos y configuraciones dentro de un presupuesto | No indicado | Sí | B2 |
 | **AutoML de bajo código** | Lo mismo con una interfaz que genera un notebook | No indicado | Sí | Solo referencia |
 | **Ajuste de hiperparámetros** (`flaml.tune`) | Buscar el mejor valor de un hiperparámetro | No indicado | Sí | B2 |
@@ -79,7 +84,8 @@ Qué ofrece Fabric hoy, qué estado tiene según Microsoft Learn y si funciona e
 **Lo que Fabric no tiene hoy (según la documentación verificada):**
 
 - **Etapas ni alias de modelo** (por ejemplo, «producción»). Por eso B4 decide el campeón con una **tabla de control** auditable.
-- **Monitoreo de deriva o de calidad de modelos.** Solo existen métricas de tráfico del endpoint (solicitudes, fallos, latencia). Por eso B4 mide el **PSI** y el desempeño real con tablas propias.
+- **Monitoreo de deriva o de calidad de modelos.** Solo existen métricas de tráfico del endpoint (solicitudes, fallos, latencia). Por eso B4 mide el **PSI** y el desempeño real con tablas propias, y B6 vigila el PSI y la **tasa de marcadas**, que no necesitan etiquetas.
+- **Un almacén de variables (*feature store*) dedicado:** no se encontró en la documentación revisada. B6 muestra la alternativa mínima: **una función compartida** que calcula las variables igual al entrenar y al servir, y una **tabla de referencia** que viaja con el modelo como artefacto.
 - **Una arquitectura de referencia de MLOps** en Learn. El nodo «Operationalize with MLOps» solo enlaza la página de Git y *deployment pipelines*.
 
 > **Capacidad Trial frente a capacidad de pago.** La página oficial de la prueba gratuita indica que **Copilot y las experiencias de IA (agente de datos, funciones de IA y servicios de IA) no están soportados** en Trial. Otras páginas de Learn mezclan estos mensajes (algunas dicen «regístrate para la prueba gratuita» como requisito). Ante la duda, **comprueba el botón o la llamada en tu workspace**: B5 lo hace por ti y no falla si no está disponible. Una capacidad de pago pequeña (F2) basta para B5.
@@ -105,14 +111,16 @@ Las [reglas del laboratorio](../requisitos.md) siguen vigentes: datos sintético
 |---|---|---|---|
 | `p_lakehouse_esperado` | Todos | `AB_Lakehouse` | Nombre de tu Lakehouse; el notebook se detiene si no coincide |
 | `p_prefijo` | Todos | `AB` | Tu prefijo; las tablas nuevas lo usan en minúsculas |
-| `p_confirmar_reemplazo` | B1, B3, B4 | `SI` | Autoriza escribir tablas y registrar versiones. Con `NO`, B1 solo explora |
+| `p_confirmar_reemplazo` | B1, B3, B4, B6 | `SI` | Autoriza escribir tablas y registrar versiones. Con `NO`, B1 solo explora |
 | `p_modelo_semantico` | B1 | `AB_SM_Transacciones` | Opcional: tu modelo de la Sesión 4, para la reconciliación |
 | `p_presupuesto_automl_s` | B2 | `30` | Segundos de AutoML |
 | `p_tipo_modelo` | B3, B4 | `logreg` | `logreg`, `rf` o `hgb` |
 | `p_modo`, `p_corte_puntuacion`, `p_factor_deriva` | B4 | `guiado`, `2026-09`, `0.0` | `guiado` recorre seis escenarios; `ciclo` ejecuta uno y es el que se programa |
 | `p_runtime_2_0` | B5 | `SI` | `NO` si tu runtime es 1.3 |
+| `p_tasa_revision` | B6 | `0.01` | Capacidad de revisión: fracción de transacciones que se puede revisar a mano; fija el umbral de validación |
+| `p_probar_endpoint` | B6 | `SI` | `NO` omite la llamada al *endpoint*; con `SI` solo se llama si hay una versión activa (nunca activa una) |
 
-**Tablas que crea el bonus** (con el prefijo en minúsculas): `ab_gold_ml_features_cuentas` (B1), `ab_gold_ml_puntuacion_actividad` (B3 y B4), `ab_ml_registro_modelos`, `ab_ml_monitoreo_deriva` y `ab_ml_monitoreo_desempeno` (B4). También se crean el experimento `ab_exp_actividad` y el modelo `ab_modelo_actividad`. **Las escrituras reemplazan solo las tablas con tu prefijo.**
+**Tablas que crea el bonus** (con el prefijo en minúsculas): `ab_gold_ml_features_cuentas` (B1), `ab_gold_ml_puntuacion_actividad` (B3 y B4), `ab_ml_registro_modelos`, `ab_ml_monitoreo_deriva` y `ab_ml_monitoreo_desempeno` (B4), y `ab_gold_ml_referencia_tx` y `ab_gold_ml_anomalias_tx` (B6). También se crean los experimentos `ab_exp_actividad` y `ab_exp_anomalias_tx` y los modelos `ab_modelo_actividad` y `ab_modelo_anomalias_tx`. **Las escrituras reemplazan solo las tablas con tu prefijo.**
 
 ## Controles esperados
 
@@ -130,6 +138,12 @@ Mide estos valores tú mismo y regístralos en las evidencias. Los **conteos** s
 | Deriva con datos reales (septiembre frente al entrenamiento) | Todas las variables `estable` | Aproximado |
 | Deriva con la campaña simulada (factor 1,6) | Al menos 4 variables `alta`; recomendación `revisar` | Aproximado |
 | Reejecución del ciclo con los mismos datos | Mismas filas y ninguna versión nueva | Exacto |
+| B6: filas con variables (al menos 10 transacciones previas) | 54.526 | Exacto |
+| B6: entrenamiento (mayo a julio) / validación / prueba | 28.743 / 12.231 / 12.800 | Exacto |
+| B6: anomalías inyectadas en agosto y en septiembre | 125 y 130 | Exacto |
+| B6: filas de `ab_gold_ml_referencia_tx` y de `ab_gold_ml_anomalias_tx` | 9 y 12.800 (una versión de modelo) | Exacto |
+| B6: modelo elegido, AUC y AP de prueba | `lof`; AUC ≈ 0,98, AP ≈ 0,5–0,6 (`iforest`: AP de validación ≈ 0,1) | Aproximado |
+| B6: tasa de marcadas en septiembre / con montos +60 % | ≈ 1 % / más de 2,5 veces esa tasa; PSI de `z_monto_tipo` `alta` | Aproximado |
 
 ## Uso responsable y límites
 
@@ -142,8 +156,9 @@ Mide estos valores tú mismo y regístralos en las evidencias. Los **conteos** s
 ## Estado de verificación
 
 - **Verificado en un tenant de Fabric** (30 de octubre de 2026; capacidad F8 de pago; workspace nuevo con runtime 2.0, Python 3.13, pandas 2.3.3, scikit-learn 1.6.1, MLflow 2.22 y FLAML 2.5): las **Sesiones 2 y 3** y los notebooks **B1 a B5** se ejecutaron de principio a fin lanzándolos por API con parámetros. Los conteos de las Sesiones 2 y 3 coincidieron exactamente con los de las guías, la hora de `fecha_hora` se conservó sin cambios, `PREDICT` coincidió con pandas en las 1.800 cuentas, el AUC real del mes anterior fue 0,8466 (el mismo valor que en las pruebas locales) y las funciones de IA y el LLM desde código respondieron en español.
-- **Verificado localmente** (Python 3.14, pandas 3.x, scikit-learn 1.9, MLflow 3.17, FLAML 2.7, con Spark y las APIs de IA simulados): el módulo de funciones, el ciclo MLOps completo con MLflow real (promoción, reejecución idempotente, reversión, deriva y desempeño), las celdas de B1 a B5 y los controles de esta guía, que las pruebas comprueban contra el dataset.
-- **No verificado en un tenant de Fabric:** los pasos que dependen de la **interfaz** (Data Wrangler, el asistente de la versión, los endpoints, Copilot y el agente de datos), la reconciliación de semantic link **contra un modelo semántico real** (solo se comprobó que la biblioteca importa y responde), el comportamiento de la celda `%pip` en una sesión **interactiva** y el comportamiento en una capacidad **Trial** (la prueba usó una capacidad de pago). Hazlo **primero tú, como prueba de humo**, y registra lo que cambie. Si algo difiere, abre una incidencia **sin datos de tu organización**.
+- **B6 verificado en un tenant de Fabric** (2 de noviembre de 2026; capacidad F8 de pago; runtime 2.0, Python 3.13, pandas 2.3.3, scikit-learn 1.6.1 y MLflow 2.22): el notebook se ejecutó de principio a fin por API, en unos 2,5 a 3 minutos. Los conteos coincidieron con los de la guía (130 anomalías inyectadas en septiembre, 12.800 transacciones puntuadas) y las métricas con las de las pruebas locales (por ejemplo, `lof` con 200 vecinos: AUC de validación 0,979 y AP 0,625; AUC de prueba 0,986). La comprobación de `PREDICT` contra pandas (acuerdo 1,0) forma parte del notebook y no falló. Se activó el *endpoint* de una versión **por API** (de 5 a 6 minutos en dos pruebas) y desde un notebook de Fabric, con `FabricRestClient` de semantic link, se puntuaron dos transacciones: la respuesta coincidió con la del modelo local (primera llamada de unos 2 segundos, incluida la red). **No se probó la activación desde la interfaz.**
+- **Verificado localmente** (Python 3.14, pandas 3.x, scikit-learn 1.9, MLflow 3.17, FLAML 2.7, con Spark y las APIs de IA simuladas): el módulo de funciones, el ciclo MLOps completo con MLflow real (promoción, reejecución idempotente, reversión, deriva y desempeño), el módulo de transacciones atípicas (variables, inyección, umbral, solicitudes), las celdas de B1 a B6 y los controles de esta guía, que las pruebas comprueban contra el dataset.
+- **No verificado en un tenant de Fabric:** los pasos que dependen de la **interfaz** (Data Wrangler, el asistente de la versión, la activación del *endpoint* y **Preview predictions**, Copilot y el agente de datos), la reconciliación de semantic link **contra un modelo semántico real** (solo se comprobó que la biblioteca importa y responde), el comportamiento de la celda `%pip` en una sesión **interactiva** y el comportamiento en una capacidad **Trial** (la prueba usó una capacidad de pago). Hazlo **primero tú, como prueba de humo**, y registra lo que cambie. Si algo difiere, abre una incidencia **sin datos de tu organización**.
 
 ## Bloqueos frecuentes
 

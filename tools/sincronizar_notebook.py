@@ -118,6 +118,7 @@ PERCENT_NOTEBOOKS: tuple[NotebookPercent, ...] = (
     NotebookPercent(BONUS / "b3_registro_puntuacion.py", BONUS / "B3_registro_puntuacion.ipynb", "bonus-b3"),
     NotebookPercent(BONUS / "b4_mlops.py", BONUS / "B4_mlops.ipynb", "bonus-b4"),
     NotebookPercent(BONUS / "b5_ia_en_notebooks.py", BONUS / "B5_ia_en_notebooks.ipynb", "bonus-b5"),
+    NotebookPercent(BONUS / "b6_anomalias_en_linea.py", BONUS / "B6_anomalias_en_linea.ipynb", "bonus-b6"),
 )
 
 

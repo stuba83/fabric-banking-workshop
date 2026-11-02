@@ -59,9 +59,10 @@ Para equipos que quieren ver el ciclo completo de machine learning en Fabric, in
 | B3 | Registrar el modelo, puntuar por lotes con `PREDICT` y llevarlo a Power BI | [Guía](docs/bonus-ml/modulo-3-registro-puntuacion.md) | [B3](notebooks/bonus_ml/B3_registro_puntuacion.ipynb) |
 | B4 | MLOps: ciclo repetible, compuerta de promoción, monitoreo de deriva y reversión | [Guía](docs/bonus-ml/modulo-4-mlops.md) | [B4](notebooks/bonus_ml/B4_mlops.ipynb) |
 | B5 | IA en notebooks: funciones de IA, LLM, Copilot y agente de datos | [Guía](docs/bonus-ml/modulo-5-ia.md) | [B5](notebooks/bonus_ml/B5_ia_en_notebooks.ipynb) |
+| B6 | Detectar transacciones atípicas sin etiquetas y puntuar en línea con el *endpoint* del modelo | [Guía](docs/bonus-ml/modulo-6-anomalias-en-linea.md) | [B6](notebooks/bonus_ml/B6_anomalias_en_linea.ipynb) |
 | — | Plantilla de evidencias | [Plantilla](docs/bonus-ml/evidencias.md) | — |
 
-B1 a B4 funcionan en una capacidad **Trial**. **B5 y la IA de Data Wrangler requieren una capacidad de pago (F2 o superior)**: Copilot, las funciones de IA y el agente de datos no están soportados en Trial. Las Sesiones 2 y 3 y los notebooks B1 a B5 se ejecutaron de principio a fin en un tenant de Fabric (capacidad F8, runtime 2.0) y sus controles coincidieron; los pasos de la interfaz no se han verificado. La guía indica qué se verificó y qué no.
+B1 a B4 y B6 funcionan en una capacidad **Trial** (en B6, la llamada al *endpoint* en tiempo real es una vista previa y la celda no falla si no está disponible). **B5 y la IA de Data Wrangler requieren una capacidad de pago (F2 o superior)**: Copilot, las funciones de IA y el agente de datos no están soportados en Trial. Las Sesiones 2 y 3 y los notebooks B1 a B6 se ejecutaron de principio a fin en un tenant de Fabric (capacidad F8, runtime 2.0) y sus controles coincidieron; los pasos de la interfaz no se han verificado. La guía indica qué se verificó y qué no.
 
 En la Sesión 2, el pipeline ejecuta una actividad Notebook que carga seis CSV en tablas Delta bronce. No usa Copy Data ni fuentes externas. Conserva duplicados y errores deliberados como texto para tratarlos en la siguiente sesión. El reemplazo es por lote completo y requiere confirmar explícitamente el Lakehouse y el prefijo de destino; no ejecutar sobre producción.
 
@@ -122,7 +123,7 @@ python .\dataset\validar_dataset.py
 
 ### Notebooks de las Sesiones 2 y 3 y del bonus de ML
 
-El código fuente está en [`notebooks/ingesta_bronce.py`](notebooks/ingesta_bronce.py) (Sesión 2) y [`notebooks/plata_silver.py`](notebooks/plata_silver.py) (Sesión 3). Los notebooks del bonus se escriben como archivos `.py` con celdas `# %%` en [`notebooks/bonus_ml`](notebooks/bonus_ml), junto con el código compartido [`ml_actividad.py`](notebooks/bonus_ml/ml_actividad.py). Para mantener sincronizados los notebooks importables y ejecutar las pruebas locales:
+El código fuente está en [`notebooks/ingesta_bronce.py`](notebooks/ingesta_bronce.py) (Sesión 2) y [`notebooks/plata_silver.py`](notebooks/plata_silver.py) (Sesión 3). Los notebooks del bonus se escriben como archivos `.py` con celdas `# %%` en [`notebooks/bonus_ml`](notebooks/bonus_ml), junto con el código compartido [`ml_actividad.py`](notebooks/bonus_ml/ml_actividad.py) (B1 a B5) y [`anomalias_tx.py`](notebooks/bonus_ml/anomalias_tx.py) (B6). Para mantener sincronizados los notebooks importables y ejecutar las pruebas locales:
 
 ```powershell
 python .\tools\sincronizar_notebook.py
@@ -130,11 +131,11 @@ python .\tools\sincronizar_notebook.py --check
 python -m unittest discover -s tests -v
 ```
 
-Las pruebas del bonus necesitan bibliotecas adicionales y **se omiten si no están instaladas**: `pandas`, `numpy` y `scikit-learn` para el módulo de funciones, y además `mlflow-skinny` y `flaml[automl]` para los notebooks de B2 a B4. Para ejecutarlas todas, en un entorno virtual:
+Las pruebas del bonus necesitan bibliotecas adicionales y **se omiten si no están instaladas**: `pandas`, `numpy` y `scikit-learn` para el módulo de funciones, y además `mlflow-skinny` y `flaml[automl]` para los notebooks de B2 a B4 y B6. Para ejecutarlas todas, en un entorno virtual:
 
 ```powershell
 python -m pip install pandas numpy scikit-learn mlflow-skinny "flaml[automl]"
-python -m unittest tests.test_ml_actividad tests.test_mlops_actividad tests.test_notebooks_bonus -v
+python -m unittest tests.test_ml_actividad tests.test_mlops_actividad tests.test_anomalias_tx tests.test_notebooks_bonus tests.test_bonus_docs -v
 ```
 
 El participante importa cada `.ipynb` en **Fabric PySpark**, adjunta su Lakehouse y configura su pipeline según la guía. No necesita instalar Python localmente. El runtime de Fabric aporta Spark; la versión 3.14 indicada arriba corresponde al generador local del dataset.

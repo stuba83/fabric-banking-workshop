@@ -78,4 +78,4 @@ Las nueve funciones de IA son `analyze_sentiment`, `classify`, `embed`, `extract
 
 ## Siguiente
 
-Completa la [plantilla de evidencias del bonus](evidencias.md) y revisa las [referencias](guia.md#referencias).
+[Módulo B6: Detectar transacciones atípicas y puntuar en línea](modulo-6-anomalias-en-linea.md): retoma el ciclo de vida con un modelo de uso en línea, sin etiquetas y con *endpoint*. Después completa la [plantilla de evidencias del bonus](evidencias.md) y revisa las [referencias](guia.md#referencias).

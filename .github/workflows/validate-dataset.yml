@@ -38,4 +38,4 @@ jobs:
       - name: Install the data science libraries
         run: python -m pip install --disable-pip-version-check pandas numpy scikit-learn mlflow-skinny "flaml[automl]"
       - name: Test the data science bonus
-        run: python -m unittest tests.test_ml_actividad tests.test_mlops_actividad tests.test_notebooks_bonus tests.test_bonus_docs -v
+        run: python -m unittest tests.test_ml_actividad tests.test_mlops_actividad tests.test_anomalias_tx tests.test_notebooks_bonus tests.test_bonus_docs -v

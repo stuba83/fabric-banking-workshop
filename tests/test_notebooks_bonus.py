@@ -30,6 +30,7 @@ if LIBRERIAS:
     import pandas as pd
 
     from notebooks import plata_silver
+    from notebooks.bonus_ml import anomalias_tx as an
     from notebooks.bonus_ml import ml_actividad as ml
     from test_mlops_actividad import CONTEXTO, SparkSimulado, _modulos_pyspark, modulos_falsos
     from test_plata_silver import bronce_real
@@ -587,6 +588,212 @@ class B4Tests(_ConMlflow):
             self.correr(self.fuente, p_confirmar_reemplazo="NO")
         self.assertEqual(self.versiones(), [])
 
+
+class _ClienteRestSimulado:
+    """Imita `sempy.fabric.FabricRestClient` para el endpoint de un modelo con una version."""
+
+    def __init__(self, estado: str, mlflow_mod: object, modelo: str, version: int, adulterar: bool = False) -> None:
+        self.estado, self.mlflow, self.modelo, self.version, self.adulterar = estado, mlflow_mod, modelo, version, adulterar
+        self.llamadas: list[tuple[str, str]] = []
+
+    @staticmethod
+    def _respuesta(codigo: int, cuerpo: dict) -> types.SimpleNamespace:
+        return types.SimpleNamespace(status_code=codigo, json=lambda: cuerpo)
+
+    def get(self, ruta: str):
+        self.llamadas.append(("GET", ruta))
+        return self._respuesta(200, {"value": [{"versionName": str(self.version), "status": self.estado}]})
+
+    def post(self, ruta: str, json: dict):
+        self.llamadas.append(("POST", ruta))
+        entradas = pd.DataFrame(json["inputs"], columns=list(an.FEATURES_TX))
+        modelo = self.mlflow.sklearn.load_model(f"models:/{self.modelo}/{self.version}")
+        marcas = modelo.predict(entradas)
+        if self.adulterar:
+            marcas = -marcas
+        return self._respuesta(200, {"predictions": [[int(m)] for m in marcas]})
+
+
+def _sempy_con_endpoint(cliente: "_ClienteRestSimulado", modelo: str) -> dict[str, types.ModuleType]:
+    paquete = types.ModuleType("sempy")
+    fabric = types.ModuleType("sempy.fabric")
+    fabric.list_items = lambda type=None: pd.DataFrame({"Id": ["id-del-modelo"], "Display Name": [modelo], "Type": ["MLModel"]})
+    fabric.FabricRestClient = lambda: cliente
+    paquete.fabric = fabric
+    return {"sempy": paquete, "sempy.fabric": fabric}
+
+
+def _celda_del_endpoint() -> str:
+    for celda in notebook_percent.parsear((BONUS / "b6_anomalias_en_linea.py").read_text(encoding="utf-8"), "b6"):
+        if celda.tipo == "code" and celda.contenido.startswith("if p_probar_endpoint"):
+            return celda.contenido + "\n"
+    raise AssertionError("the endpoint cell was not found")
+
+
+@unittest.skipUnless(LIBRERIAS and MLFLOW, "requires pandas, scikit-learn and mlflow")
+class B6Tests(unittest.TestCase):
+    """El notebook completo tarda minutos con el seguimiento en archivos: se ejecuta dos veces y las pruebas leen los resultados."""
+
+    fuente = BONUS / "b6_anomalias_en_linea.py"
+    modelo = "ab_modelo_anomalias_tx"
+    parametros = {"p_lakehouse_esperado": "AB_Lakehouse", "p_prefijo": "AB", "p_confirmar_reemplazo": "SI"}
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        import mlflow
+
+        cls.mlflow = mlflow
+        cls._entorno = patch.dict(os.environ, {"MLFLOW_ALLOW_FILE_STORE": "true"})
+        cls._entorno.start()
+        cls._directorio = tempfile.TemporaryDirectory()
+        uri = Path(cls._directorio.name).as_uri()
+        mlflow.set_tracking_uri(uri)
+        mlflow.set_registry_uri(uri)
+        cls.spark = _spark_con_silver()
+        cls.cliente = _ClienteRestSimulado("Active", mlflow, cls.modelo, 1)
+        cls.espacio1, cls.registro1 = ejecutar_notebook(
+            cls.fuente, cls.parametros, cls.spark, extra_modulos=_sempy_con_endpoint(cls.cliente, cls.modelo)
+        )
+        cls.versiones_tras_1 = cls.versiones_b6()
+        cls.anomalias_tras_1 = cls.spark.tablas["ab_gold_ml_anomalias_tx"].copy()
+        cls.espacio2, cls.registro2 = ejecutar_notebook(cls.fuente, cls.parametros, cls.spark)
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        from mlflow.utils import import_hooks
+
+        cls._entorno.stop()
+        cls._directorio.cleanup()
+        import_hooks._post_import_hooks.pop("pyspark", None)
+
+    @classmethod
+    def versiones_b6(cls) -> list[int]:
+        return sorted(int(v.version) for v in cls.mlflow.MlflowClient().search_model_versions(f"name='{cls.modelo}'"))
+
+    def _correr_celda_del_endpoint(self, cliente: "_ClienteRestSimulado", **cambios) -> str:
+        espacio = {**self.espacio2, **cambios}
+        with modulos_falsos(_sempy_con_endpoint(cliente, self.modelo)):
+            with contextlib.redirect_stdout(io.StringIO()) as salida:
+                exec(compile(_celda_del_endpoint(), "b6[endpoint]", "exec"), espacio)
+        return salida.getvalue()
+
+    def test_notebook_trains_registers_scores_and_reproduces_the_model(self) -> None:
+        self.assertEqual(self.versiones_tras_1, [1])
+        version = self.mlflow.MlflowClient().get_model_version(self.modelo, "1")
+        self.assertEqual(version.tags["tipo_detector"], "lof")
+        self.assertEqual(version.tags["evaluacion"], "anomalias_inyectadas")
+        self.assertEqual(self.espacio1["firma"].inputs.input_names(), list(an.FEATURES_TX))
+        self.assertIn("Sin fuga de datos", self.registro1.texto)
+        self.assertIn("La versión registrada reproduce los puntajes y las marcas", self.registro1.texto)
+        self.assertIn("MLFlowTransformer no disponible", self.registro1.texto)
+
+    def test_the_tables_hold_the_reference_and_the_scored_september_transactions(self) -> None:
+        referencia = self.spark.tablas["ab_gold_ml_referencia_tx"]
+        self.assertEqual(len(referencia), 9)
+        anomalias = self.anomalias_tras_1
+        prueba = self.espacio1["prueba"]
+        self.assertEqual(set(anomalias["mes"]), {an.MES_PRUEBA})
+        self.assertEqual(set(anomalias["version_modelo"]), {1})
+        self.assertEqual(len(anomalias), len(prueba))
+        self.assertTrue(anomalias["transaccion_id"].is_unique)
+        self.assertEqual(int(anomalias["es_anomalia_inyectada"].sum()), int(prueba["es_anomalia_inyectada"].sum()))
+        self.assertEqual(set(anomalias.loc[anomalias["es_anomalia_inyectada"] == 1, "tipo_anomalia"]), set(an.TIPOS_ANOMALIA))
+
+    def test_candidate_comparison_prefers_lof_and_explains_why_isolation_forest_fails(self) -> None:
+        candidatos = self.espacio1["candidatos"].set_index("nombre")
+        self.assertEqual(len(candidatos), 5)
+        self.assertTrue(self.espacio1["elegido"].startswith("lof"))
+        self.assertGreater(
+            candidatos.loc[self.espacio1["elegido"], "average_precision_validacion"],
+            3 * candidatos.loc["iforest", "average_precision_validacion"],
+        )
+        corridas = self.mlflow.search_runs(experiment_names=["ab_exp_anomalias_tx"])
+        self.assertEqual(len(corridas), 12)  # cinco candidatos y la corrida final, dos veces
+
+    def test_model_beats_the_baseline_and_sees_every_anomaly_type(self) -> None:
+        modelo, base = self.espacio1["metricas_prueba"], self.espacio1["metricas_base_prueba"]
+        self.assertGreater(modelo["auc"], 0.9)
+        self.assertGreater(modelo["average_precision"], base["average_precision"])
+        self.assertGreater(modelo["recall"], base["recall"])
+        self.assertGreater(modelo["precision"], 5 * modelo["prevalencia"])
+        por_tipo = self.espacio1["por_tipo"].set_index("tipo_anomalia")
+        self.assertTrue((por_tipo["recall_modelo"] > 0).all())
+        self.assertEqual(por_tipo.loc["rafaga", "recall_linea_base"], 0.0)
+        self.assertGreater(por_tipo.loc["rafaga", "recall_modelo"], 0.3)
+        self.assertGreater(por_tipo.loc["monto_extremo", "recall_linea_base"], por_tipo.loc["monto_extremo", "recall_modelo"])
+
+    def test_flag_rate_is_close_to_the_review_capacity(self) -> None:
+        self.assertAlmostEqual(self.espacio1["metricas_validacion"]["tasa_marcadas"], 0.01, delta=0.002)
+        self.assertGreater(self.espacio1["metricas_prueba"]["tasa_marcadas"], 0.003)
+        self.assertLess(self.espacio1["metricas_prueba"]["tasa_marcadas"], 0.02)
+
+    def test_monitoring_without_labels_detects_a_simulated_change_in_amounts(self) -> None:
+        tasas = self.espacio1["marcadas_por_mes"]["tasa_marcadas"].tolist()
+        self.assertGreater(tasas[2], 2.5 * tasas[1])
+        simulada = self.espacio1["deriva_simulada"].set_index("variable")
+        normal = self.espacio1["deriva_normal"].set_index("variable")
+        self.assertEqual(simulada.loc["z_monto_tipo", "deriva"], "alta")
+        self.assertEqual(normal.loc["z_monto_tipo", "deriva"], "estable")
+
+    def test_the_single_transaction_request_matches_the_signature_and_ranks_the_suspicious_one_higher(self) -> None:
+        cuerpo = self.espacio1["cuerpo"]
+        self.assertEqual(cuerpo["formatType"], "dataframe")
+        self.assertEqual(len(cuerpo["inputs"]), 2)
+        self.assertEqual(len(cuerpo["inputs"][0]), len(an.FEATURES_TX))
+        local = self.espacio1["local"]
+        self.assertEqual(local["es_atipica"].tolist(), [0, 1])
+        self.assertGreater(local["score_anomalia"].iloc[1], local["score_anomalia"].iloc[0])
+
+    def test_an_active_endpoint_is_called_and_agrees_with_the_local_scores(self) -> None:
+        self.assertIn("El endpoint coincide con la puntuación local de la misma versión.", self.registro1.texto)
+        self.assertEqual([metodo for metodo, _ in self.cliente.llamadas], ["GET", "POST"])
+        self.assertTrue(self.cliente.llamadas[1][1].endswith("/mlmodels/id-del-modelo/endpoint/versions/1/score"))
+
+    def test_without_semantic_link_the_notebook_says_so_and_keeps_going(self) -> None:
+        self.assertIn("Endpoint del modelo ab_modelo_anomalias_tx → no disponible", self.registro2.texto)
+
+    def test_an_endpoint_that_disagrees_with_the_local_model_stops_the_cell(self) -> None:
+        cliente = _ClienteRestSimulado("Active", self.mlflow, self.modelo, 2, adulterar=True)
+        with self.assertRaisesRegex(ValueError, "endpoint: expected"):
+            self._correr_celda_del_endpoint(cliente)
+
+    def test_an_inactive_endpoint_is_reported_but_never_activated(self) -> None:
+        cliente = _ClienteRestSimulado("Deactivated", self.mlflow, self.modelo, 2)
+        texto = self._correr_celda_del_endpoint(cliente)
+        self.assertIn("Endpoint del modelo ab_modelo_anomalias_tx → ninguna version activa (v2: Deactivated)", texto)
+        self.assertEqual([metodo for metodo, _ in cliente.llamadas], ["GET"])
+
+    def test_the_endpoint_check_can_be_switched_off(self) -> None:
+        cliente = _ClienteRestSimulado("Active", self.mlflow, self.modelo, 2)
+        texto = self._correr_celda_del_endpoint(cliente, p_probar_endpoint="NO")
+        self.assertIn("Prueba del endpoint omitida", texto)
+        self.assertEqual(cliente.llamadas, [])
+
+    def test_running_it_again_registers_another_version_but_does_not_duplicate_scores(self) -> None:
+        self.assertEqual(self.versiones_b6(), [1, 2])
+        anomalias = self.spark.tablas["ab_gold_ml_anomalias_tx"]
+        self.assertEqual(len(anomalias), len(self.espacio2["prueba"]))
+        self.assertEqual(set(anomalias["version_modelo"]), {2})
+        self.assertTrue(anomalias["transaccion_id"].is_unique)
+
+
+@unittest.skipUnless(LIBRERIAS and MLFLOW, "requires pandas, scikit-learn and mlflow")
+class B6ProteccionesTests(_ConMlflow):
+    fuente = BONUS / "b6_anomalias_en_linea.py"
+
+    def test_without_confirmation_it_trains_but_registers_and_writes_nothing(self) -> None:
+        with self.assertRaisesRegex(ValueError, "p_confirmar_reemplazo must be exactly 'SI'"):
+            self.correr(self.fuente, p_confirmar_reemplazo="NO")
+        encontradas = self.mlflow.MlflowClient().search_model_versions("name='ab_modelo_anomalias_tx'")
+        self.assertEqual(list(encontradas), [])
+        self.assertNotIn("ab_gold_ml_anomalias_tx", self.spark.tablas)
+        self.assertNotIn("ab_gold_ml_referencia_tx", self.spark.tablas)
+
+    def test_missing_silver_tables_stop_the_notebook_before_any_work(self) -> None:
+        del self.spark.tablas["ab_silver_transacciones"]
+        with self.assertRaisesRegex(ValueError, "ab_silver_transacciones: expected an existing table"):
+            self.correr(self.fuente)
+        self.assertEqual(self.spark.escrituras, [])
 
 if __name__ == "__main__":
     unittest.main()

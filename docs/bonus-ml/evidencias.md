@@ -152,7 +152,62 @@ Una regla de uso responsable de IA que aplicaría mi equipo:
 
 > Completar.
 
-## 7. Comprensión
+## 7. B6 — Transacciones atípicas y puntuación en línea
+
+| Dato | Esperado | Medido |
+|---|---:|---|
+| Filas con variables (al menos 10 transacciones previas) | 54.526 | |
+| Entrenamiento / validación / prueba | 28.743 / 12.231 / 12.800 | |
+| Anomalías inyectadas en agosto / septiembre | 125 / 130 | |
+| Prueba de fuga de datos | «Sin fuga de datos…» | |
+| `<prefijo>_gold_ml_referencia_tx` (T-SQL) | 9 | |
+| `<prefijo>_gold_ml_anomalias_tx` (T-SQL) | 12.800 | |
+| Acuerdo entre pandas y `PREDICT` | 1,0 | |
+
+| Candidato | AP de validación |
+|---|---|
+| `iforest` | |
+| `lof_20` | |
+| `lof_50` | |
+| `lof_100` | |
+| `lof_200` | |
+
+| Dato | Modelo | Línea base |
+|---|---|---|
+| Elegido y razón | | — |
+| AUC de prueba (medido **una vez**) | | |
+| Precisión / *recall* | | |
+| Tasa de marcadas | | |
+| *Recall* de `monto_extremo` | | |
+| *Recall* de `madrugada` | | |
+| *Recall* de `rafaga` | | |
+
+| Monitoreo | Valor |
+|---|---|
+| Tasa de marcadas en septiembre | |
+| Tasa de marcadas con los montos +60 % (simulado) | |
+| PSI de `z_monto_tipo` en septiembre / simulado | |
+
+| *Endpoint* (vista previa) | Valor |
+|---|---|
+| ¿Pudiste activar una versión? ¿Cuánto tardó? | |
+| Latencia observada (sin prometer un SLA) | |
+| ¿Coincidió con la versión cargada en el notebook? | |
+| Si no estaba disponible, mensaje observado (sin secretos) | |
+
+- [ ] La prueba de fuga de datos pasó.
+- [ ] Las tres tablas de comparación (candidatos, modelo frente a línea base, monitoreo) están completas.
+- [ ] Entiendo por qué `iforest` rinde peor que `lof` en estos datos.
+- [ ] Activé el *endpoint* **a propósito** y lo desactivé al terminar (o anoté por qué no pude).
+
+Explica con tus palabras por qué las variables de una transacción deben calcularse con el mismo código al entrenar y al servir:
+
+> Completar.
+
+Qué umbral (capacidad de revisión) elegirías para tu organización y por qué:
+
+> Completar.
+## 8. Comprensión
 
 1. ¿Por qué la división de datos es por tiempo y no al azar?
 
@@ -174,7 +229,7 @@ Una regla de uso responsable de IA que aplicaría mi equipo:
 
    Respuesta:
 
-## 8. Bloqueos y revisión
+## 9. Bloqueos y revisión
 
 | Módulo y paso | Mensaje observado, sin secretos | Responsable | Estado |
 |---|---|---|---|

@@ -11,11 +11,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import notebook_percent
 
 LIBRERIAS = all(importlib.util.find_spec(m) for m in ("pandas", "numpy", "sklearn"))
 if LIBRERIAS:
+    from notebooks.bonus_ml import anomalias_tx as an
     from notebooks.bonus_ml import ml_actividad as ml
 
 BONUS_DOCS = ROOT / "docs" / "bonus-ml"
@@ -155,6 +157,74 @@ class DocumentacionFrenteAlCodigoTests(unittest.TestCase):
             with self.subTest(variable=variable):
                 self.assertIn(f"`{variable}`", guia)
                 self.assertNotIn(variable, ml.FEATURES)
+
+@unittest.skipUnless(LIBRERIAS, "requires pandas, numpy and scikit-learn")
+class DocumentacionDeB6FrenteAlCodigoTests(unittest.TestCase):
+    modulo = BONUS_DOCS / "modulo-6-anomalias-en-linea.md"
+    notebook = BONUS_NB / "b6_anomalias_en_linea.py"
+
+    def test_documented_constants_match_the_code(self) -> None:
+        texto = _leer(self.modulo)
+        self.assertEqual(an.MESES_ENTRENAMIENTO, ("2026-05", "2026-06", "2026-07"))
+        self.assertEqual((an.MES_VALIDACION, an.MES_PRUEBA), ("2026-08", "2026-09"))
+        self.assertEqual((an.SEMILLA_VALIDACION, an.SEMILLA_PRUEBA), (11, 23))
+        self.assertIn("semilla 11", texto)
+        self.assertIn("semilla 23", texto)
+        self.assertEqual(an.MINIMO_HISTORIAL, 10)
+        self.assertIn("al menos **10 previas**", texto)
+        self.assertEqual(an.VENTANA_CANAL, 10)
+        self.assertIn("**últimas 10**", texto)
+        self.assertEqual((an.TASA_REVISION, an.TASA_INYECCION, an.ENTRENAMIENTO_MAXIMO), (0.01, 0.01, 20000))
+        self.assertIn("p_tasa_revision = 0.01", _leer(self.notebook))
+        self.assertIn("muestra de 20 000 filas", texto)
+
+    def test_every_anomaly_type_and_feature_is_documented_in_the_module_and_the_notebook(self) -> None:
+        modulo, notebook = _leer(self.modulo), _leer(self.notebook)
+        for tipo in an.TIPOS_ANOMALIA:
+            with self.subTest(tipo=tipo):
+                self.assertIn(f"`{tipo}`", modulo)
+                self.assertIn(f"`{tipo}`", notebook)
+        for variable in an.FEATURES_TX:
+            with self.subTest(variable=variable):
+                self.assertIn(f"`{variable}`", modulo)
+                self.assertIn(f"`{variable}`", notebook)
+
+    def test_every_created_table_experiment_and_model_is_documented_in_the_guide(self) -> None:
+        guia = _leer(BONUS_DOCS / "guia.md")
+        for clave, nombre in an.nombres_anomalias("AB").items():
+            with self.subTest(clave=clave):
+                self.assertIn(nombre, guia)
+                if clave in ("referencia", "anomalias"):
+                    self.assertIn(nombre.replace("ab_", "<prefijo>_", 1), _leer(self.modulo))
+
+    def test_documented_counts_match_what_the_code_produces(self) -> None:
+        from test_anomalias_tx import silver_transacciones
+
+        tx = an.preparar_transacciones(silver_transacciones())
+        meses = tx["fecha_hora"].dt.strftime("%Y-%m")
+        referencia = an.calcular_referencia(tx.loc[meses.isin(an.MESES_ENTRENAMIENTO)])
+        evaluacion = an.inyectar_anomalias(tx, {an.MES_VALIDACION: an.SEMILLA_VALIDACION, an.MES_PRUEBA: an.SEMILLA_PRUEBA})
+        features = an.construir_features_tx(evaluacion, referencia)
+        conteos = features.groupby("mes").size()
+        entrenamiento = int(conteos.loc[list(an.MESES_ENTRENAMIENTO)].sum())
+        inyectadas = features.groupby("mes")["es_anomalia_inyectada"].sum()
+        miles = lambda n: f"{n:,}".replace(",", ".")
+        modulo, guia = _leer(self.modulo), _leer(BONUS_DOCS / "guia.md")
+        esperado = f"{miles(entrenamiento)} / {miles(int(conteos[an.MES_VALIDACION]))} / {miles(int(conteos[an.MES_PRUEBA]))}"
+        for texto in (modulo, guia, _leer(BONUS_DOCS / "evidencias.md")):
+            self.assertIn(esperado, texto)
+        self.assertIn(miles(int(conteos.sum())), modulo)
+        self.assertEqual((int(inyectadas["2026-08"]), int(inyectadas["2026-09"])), (125, 130))
+        self.assertIn("125 (25 + 25 + 75) y 130 (26 + 26 + 78)", modulo)
+        self.assertIn(miles(int(conteos[an.MES_PRUEBA])), modulo)
+        self.assertEqual(len(referencia), 9)
+
+    def test_the_module_documents_what_the_endpoint_notebook_never_does(self) -> None:
+        modulo, notebook = _leer(self.modulo), _leer(self.notebook)
+        self.assertIn("El notebook **no activa nada**", modulo)
+        self.assertIn("**no activa nada**", notebook)
+        self.assertIn("vista previa", modulo)
+        self.assertIn("No prometas un SLA", modulo)
 
 
 if __name__ == "__main__":
