@@ -910,7 +910,8 @@ def ejecutar_ciclo(
         )
 
         firma = mlflow.models.infer_signature(
-            entrenamiento[list(FEATURES)], retador.predict(entrenamiento[list(FEATURES)])
+            entrenamiento[list(FEATURES)],
+            pd.Series(retador.predict(entrenamiento[list(FEATURES)]), name="prediccion"),
         )
         mlflow.sklearn.log_model(
             retador, "model", signature=firma, serialization_format="cloudpickle"

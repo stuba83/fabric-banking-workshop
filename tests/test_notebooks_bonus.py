@@ -518,6 +518,7 @@ class B3Tests(_ConMlflow):
         self.assertTrue(umbrales["marcadas"].is_monotonic_decreasing)
         self.assertTrue(umbrales["recall"].is_monotonic_decreasing)
         self.assertEqual(espacio["firma"].inputs.input_names(), list(ml.FEATURES))
+        self.assertFalse(espacio["firma"].outputs.is_tensor_spec())
 
     def test_running_it_again_registers_another_version_but_does_not_duplicate_scores(self) -> None:
         self.correr(self.fuente)
@@ -565,6 +566,8 @@ class B4Tests(_ConMlflow):
         self.assertEqual(eventos.iloc[0]["evento"], "promocion")
         self.assertEqual(set(eventos["evento"]) - {"promocion", "reversion"}, set())
         self.assertEqual(self.versiones(), sorted(set(eventos.loc[eventos["evento"] == "promocion", "version"])))
+        firma = self.mlflow.models.get_model_info(f"models:/ab_modelo_actividad/{self.versiones()[0]}").signature
+        self.assertFalse(firma.outputs.is_tensor_spec())
 
     def test_cycle_mode_runs_one_cycle_and_returns_the_summary_to_the_pipeline(self) -> None:
         _, registro = self.correr(self.fuente, p_modo="ciclo", p_corte_puntuacion="2026-09")
@@ -683,6 +686,7 @@ class B6Tests(unittest.TestCase):
         self.assertEqual(version.tags["tipo_detector"], "lof")
         self.assertEqual(version.tags["evaluacion"], "anomalias_inyectadas")
         self.assertEqual(self.espacio1["firma"].inputs.input_names(), list(an.FEATURES_TX))
+        self.assertFalse(self.espacio1["firma"].outputs.is_tensor_spec())
         self.assertIn("Sin fuga de datos", self.registro1.texto)
         self.assertIn("La versión registrada reproduce los puntajes y las marcas", self.registro1.texto)
         self.assertIn("MLFlowTransformer no disponible", self.registro1.texto)

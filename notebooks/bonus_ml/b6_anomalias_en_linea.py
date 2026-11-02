@@ -205,14 +205,16 @@ display(por_tipo.round(2))
 # %% [markdown]
 # ## 6. Registrar el modelo con su firma y su referencia
 #
-# La corrida final guarda el modelo con su **firma** (8 columnas de entrada), las métricas y la **referencia** como artefacto: así, quien consuma el modelo sabe con qué referencia se calcularon sus variables. La versión se registra con etiquetas.
+# La corrida final guarda el modelo con su **firma** (8 columnas de entrada y una de salida), las métricas y la **referencia** como artefacto: así, quien consuma el modelo sabe con qué referencia se calcularon sus variables. La versión se registra con etiquetas.
+#
+# **La salida se declara como una columna** (`pd.Series`), no como un arreglo de NumPy. Un arreglo se infiere como **tensor**, y entonces la página de la versión dice «Endpoints aren't supported for this model… has tensors» y deshabilita **Activate version endpoint**.
 
 # %%
 validar_parametros_ml(notebookutils.runtime.context, p_lakehouse_esperado, p_prefijo, p_confirmar_reemplazo)
 referencia = calcular_referencia(transacciones_entrenamiento, fecha_utc=datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"))
 muestra_firma = muestra[list(FEATURES_TX)].head(1000)
 with mlflow.start_run(run_name=f"final_{elegido}") as corrida:
-    firma = infer_signature(muestra_firma, modelo.predict(muestra_firma))
+    firma = infer_signature(muestra_firma, pd.Series(modelo.predict(muestra_firma), name="prediccion"))
     mlflow.sklearn.log_model(modelo, "model", signature=firma, serialization_format="cloudpickle")
     mlflow.log_dict({"referencia": referencia.to_dict("records"), "features": list(FEATURES_TX)}, "referencia_tx.json")
     mlflow.log_params({

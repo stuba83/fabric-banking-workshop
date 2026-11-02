@@ -50,7 +50,7 @@ print({nombre: len(parte) for nombre, parte in partes.items()})
 # %% [markdown]
 # ## 2. Entrenar y guardar el modelo con su firma
 #
-# La **firma** se infiere de un ejemplo de entrada y de la salida del modelo. Se guarda junto con el modelo: es lo que permite que otro motor (Spark, SQL) sepa qué columnas esperar. El formato de serialización se fija explícitamente para que el resultado sea idéntico en cualquier versión de MLflow.
+# La **firma** se infiere de un ejemplo de entrada y de la salida del modelo. Se guarda junto con el modelo: es lo que permite que otro motor (Spark, SQL) sepa qué columnas esperar. La salida se declara como **una columna** (`pd.Series`), no como un arreglo de NumPy: un arreglo se infiere como **tensor**, y la página de la versión indica que los *endpoints* no admiten esquemas con tensores. El formato de serialización se fija explícitamente para que el resultado sea idéntico en cualquier versión de MLflow.
 
 # %%
 mlflow.set_experiment(nombres["experimento"])
@@ -58,7 +58,7 @@ with mlflow.start_run(run_name=f"candidato_{p_tipo_modelo}") as corrida:
     modelo = crear_modelo(p_tipo_modelo).fit(X_tr, y_tr)
     metricas_val = evaluar_clasificador(validacion[ETIQUETA], modelo.predict_proba(validacion[list(FEATURES)])[:, 1])
     metricas_prueba = evaluar_clasificador(prueba[ETIQUETA], modelo.predict_proba(prueba[list(FEATURES)])[:, 1])
-    firma = infer_signature(X_tr, modelo.predict(X_tr))
+    firma = infer_signature(X_tr, pd.Series(modelo.predict(X_tr), name="prediccion"))
     mlflow.sklearn.log_model(modelo, "model", signature=firma, serialization_format="cloudpickle")
     mlflow.log_params({"tipo_modelo": p_tipo_modelo, "cortes_entrenamiento": ",".join(CORTES_ENTRENAMIENTO)})
     mlflow.log_metrics({
