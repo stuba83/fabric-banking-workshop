@@ -17,7 +17,7 @@
 #
 # **Idea central: el mismo código para entrenar y para servir.** Las variables de una transacción (qué tan alto es su monto para su tipo, qué tan inusual es su canal para esa cuenta, cuánto pasó desde la anterior) se calculan con **una sola función**. Un servicio en línea necesita esas mismas variables al llamar al *endpoint*: si se calculan distinto, el modelo da resultados distintos. Los almacenes de variables (*feature stores*) existen para resolver esto; aquí se resuelve con la función compartida y una **tabla de referencia** que viaja con el modelo.
 #
-# **Requisitos.** Sesión 3 completada (tablas plata). Funciona en Trial salvo el *endpoint*, que está en vista previa. `p_confirmar_reemplazo = 'SI'` se necesita para registrar el modelo y escribir las tablas. Cada ejecución registra **una versión nueva** del modelo `<prefijo>_modelo_anomalias_tx`.
+# **Requisitos.** Sesión 3 completada (tablas plata). Funciona en Trial salvo el *endpoint*, que está en vista previa. `p_confirmar_reemplazo = 'SI'` se necesita para registrar el modelo y escribir las tablas. Cada ejecución registra **una versión nueva** del modelo `<prefijo>_modelo_atipicas_tx`.
 
 # %% parameters
 p_lakehouse_esperado = ''

@@ -13,7 +13,7 @@ Recorrer el ciclo de vida de un modelo cuyo uso es **en línea**: una decisión 
 
 - Sesión 3 completada (tablas plata con sus conteos). B3 y B4 recomendados: aquí se reutilizan el registro de modelos, `PREDICT` y el PSI.
 - Parámetros: `p_lakehouse_esperado`, `p_prefijo`, `p_confirmar_reemplazo` (`SI` para registrar y escribir), `p_tasa_revision` (`0.01` por defecto) y `p_probar_endpoint` (`SI` por defecto).
-- **Cada ejecución registra una versión nueva** del modelo `<prefijo>_modelo_anomalias_tx`.
+- **Cada ejecución registra una versión nueva** del modelo `<prefijo>_modelo_atipicas_tx`.
 - El notebook se ejecuta completo en unos **3 minutos** (la parte pesada es el seguimiento de las seis corridas y el registro).
 
 ## Qué cambia frente a B1–B4
@@ -153,6 +153,7 @@ GROUP BY tipo_anomalia;
 |---|---|
 | `p_confirmar_reemplazo must be exactly 'SI'` al registrar | Es lo esperado con `NO`: el notebook entrena y mide, pero no registra ni escribe |
 | `ab_silver_transacciones: expected an existing table` | Completa la Sesión 3 con el mismo prefijo |
+| `PERMISSION_DENIED: User does not have permission…` en `mlflow.set_experiment` | Ocurre si **borraste hace poco** un experimento con ese nombre: Fabric tarda en liberarlo (al recrearlo por API: «Artifact Exists and may be getting deleted»). No es un problema de tu rol: espera o usa otro prefijo. Un nombre que nunca existió funciona |
 | `data leakage check: expected 0 differences` | Alguien cambió el cálculo de las variables para que use datos posteriores a la transacción |
 | `MLFlowTransformer no disponible` | El notebook debe ser de PySpark en un runtime de Fabric |
 | `PREDICT` no coincide | Que el modelo tenga firma, sea `sklearn` y las columnas coincidan; `PREDICT` devuelve `-1` (atípica) o `1` |

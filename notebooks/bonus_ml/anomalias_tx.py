@@ -91,8 +91,8 @@ def nombres_anomalias(prefijo: str) -> dict[str, str]:
     return {
         "referencia": f"{p}_gold_ml_referencia_tx",
         "anomalias": f"{p}_gold_ml_anomalias_tx",
-        "experimento": f"{p}_exp_anomalias_tx",
-        "modelo": f"{p}_modelo_anomalias_tx",
+        "experimento": f"{p}_exp_atipicas_tx",
+        "modelo": f"{p}_modelo_atipicas_tx",
     }
 
 

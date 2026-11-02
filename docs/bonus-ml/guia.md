@@ -120,7 +120,7 @@ Las [reglas del laboratorio](../requisitos.md) siguen vigentes: datos sintético
 | `p_tasa_revision` | B6 | `0.01` | Capacidad de revisión: fracción de transacciones que se puede revisar a mano; fija el umbral de validación |
 | `p_probar_endpoint` | B6 | `SI` | `NO` omite la llamada al *endpoint*; con `SI` solo se llama si hay una versión activa (nunca activa una) |
 
-**Tablas que crea el bonus** (con el prefijo en minúsculas): `ab_gold_ml_features_cuentas` (B1), `ab_gold_ml_puntuacion_actividad` (B3 y B4), `ab_ml_registro_modelos`, `ab_ml_monitoreo_deriva` y `ab_ml_monitoreo_desempeno` (B4), y `ab_gold_ml_referencia_tx` y `ab_gold_ml_anomalias_tx` (B6). También se crean los experimentos `ab_exp_actividad` y `ab_exp_anomalias_tx` y los modelos `ab_modelo_actividad` y `ab_modelo_anomalias_tx`. **Las escrituras reemplazan solo las tablas con tu prefijo.**
+**Tablas que crea el bonus** (con el prefijo en minúsculas): `ab_gold_ml_features_cuentas` (B1), `ab_gold_ml_puntuacion_actividad` (B3 y B4), `ab_ml_registro_modelos`, `ab_ml_monitoreo_deriva` y `ab_ml_monitoreo_desempeno` (B4), y `ab_gold_ml_referencia_tx` y `ab_gold_ml_anomalias_tx` (B6). También se crean los experimentos `ab_exp_actividad` y `ab_exp_atipicas_tx` y los modelos `ab_modelo_actividad` y `ab_modelo_atipicas_tx`. **Las escrituras reemplazan solo las tablas con tu prefijo.**
 
 ## Controles esperados
 

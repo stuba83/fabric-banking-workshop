@@ -635,7 +635,7 @@ class B6Tests(unittest.TestCase):
     """El notebook completo tarda minutos con el seguimiento en archivos: se ejecuta dos veces y las pruebas leen los resultados."""
 
     fuente = BONUS / "b6_anomalias_en_linea.py"
-    modelo = "ab_modelo_anomalias_tx"
+    modelo = "ab_modelo_atipicas_tx"
     parametros = {"p_lakehouse_esperado": "AB_Lakehouse", "p_prefijo": "AB", "p_confirmar_reemplazo": "SI"}
 
     @classmethod
@@ -707,7 +707,7 @@ class B6Tests(unittest.TestCase):
             candidatos.loc[self.espacio1["elegido"], "average_precision_validacion"],
             3 * candidatos.loc["iforest", "average_precision_validacion"],
         )
-        corridas = self.mlflow.search_runs(experiment_names=["ab_exp_anomalias_tx"])
+        corridas = self.mlflow.search_runs(experiment_names=["ab_exp_atipicas_tx"])
         self.assertEqual(len(corridas), 12)  # cinco candidatos y la corrida final, dos veces
 
     def test_model_beats_the_baseline_and_sees_every_anomaly_type(self) -> None:
@@ -750,7 +750,7 @@ class B6Tests(unittest.TestCase):
         self.assertTrue(self.cliente.llamadas[1][1].endswith("/mlmodels/id-del-modelo/endpoint/versions/1/score"))
 
     def test_without_semantic_link_the_notebook_says_so_and_keeps_going(self) -> None:
-        self.assertIn("Endpoint del modelo ab_modelo_anomalias_tx → no disponible", self.registro2.texto)
+        self.assertIn("Endpoint del modelo ab_modelo_atipicas_tx → no disponible", self.registro2.texto)
 
     def test_an_endpoint_that_disagrees_with_the_local_model_stops_the_cell(self) -> None:
         cliente = _ClienteRestSimulado("Active", self.mlflow, self.modelo, 2, adulterar=True)
@@ -760,7 +760,7 @@ class B6Tests(unittest.TestCase):
     def test_an_inactive_endpoint_is_reported_but_never_activated(self) -> None:
         cliente = _ClienteRestSimulado("Deactivated", self.mlflow, self.modelo, 2)
         texto = self._correr_celda_del_endpoint(cliente)
-        self.assertIn("Endpoint del modelo ab_modelo_anomalias_tx → ninguna version activa (v2: Deactivated)", texto)
+        self.assertIn("Endpoint del modelo ab_modelo_atipicas_tx → ninguna version activa (v2: Deactivated)", texto)
         self.assertEqual([metodo for metodo, _ in cliente.llamadas], ["GET"])
 
     def test_the_endpoint_check_can_be_switched_off(self) -> None:
@@ -784,7 +784,7 @@ class B6ProteccionesTests(_ConMlflow):
     def test_without_confirmation_it_trains_but_registers_and_writes_nothing(self) -> None:
         with self.assertRaisesRegex(ValueError, "p_confirmar_reemplazo must be exactly 'SI'"):
             self.correr(self.fuente, p_confirmar_reemplazo="NO")
-        encontradas = self.mlflow.MlflowClient().search_model_versions("name='ab_modelo_anomalias_tx'")
+        encontradas = self.mlflow.MlflowClient().search_model_versions("name='ab_modelo_atipicas_tx'")
         self.assertEqual(list(encontradas), [])
         self.assertNotIn("ab_gold_ml_anomalias_tx", self.spark.tablas)
         self.assertNotIn("ab_gold_ml_referencia_tx", self.spark.tablas)
