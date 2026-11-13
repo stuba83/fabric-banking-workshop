@@ -13,3 +13,4 @@ evidencias-completadas/
 logs/
 complementos/**/dist/
 complementos/**/__pycache__/
+complementos/**/node_modules/

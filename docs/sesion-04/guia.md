@@ -213,7 +213,7 @@ El facilitador mencionará, **sin ejercicio ni evidencia**, otros controles que 
   `none` deja la columna oculta para ese rol; `read` la deja visible.
 - **Consumo con permiso de compilación y App.** Con el permiso de compilación (*Build*) sobre el modelo, otras personas crean sus propios reportes sobre él: **un modelo, muchos reportes**. Una App del workspace distribuye el contenido publicado a los usuarios finales.
 - **Dónde puede vivir la seguridad en Direct Lake.** Según la documentación, en el modelo semántico (RLS y OLS), en el endpoint SQL o en la seguridad de OneLake. Conviene **elegir una** capa como fuente de verdad, para no duplicar reglas que luego se contradigan.
-- **Fabric Apps.** Una forma de publicar una aplicación de datos sobre Fabric. Está en **vista previa**: el facilitador la muestra con una demostración prearmada.
+- **Fabric Apps.** Una forma de publicar una aplicación de datos sobre Fabric. Está en **vista previa**: el facilitador la muestra con una demostración prearmada, [«Banca sintética»](../../complementos/fabric-apps/fac-banca-sintetica/README.md), que lee en vivo un Warehouse con los datos sintéticos del laboratorio.
 - **Otros controles.** Las etiquetas de confidencialidad y el acceso de los usuarios finales a un modelo Direct Lake (con identidad propia o con una conexión de identidad fija). Tampoco se comparten elementos con personas externas al laboratorio.
 
 ## 6. Accionables antes de la Sesión 5

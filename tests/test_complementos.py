@@ -19,7 +19,8 @@ COMPLEMENTOS = ROOT / "complementos"
 REFERENCIAS = ROOT / "docs" / "referencias-complementarias.md"
 BONUS_IA = ROOT / "docs" / "bonus-desarrollo-asistido"
 GUIAS = [ROOT / "docs" / f"sesion-0{n}" / "guia.md" for n in range(1, 6)]
-SUFIJOS_TEXTO = {".md", ".html", ".json", ".ipynb", ".ps1", ".py", ".sql", ".toml", ".txt", ".yml"}
+SUFIJOS_TEXTO = {".md", ".html", ".json", ".ipynb", ".ps1", ".py", ".sql", ".toml", ".txt", ".yml",
+                 ".ts", ".tsx", ".mjs", ".css"}
 
 TERMINOS_EXTENDIDOS = re.compile(
     TERMINOS_BASE.pattern
@@ -121,6 +122,9 @@ class ComplementosEstructuraTests(unittest.TestCase):
             "git-cicd/fabric-cicd-git-flujo.html",
             "desarrollo-asistido-ia/fabric-desarrollo-asistido-ia-flujo.html",
             "desarrollo-asistido-ia/guion-demo.md",
+            "fabric-apps/fac-banca-sintetica/README.md",
+            "fabric-apps/fac-banca-sintetica/package.json",
+            "fabric-apps/fac-banca-sintetica/rayfin/rayfin.yml",
         ):
             with self.subTest(archivo=relativa):
                 self.assertTrue((COMPLEMENTOS / relativa).is_file())
@@ -174,7 +178,7 @@ class ComplementosSaneamientoTests(unittest.TestCase):
 
 
 class ComplementosHtmlTests(unittest.TestCase):
-    HTML = sorted(COMPLEMENTOS.rglob("*.html"))
+    HTML = sorted(p for p in COMPLEMENTOS.rglob("*.html") if "fabric-apps" not in p.parts)
 
     def test_there_are_two_sheets(self) -> None:
         self.assertEqual(len(self.HTML), 2)
@@ -214,7 +218,8 @@ class ComplementosHtmlTests(unittest.TestCase):
 
 class EnlacesTests(unittest.TestCase):
     def test_every_relative_link_in_the_complements_and_guides_resolves(self) -> None:
-        documentos = [*COMPLEMENTOS.rglob("*.md"), REFERENCIAS, *BONUS_IA.glob("*.md"), *GUIAS, ROOT / "README.md"]
+        documentos = [*(p for p in COMPLEMENTOS.rglob("*.md") if ".agents" not in p.parts), REFERENCIAS,
+                      *BONUS_IA.glob("*.md"), *GUIAS, ROOT / "README.md"]
         rotos: list[str] = []
         for documento in documentos:
             for destino in ENLACE.findall(_leer(documento)):
@@ -242,6 +247,7 @@ class EnlacesTests(unittest.TestCase):
             "git-cicd/fabric-cicd-git-flujo.html",
             "desarrollo-asistido-ia/fabric-desarrollo-asistido-ia-flujo.html",
             "desarrollo-asistido-ia/guion-demo.md",
+            "fabric-apps/fac-banca-sintetica/README.md",
             "../docs/referencias-complementarias.md",
             "../docs/bonus-desarrollo-asistido/guia.md",
         ):
@@ -256,7 +262,7 @@ class EnlacesTests(unittest.TestCase):
             1: ("referencias-complementarias.md",),
             2: ("referencias-complementarias.md", "complementos/metadata-driven/README-metadata-driven.md"),
             3: ("referencias-complementarias.md", "complementos/warehouse-librerias/README-warehouse-librerias.md"),
-            4: ("referencias-complementarias.md",),
+            4: ("referencias-complementarias.md", "complementos/fabric-apps/fac-banca-sintetica/README.md"),
             5: ("referencias-complementarias.md", "complementos/git-cicd/fabric-cicd-git-flujo.html",
                 "complementos/desarrollo-asistido-ia/", "bonus-desarrollo-asistido/guia.md"),
         }
