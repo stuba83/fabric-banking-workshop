@@ -1,0 +1,215 @@
+{
+  "properties": {
+    "description": "Variante alternativa de la ingesta metadata-driven: un notebook lee el catálogo (activo y ordenado) y lo entrega por exitValue al ForEach.",
+    "activities": [
+      {
+        "name": "Leer_Catalogo",
+        "type": "TridentNotebook",
+        "description": "Alternativa al Lookup: FAC_NB_Leer_Catalogo lee el Delta con Spark y devuelve por exitValue solo las tablas activas, ya ordenadas por 'orden' y filtradas por filtro_tabla. Evita la latencia de sincronización del endpoint SQL y no necesita conexión.",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.01:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "typeProperties": {
+          "notebookId": "{{NOTEBOOK_ID_LEER_CATALOGO}}",
+          "workspaceId": "{{WORKSPACE_ID}}",
+          "parameters": {
+            "filtro_tabla": {
+              "value": {
+                "value": "@pipeline().parameters.filtro_tabla",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "destino": {
+              "value": {
+                "value": "@pipeline().parameters.destino",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sessionTag": "fac_ingesta"
+        }
+      },
+      {
+        "name": "Por_Cada_Tabla",
+        "type": "ForEach",
+        "description": "Secuencial a propósito (isSequential=true; batchCount solo aplica en modo paralelo y aquí se omite). Razones: (1) todas las iteraciones escriben en las mismas tablas Delta de control (catálogo y bitácora) y el MERGE concurrente puede chocar; (2) la capacidad del laboratorio es pequeña; (3) en el monitor las tablas se ven en orden y un fallo es fácil de aislar. Para paralelizar: isSequential=false y batchCount=N, tras revisar las dos primeras razones.",
+        "dependsOn": [
+          {
+            "activity": "Leer_Catalogo",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "typeProperties": {
+          "items": {
+            "value": "@json(activity('Leer_Catalogo').output.result.exitValue).tablas",
+            "type": "Expression"
+          },
+          "isSequential": true,
+          "activities": [
+            {
+              "name": "Cargar_Tabla",
+              "type": "TridentNotebook",
+              "description": "Invoca FAC_NB_Carga_Generica con los valores de la fila del catálogo (@item()). Un error se ve en rojo aquí; la bitácora ya quedó escrita.",
+              "dependsOn": [],
+              "policy": {
+                "timeout": "0.01:00:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureInput": false,
+                "secureOutput": false
+              },
+              "typeProperties": {
+                "notebookId": "{{NOTEBOOK_ID_CARGA_GENERICA}}",
+                "workspaceId": "{{WORKSPACE_ID}}",
+                "parameters": {
+                  "tabla": {
+                    "value": {
+                      "value": "@item().tabla_destino",
+                      "type": "Expression"
+                    },
+                    "type": "string"
+                  },
+                  "ruta_origen": {
+                    "value": {
+                      "value": "@item().ruta_origen",
+                      "type": "Expression"
+                    },
+                    "type": "string"
+                  },
+                  "formato": {
+                    "value": {
+                      "value": "@item().formato",
+                      "type": "Expression"
+                    },
+                    "type": "string"
+                  },
+                  "tipo_carga": {
+                    "value": {
+                      "value": "@item().tipo_carga",
+                      "type": "Expression"
+                    },
+                    "type": "string"
+                  },
+                  "columna_marca": {
+                    "value": {
+                      "value": "@coalesce(item().columna_marca, '')",
+                      "type": "Expression"
+                    },
+                    "type": "string"
+                  },
+                  "columna_clave": {
+                    "value": {
+                      "value": "@coalesce(item().columna_clave, '')",
+                      "type": "Expression"
+                    },
+                    "type": "string"
+                  },
+                  "ultima_marca": {
+                    "value": {
+                      "value": "@coalesce(item().ultima_marca, '')",
+                      "type": "Expression"
+                    },
+                    "type": "string"
+                  },
+                  "destino": {
+                    "value": {
+                      "value": "@pipeline().parameters.destino",
+                      "type": "Expression"
+                    },
+                    "type": "string"
+                  },
+                  "run_id": {
+                    "value": {
+                      "value": "@pipeline().RunId",
+                      "type": "Expression"
+                    },
+                    "type": "string"
+                  },
+                  "forzar_completa": {
+                    "value": {
+                      "value": "@pipeline().parameters.forzar_completa",
+                      "type": "Expression"
+                    },
+                    "type": "bool"
+                  }
+                },
+                "sessionTag": "fac_ingesta"
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "Resumen_Bitacora",
+        "type": "TridentNotebook",
+        "description": "Paso final: muestra la bitácora de esta corrida y la marca de agua. Se ejecuta aunque el ForEach falle (Completed) y falla si hay errores o faltan tablas, para que el pipeline no quede en verde con una carga rota.",
+        "dependsOn": [
+          {
+            "activity": "Por_Cada_Tabla",
+            "dependencyConditions": [
+              "Completed"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.01:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "typeProperties": {
+          "notebookId": "{{NOTEBOOK_ID_RESUMEN_BITACORA}}",
+          "workspaceId": "{{WORKSPACE_ID}}",
+          "parameters": {
+            "run_id": {
+              "value": {
+                "value": "@pipeline().RunId",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "filtro_tabla": {
+              "value": {
+                "value": "@pipeline().parameters.filtro_tabla",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "destino": {
+              "value": {
+                "value": "@pipeline().parameters.destino",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sessionTag": "fac_ingesta"
+        }
+      }
+    ],
+    "parameters": {
+      "forzar_completa": {
+        "type": "bool",
+        "defaultValue": false
+      },
+      "filtro_tabla": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "destino": {
+        "type": "string",
+        "defaultValue": "{{ESQUEMA}}"
+      }
+    }
+  }
+}

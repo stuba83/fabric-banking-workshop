@@ -1,0 +1,1067 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Desarrollo en Fabric asistido por GitHub Copilot · flujo y guía de demo</title>
+<style>
+:root,[data-theme="light"]{
+color-scheme:light;
+--bg:#f3f6fa;--bg2:#e9eff6;--card:#ffffff;--card2:#eef3fa;--hover:#e6f0fa;--surface:#ffffff;--input:#ffffff;
+--border:#dde3ea;--border2:#c2cddb;--text:#201f1e;--text2:#3b3a39;--muted:#605e5c;--faint:#6b6a68;
+--accent:#0078d4;--accent2:#0f6cbd;--on-accent:#ffffff;--accentg:linear-gradient(135deg,#0078d4,#2ba3f0);
+--hi:#d83b01;--mid:#b86a00;--lo:#00828c;--green:#107c10;--purple:#5c2d91;
+--data:#00b7c3;--on-data:#04121a;--dataglow:rgba(0,120,212,.14);
+--heading:#003a6c;--ink:#04121a;--on-fill:#ffffff;--shade:rgba(0,0,0,.45);--bar-glow:rgba(0,40,90,.25);
+--hero:linear-gradient(120deg,#002b52 0%,#0078d4 70%,#2ba3f0 100%);--hero-fg:#ffffff;
+--elev:0 2px 10px rgba(0,40,90,.08);--modal-shadow:0 18px 48px rgba(0,40,90,.22);--scrim:rgba(15,23,34,.55);
+}
+[data-theme="dark"]{
+color-scheme:dark;
+--bg:#0f1722;--bg2:#131c2a;--card:#1a2433;--card2:#1f2b3d;--hover:#243348;--surface:#1a2433;--input:#111a27;
+--border:#2d3b52;--border2:#3d4e68;--text:#e6ebf2;--text2:#c3cfdf;--muted:#9fb0c6;--faint:#8396ae;
+--accent:#4da6ff;--accent2:#6cb8ff;--on-accent:#0b1220;--accentg:linear-gradient(135deg,#0b5cad,#4da6ff);
+--hi:#ff8a65;--mid:#ffc83d;--lo:#3fd0da;--green:#6ccb5f;--purple:#b79ced;
+--data:#3fd0da;--on-data:#04121a;--dataglow:rgba(77,166,255,.16);
+--heading:#e6ebf2;--ink:#04121a;--on-fill:#ffffff;--shade:rgba(0,0,0,.55);--bar-glow:rgba(255,255,255,.3);
+--hero:linear-gradient(120deg,#0a1b30 0%,#0b4d8c 70%,#1b78c2 100%);--hero-fg:#ffffff;
+--elev:0 2px 12px rgba(0,0,0,.35);--modal-shadow:0 18px 48px rgba(0,0,0,.5);--scrim:rgba(4,8,16,.7);
+}
+:root{
+--hi-soft:color-mix(in srgb,var(--hi) 16%,transparent);--mid-soft:color-mix(in srgb,var(--mid) 16%,transparent);
+--green-soft:color-mix(in srgb,var(--green) 16%,transparent);--purple-soft:color-mix(in srgb,var(--purple) 16%,transparent);
+--accent-soft:color-mix(in srgb,var(--accent) 14%,transparent);--data-soft:color-mix(in srgb,var(--data) 18%,transparent);
+--lo-soft:color-mix(in srgb,var(--lo) 16%,transparent);--edge:color-mix(in srgb,var(--muted) 60%,transparent);--overlay:color-mix(in srgb,var(--bg) 82%,transparent);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Aptos,Calibri,-apple-system,sans-serif;font-size:14px;line-height:1.45}
+a{color:var(--accent2);text-decoration:none}
+a:hover{text-decoration:underline}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.mono,code,pre,#log,.file{font-family:Consolas,"Courier New",monospace}
+.muted{color:var(--muted)}
+.app{max-width:1560px;margin:0 auto;padding:0 20px 28px}
+
+/* hero */
+.hero{background:var(--hero);color:var(--hero-fg);box-shadow:0 4px 18px var(--bar-glow)}
+.hero-in{max-width:1560px;margin:0 auto;padding:14px 20px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.hero .brand{display:flex;align-items:center;gap:13px}
+.logo{width:34px;height:34px;border-radius:9px;background:color-mix(in srgb,var(--hero-fg) 18%,transparent);border:1px solid color-mix(in srgb,var(--hero-fg) 50%,transparent);display:flex;align-items:center;justify-content:center}
+.logo svg{width:20px;height:20px}
+.logo .g{fill:none;stroke:var(--hero-fg);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.logo .d{fill:var(--hero-fg)}
+.hero .brand-divider{width:1px;height:36px;background:color-mix(in srgb,var(--hero-fg) 40%,transparent)}
+.hero .brand-txt h1{margin:0;font-size:18px;font-weight:620;letter-spacing:-.01em;color:var(--hero-fg)}
+.hero .brand-txt p{margin:2px 0 0;font-size:12.5px;color:color-mix(in srgb,var(--hero-fg) 88%,transparent)}
+.hero .hdr-controls{margin-left:auto;display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.hkpi{color:var(--hero-fg);background:color-mix(in srgb,var(--hero-fg) 14%,transparent);border:1px solid color-mix(in srgb,var(--hero-fg) 60%,transparent);border-radius:20px;padding:5px 14px;font-weight:600;font-size:12.5px}
+.hkpi b{font-size:16px;margin:0 2px}
+.icon-btn{font:inherit;font-size:12.5px;font-weight:600;cursor:pointer;color:var(--hero-fg);background:color-mix(in srgb,var(--hero-fg) 14%,transparent);border:1px solid color-mix(in srgb,var(--hero-fg) 60%,transparent);border-radius:20px;padding:6px 14px;transition:all .15s}
+.icon-btn:hover{background:var(--hero-fg);color:var(--accent);border-color:var(--hero-fg)}
+
+/* tabs */
+.tabs{display:flex;gap:6px;margin:12px 0 10px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.tab{font:inherit;background:transparent;border:0;border-bottom:2px solid transparent;padding:9px 16px;cursor:pointer;font-weight:640;font-size:13px;color:var(--muted);user-select:none}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--text);border-bottom-color:var(--accent2)}
+.tab .n{display:inline-block;margin-left:6px;font-size:11px;background:var(--card2);color:var(--accent2);border-radius:999px;padding:1px 7px}
+.view{display:none}
+.view.active{display:block}
+
+/* generic */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px}
+.card h3{margin:0 0 6px;font-size:14.5px;color:var(--heading)}
+.card p{margin:0 0 8px}
+.card p:last-child{margin-bottom:0}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:14px;margin-bottom:14px}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;margin-bottom:14px}
+.sec-h{font-size:13px;font-weight:700;color:var(--text2);margin:20px 2px 10px;padding-top:8px;border-top:1px solid var(--border)}
+.sec-h:first-child{margin-top:0;border-top:0;padding-top:0}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:11px;margin-bottom:16px}
+.kpis .card .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint)}
+.kpis .card .val{font-size:15.5px;font-weight:700;margin-top:3px;color:var(--heading)}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:6px;white-space:nowrap;background:var(--card2);color:var(--accent2)}
+.pill.live{background:var(--green-soft);color:var(--green)}
+.pill.pre{background:var(--purple-soft);color:var(--purple)}
+.pill.prev,.pill.vf{background:var(--mid-soft);color:var(--mid)}
+.pill.ga{background:var(--green-soft);color:var(--green)}
+.pill.opt{background:var(--lo-soft);color:var(--lo)}
+.cmd{font-family:Consolas,monospace;font-size:11.5px;padding:1px 6px;border-radius:6px;background:var(--card2);border:1px solid var(--border);color:var(--accent2)}
+pre.code{margin:6px 0 0;background:var(--card2);border:1px dashed var(--border2);border-radius:10px;padding:10px 12px;font-size:12.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;color:var(--text);overflow:auto;user-select:all}
+.btn{font:inherit;font-size:12.5px;font-weight:600;color:var(--text);background:var(--surface);border:1px solid var(--border2);border-radius:999px;padding:6px 13px;cursor:pointer;transition:all .15s}
+.btn:hover{border-color:var(--accent);color:var(--accent2)}
+.btn.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent);min-width:132px}
+.btn.primary:hover{background:var(--accent2);border-color:var(--accent2);color:var(--on-accent)}
+.btn.ok{border-color:var(--green);color:var(--green)}
+select{font:inherit;font-size:12px;color:var(--text);background:var(--input);border:1px solid var(--border2);border-radius:9px;padding:5px 8px}
+.callout{border:1px solid var(--border);border-left:4px solid var(--accent);background:var(--accent-soft);border-radius:12px;padding:10px 14px;margin:0 0 14px}
+.callout.warn{border-left-color:var(--mid);background:var(--mid-soft)}
+.callout b{color:var(--heading)}
+.rc{display:inline-block;font-size:10px;font-weight:700;padding:0 5px;margin-left:3px;border-radius:5px;background:var(--card2);color:var(--accent2);border:1px solid var(--border);vertical-align:1px}
+.rc:hover{background:var(--accent);color:var(--on-accent);text-decoration:none}
+.tablewrap{overflow:auto;border:1px solid var(--border);border-radius:12px;background:var(--card)}
+table.t{width:100%;border-collapse:collapse}
+table.t th,table.t td{padding:8px 11px;text-align:left;border-bottom:1px solid var(--border);font-size:12.5px;vertical-align:top}
+table.t th{background:var(--bg2);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.03em;border-bottom:2px solid var(--border2)}
+table.t tr:last-child td{border-bottom:0}
+.foot{color:var(--faint);font-size:11.5px;margin-top:22px;text-align:center}
+
+/* flow: player */
+.player{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px 14px;margin-bottom:10px}
+.player .grow{flex:1;min-width:180px}
+.player input[type=range]{width:100%;accent-color:var(--accent)}
+.player label{font-size:12px;color:var(--text2);display:inline-flex;align-items:center;gap:6px}
+.capline{padding:9px 14px;background:var(--accent-soft);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;min-height:46px;color:var(--text2)}
+.capline b{color:var(--accent2)}
+.stagewrap{position:relative;overflow:hidden;border-radius:14px}
+.stage{overflow-x:auto;padding:14px 16px 16px;background:var(--card);border:1px solid var(--border);border-radius:14px}
+#plane{position:relative;display:grid;grid-template-columns:1.3fr 1fr 1.2fr;column-gap:76px;padding-left:36px;min-width:1040px;align-items:stretch;font-size:12.5px}
+#edges{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:3;overflow:visible}
+.col{display:flex;flex-direction:column;gap:6px;position:relative;z-index:2}
+.colh{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:600}
+.stack{flex:1;display:flex;flex-direction:column;justify-content:space-between;gap:10px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.edge{fill:none;stroke:var(--edge);stroke-width:1.5;stroke-dasharray:4 4;marker-end:url(#arr)}
+.edge.on{stroke:var(--data);stroke-width:2.4;stroke-dasharray:none;opacity:1;marker-end:url(#arr-on)}
+.edge.hide{display:none}
+.mk{fill:var(--edge)}
+.mk.on{fill:var(--data)}
+.packet{fill:var(--data);stroke:var(--card);stroke-width:2}
+.node{position:relative;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:8px 11px;box-shadow:var(--elev);cursor:pointer;transition:border-color .25s,box-shadow .25s,background .25s,opacity .25s}
+.node:hover{border-color:var(--border2)}
+.node.active{border-color:var(--accent);box-shadow:0 0 0 3px var(--dataglow);background:var(--accent-soft)}
+.node.sel,.card-s.sel,.wh.sel{box-shadow:0 0 0 2px var(--accent2)}
+.nh{font-weight:650;color:var(--heading);display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.nh .muted{font-weight:400;font-size:11.5px}
+.sm{font-size:11.5px;color:var(--muted);margin-top:2px}
+.chiprow{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.tagc{font-size:10.5px;font-weight:600;padding:1px 7px;border-radius:999px;border:1px solid var(--border2);color:var(--muted);transition:all .3s}
+.tagc.on{border-color:var(--accent);color:var(--accent2);background:var(--accent-soft)}
+.prompt{visibility:hidden;margin-top:6px;padding:6px 8px;border-radius:10px;background:var(--card2);border-left:3px solid var(--accent);font-size:11.5px;min-height:62px;color:var(--text2)}
+.prompt.on{visibility:visible}
+.prompt .pl{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--accent2);font-weight:700}
+.gate{visibility:hidden;margin-top:5px;font-size:11.5px;padding:3px 8px;border-radius:8px;border:1px solid var(--mid);color:var(--mid);font-weight:600;min-height:25px}
+.gate.on{visibility:visible}
+.gate.ok{border-color:var(--green);color:var(--green)}
+#files{margin-top:6px;height:58px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+.file{font-size:10.5px;line-height:14.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:fin .4s}
+.file::before{content:"+ ";color:var(--green);font-weight:700}
+.commit{visibility:hidden;margin-top:4px;font-size:11.5px;color:var(--green);font-weight:600}
+.commit.on{visibility:visible;animation:fin .4s}
+@keyframes fin{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+@keyframes pulse{50%{box-shadow:0 0 0 4px var(--dataglow)}}
+.pill.st-ok{background:var(--green-soft);color:var(--green)}
+#cappill{margin-left:auto}
+.ws{border:1.5px dashed var(--border2);border-radius:16px;padding:8px 9px 9px;background:var(--bg2);transition:all .35s;display:flex;flex-direction:column;gap:7px}
+.ws.creating{border-style:solid;border-color:var(--accent);animation:pulse 1s infinite}
+.ws.ready{border-style:solid;border-color:var(--green)}
+.wh{display:flex;justify-content:space-between;align-items:center;font-weight:650;color:var(--heading);cursor:pointer;border-radius:8px;padding:1px 3px}
+.st{font-size:11px;font-weight:600;color:var(--muted)}
+.ready>.wh .st,.ready>.nm .st{color:var(--green)}
+.creating .st,.running .st{color:var(--accent2)}
+.items{display:flex;flex-direction:column;gap:7px}
+.card-s{border:1px dashed var(--border2);border-radius:12px;padding:6px 9px;background:var(--card2);opacity:.6;cursor:pointer;transition:all .35s;min-width:0}
+.card-s .nm{display:flex;justify-content:space-between;gap:6px;font-weight:650;font-size:12.5px;color:var(--heading)}
+.card-s .ty{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.card-s.creating,.card-s.running{opacity:1;border-style:solid;border-color:var(--accent);animation:pulse 1s infinite}
+.card-s.ready{opacity:1;border-style:solid;border-color:var(--green);background:var(--card)}
+.tbls{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.tbl{font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;border:1px dashed var(--border2);opacity:.5;transition:all .35s;color:var(--muted)}
+.tbl.creating{opacity:1;border-style:solid;border-color:var(--accent);color:var(--accent2)}
+.tbl.ready{opacity:1;border-style:solid;border-color:var(--green);color:var(--green)}
+.bar{height:5px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:6px}
+.bar>i{display:block;height:100%;width:0;background:var(--accentg)}
+.note{font-size:11px;color:var(--green);min-height:14px;margin-top:2px;font-weight:600}
+.mchips{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.mchip{font-size:10.5px;font-weight:700;padding:0 6px;border-radius:6px;background:var(--card2);color:var(--accent2);border:1px solid var(--border)}
+.mchip.later{visibility:hidden}
+.mchip.later.on{visibility:visible}
+.dax{visibility:hidden;margin-top:4px;font-size:11px;color:var(--green);font-weight:600}
+.dax.on{visibility:visible}
+.mini{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:6px;padding:5px;border:1px solid var(--border);border-radius:8px;background:var(--surface)}
+.v{opacity:0;transform:scale(.9);transition:all .35s;border:1px solid var(--border);border-radius:5px;background:var(--card2);font-size:9.5px;padding:2px 5px;min-height:20px;color:var(--muted);overflow:hidden}
+.v.on{opacity:1;transform:none}
+.v.hl{border-color:var(--accent);background:var(--accent-soft);color:var(--accent2);font-weight:700}
+.v b{display:block;color:var(--text);font-size:10.5px}
+.s2{grid-column:span 2}.s3{grid-column:span 3}
+.v svg{width:100%;height:24px;display:block}
+.v .ln{fill:none;stroke:var(--data);stroke-width:1.8}
+.v .bk{fill:var(--accent);opacity:.8}
+.v .sk{height:4px;border-radius:2px;background:var(--border2);margin:3px 0}
+.vc{font-size:10.5px;color:var(--faint);margin-top:3px}
+.opt.dim{opacity:.4}
+.ws.opt{min-height:0}
+.ws.opt .wh{cursor:pointer}
+
+/* flow: bottom panel */
+.bottom{display:grid;grid-template-columns:320px 1fr;gap:14px;margin-top:12px}
+.bottom .card{height:236px;overflow:auto;padding:10px 14px}
+.bh{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600;margin-bottom:6px}
+.step{display:flex;gap:8px;padding:4px 8px;border-radius:8px;cursor:pointer;color:var(--text);font-size:12.5px;border:0;background:transparent;width:100%;text-align:left;font-family:inherit}
+.step:hover{background:var(--card2)}
+.step .tg{min-width:74px;font-size:10.5px;color:var(--muted);padding-top:1px}
+.step.cur{background:var(--accent-soft);color:var(--accent2);font-weight:650}
+.step.done{color:var(--muted)}
+#log{font-size:11.5px}
+.ln{padding:1px 0;animation:fin .3s}
+.ln.ok{color:var(--green)}.ln.warn{color:var(--mid)}.ln.dim{color:var(--muted)}
+#pop{display:none;position:absolute;z-index:6;font-size:12.5px;background:var(--card);border:1px solid var(--accent);border-radius:14px;padding:12px 14px;box-shadow:var(--modal-shadow);max-height:85%;overflow:auto}
+#pop.on{display:block}
+#pop h3{margin:0 26px 6px 0;font-size:14px;color:var(--accent2)}
+#pop p{margin:0 0 7px;line-height:1.4}
+#pop .k{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700;display:block}
+#pop .care{border-left:3px solid var(--mid);padding-left:8px}
+#pop .x{position:absolute;top:6px;right:8px;padding:1px 9px;font-size:14px;line-height:1.3}
+#finale{display:none;position:absolute;inset:0;align-items:flex-start;padding-top:56px;justify-content:center;background:var(--overlay);z-index:5;border-radius:14px}
+#finale.on{display:flex}
+#finale .box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 24px;box-shadow:var(--modal-shadow);max-width:540px}
+#finale h2{margin:0 0 8px;font-size:17px;color:var(--heading)}
+#finale ul{margin:6px 0 12px;padding-left:18px;line-height:1.6}
+
+/* guardarraíles, checklist, prompts, refs */
+details.care{background:var(--card);border:1px solid var(--border);border-radius:14px;margin-bottom:10px}
+details.care summary{cursor:pointer;padding:11px 16px;font-weight:650;color:var(--heading);list-style:none;display:flex;align-items:center;gap:10px}
+details.care summary::-webkit-details-marker{display:none}
+details.care summary::before{content:"▸";color:var(--accent2);transition:transform .15s}
+details.care[open] summary::before{transform:rotate(90deg)}
+details.care .body{padding:0 16px 12px 36px}
+details.care .body p{margin:0 0 7px}
+.k2{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);font-weight:700;display:block;margin-top:6px}
+.chk{display:flex;gap:9px;align-items:flex-start;padding:5px 0;cursor:pointer;border-bottom:1px solid var(--border)}
+.chk:last-child{border-bottom:0}
+.chk input{margin-top:3px;accent-color:var(--accent);flex:none}
+.progress{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.progress .bar{flex:1;height:8px;margin-top:0}
+.tree{font-size:12.5px;line-height:1.55}
+#prompt-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+.pcard{display:flex;flex-direction:column;gap:6px}
+.pcard>:last-child{margin-top:auto}
+.pcard .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pcard .top h3{margin:0}
+.pcard .top .when{margin-left:auto}
+.pcard .row{display:flex;gap:8px;align-items:center;margin-top:2px}
+.pcard .row .btn{margin-left:auto}
+.pcard.flash{border-color:var(--accent);box-shadow:0 0 0 3px var(--dataglow)}
+.refitem{display:flex;gap:12px;align-items:flex-start}
+.refitem .id{flex:none;min-width:38px;text-align:center;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--card2);color:var(--accent2);border:1px solid var(--border)}
+.refitem .u{font-family:Consolas,monospace;font-size:11.5px;word-break:break-all;display:block;margin-top:2px}
+.refitem.flash{border-color:var(--accent);box-shadow:0 0 0 3px var(--dataglow)}
+
+@media (max-width:1100px){.bottom{grid-template-columns:1fr}.grid2,#prompt-list{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{animation:none !important;transition:none !important}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="hero-in">
+  <div class="brand">
+    <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="g" d="M3 6h6l3 6h9"/><path class="g" d="M3 18h6l3-6"/><circle class="d" cx="3" cy="6" r="1.8"/><circle class="d" cx="3" cy="18" r="1.8"/><circle class="d" cx="21" cy="12" r="1.8"/></svg></div>
+    <div class="brand-divider"></div>
+    <div class="brand-txt"><h1>Desarrollo en Microsoft Fabric asistido por GitHub Copilot</h1><p>Reglas + skills + MCP + herramientas · cada cambio es un diff · datos sintéticos · demo de ~8 min (Sesión 5)</p></div>
+  </div>
+  <div class="hdr-controls"><div class="hkpi" title="workspace, lakehouse, notebook, pipeline, modelo semántico y reporte">Artefactos de Fabric creados <b id="artn">0</b>/6</div><button type="button" class="icon-btn" id="theme" aria-pressed="false">Modo oscuro</button></div>
+</div></header>
+
+<div class="app">
+<div class="tabs" role="tablist" aria-label="Secciones">
+  <button class="tab active" role="tab" id="tab-flow" data-tab="flow" aria-selected="true" aria-controls="view-flow">Flujo animado</button>
+  <button class="tab" role="tab" id="tab-guard" data-tab="guard" aria-selected="false" tabindex="-1" aria-controls="view-guard">Guardarraíles</button>
+  <button class="tab" role="tab" id="tab-repl" data-tab="repl" aria-selected="false" tabindex="-1" aria-controls="view-repl">Para replicarlo</button>
+  <button class="tab" role="tab" id="tab-prompts" data-tab="prompts" aria-selected="false" tabindex="-1" aria-controls="view-prompts">Prompts de ejemplo<span class="n" id="npr"></span></button>
+  <button class="tab" role="tab" id="tab-refs" data-tab="refs" aria-selected="false" tabindex="-1" aria-controls="view-refs">Referencias<span class="n" id="nrf"></span></button>
+</div>
+
+<section class="view active" id="view-flow" role="tabpanel" aria-labelledby="tab-flow">
+  <div class="card player" role="group" aria-label="Controles del reproductor">
+    <button class="btn" id="back" type="button" title="Ir al final del paso anterior">◀ Paso</button>
+    <button class="btn primary" id="play" type="button">▶ Reproducir</button>
+    <button class="btn" id="fwd" type="button" title="Reproducir el paso siguiente y pausar">Paso ▶</button>
+    <button class="btn" id="restart" type="button" title="Volver al inicio y reproducir">⟲ Reiniciar</button>
+    <div class="grow"><input id="scrub" type="range" min="0" max="100" value="0" aria-label="Línea de tiempo"></div>
+    <span id="time" class="mono">0:00 / 0:00</span>
+    <label>Velocidad <select id="speed" aria-label="Velocidad" autocomplete="off"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></label>
+    <label><input type="checkbox" id="optToggle" checked autocomplete="off"> Incluir rama opcional (Fabric Apps · preview)</label>
+  </div>
+  <div class="capline" id="capline" aria-live="polite"><b>Listo.</b> Pulsa «▶ Reproducir», avanza con «Paso ▶» o haz clic (o Enter) en cualquier componente para ver qué hace y dónde aparece en la demo.</div>
+  <div class="stagewrap">
+  <div class="stage"><div id="plane">
+    <svg id="edges" aria-hidden="true"><defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto"><path class="mk" d="M0,1 L10,5 L0,9 z"/></marker>
+      <marker id="arr-on" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="11" markerHeight="11" markerUnits="userSpaceOnUse" orient="auto"><path class="mk on" d="M0,1 L10,5 L0,9 z"/></marker>
+    </defs></svg>
+
+    <div class="col">
+      <div class="colh">Estación del desarrollador · VS Code / Copilot CLI</div>
+      <div class="stack">
+        <div class="node" id="n-dev" data-info="dev" tabindex="0" role="button">
+          <div class="nh"><span aria-hidden="true">👤</span> Desarrollador</div>
+          <div class="sm">Pide en lenguaje natural · revisa y aprueba</div>
+          <div class="prompt" id="prompt"><span class="pl" id="plabel"></span><span id="ptext"></span></div>
+          <div class="gate" id="gate"></div>
+        </div>
+        <div class="node" id="n-agent" data-info="agent" tabindex="0" role="button">
+          <div class="nh"><span aria-hidden="true">🤖</span> Agente de GitHub Copilot</div>
+          <div class="sm" id="agst">en espera</div>
+        </div>
+        <div class="duo">
+          <div class="node" id="n-rules" data-info="rules" tabindex="0" role="button">
+            <div class="nh"><span aria-hidden="true">📜</span> Reglas del proyecto</div>
+            <div class="sm mono">copilot-instructions.md</div>
+            <div class="sm mono">agents/*.agent.md</div>
+            <div class="chiprow" id="rulechips"><span class="tagc">solo ws-ia-dev*</span><span class="tagc">datos sintéticos</span><span class="tagc">sin operar capacidad</span></div>
+          </div>
+          <div class="node" id="n-skills" data-info="skills" tabindex="0" role="button">
+            <div class="nh"><span aria-hidden="true">🧰</span> Skills de Fabric</div>
+            <div class="sm mono">.github/skills/</div>
+            <div class="chiprow" id="skillchips"><span class="tagc" data-sk="e2e-medallion-architecture">e2e-medallion</span><span class="tagc" data-sk="spark-cli">spark-cli</span><span class="tagc" data-sk="semantic-model-authoring">semantic-model</span><span class="tagc" data-sk="powerbi-report-cli">report-cli</span></div>
+          </div>
+        </div>
+        <div class="node" id="n-repo" data-info="repo" tabindex="0" role="button">
+          <div class="nh"><span aria-hidden="true">🗂</span> Repo Git local <span class="muted">· cada cambio = un diff</span></div>
+          <div id="files"></div>
+          <div class="commit" id="commit">● punto de control confirmado (git commit)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="colh">Servidor MCP · herramientas y APIs</div>
+      <div class="stack">
+        <div class="node" id="n-az" data-info="az" tabindex="0" role="button"><div class="nh"><span aria-hidden="true">🔑</span> Azure CLI</div><div class="sm">tokens · cuenta verificada con az account show</div></div>
+        <div class="node" id="n-rest" data-info="rest" tabindex="0" role="button"><div class="nh"><span aria-hidden="true">🔌</span> APIs REST de Fabric y Power BI</div><div class="sm">crear · ejecutar · refrescar · validar con DAX</div></div>
+        <div class="node" id="n-mcp" data-info="mcp" tabindex="0" role="button"><div class="nh"><span aria-hidden="true">🧩</span> Servidor MCP · modelado de Power BI</div><div class="sm">editar modelos en lote · local (stdio)</div></div>
+        <div class="node" id="n-rpt" data-info="rpt" tabindex="0" role="button"><div class="nh"><span aria-hidden="true">✅</span> CLI de autoría de reportes</div><div class="sm">validar y empaquetar PBIR</div></div>
+        <div class="node opt" id="n-rayfin" data-info="rayfin" tabindex="0" role="button" style="border-style:dashed"><div class="nh"><span aria-hidden="true">🧪</span> CLI de Rayfin <span class="pill prev">opcional · preview</span></div><div class="sm">crea y despliega una app de datos</div></div>
+      </div>
+    </div>
+
+    <div class="col">
+      <div class="colh">Microsoft Fabric · workspace de pruebas</div>
+      <div class="stack">
+        <div class="node" id="n-cap" data-info="cap" tabindex="0" role="button">
+          <div class="nh"><span aria-hidden="true">⚡</span> Capacidad de Fabric <span class="muted">· la gestiona una persona</span><span class="pill" id="cappill">sin verificar</span></div>
+        </div>
+        <div class="ws" id="n-ws">
+          <div class="wh" id="ws-h" data-info="ws" tabindex="0" role="button"><span>Workspace · <span class="mono">ws-ia-dev</span></span><span class="st" id="st-ws"></span></div>
+          <div class="items">
+            <div class="card-s empty" id="a-lh" data-info="lh" tabindex="0" role="button">
+              <div class="nm"><span class="mono">lh_banca</span><span class="st"></span></div><div class="ty">Lakehouse · esquemas habilitados</div>
+              <div class="tbls"><span class="tbl empty" id="t-bronze" data-info="tables">bronze</span><span class="tbl empty" id="t-silver" data-info="tables">silver</span><span class="tbl empty" id="t-gold" data-info="tables">gold</span></div>
+            </div>
+            <div class="card-s empty" id="a-nb" data-info="nb" tabindex="0" role="button"><div class="nm"><span class="mono">nb_medallion</span><span class="st"></span></div><div class="ty">Notebook · PySpark</div></div>
+            <div class="card-s empty" id="a-pl" data-info="pl" tabindex="0" role="button"><div class="nm"><span class="mono">pl_medallion</span><span class="st"></span></div><div class="ty">Pipeline de datos (Data Factory)</div><div class="bar"><i id="plbar"></i></div><div class="note" id="plnote"></div></div>
+            <div class="card-s empty" id="a-sm" data-info="sm" tabindex="0" role="button">
+              <div class="nm"><span class="mono">sm_kpis</span><span class="st"></span></div><div class="ty">Modelo semántico · Direct Lake · TMDL</div>
+              <div class="mchips"><span class="mchip">Total Amount</span><span class="mchip">Transactions</span><span class="mchip">Avg Ticket</span><span class="mchip later" id="mchipEs">+ traducción es</span></div>
+              <div class="dax" id="dax">✓ consulta DAX por canal = endpoint SQL</div>
+            </div>
+            <div class="card-s empty" id="a-rp" data-info="rp" tabindex="0" role="button">
+              <div class="nm"><span class="mono">rpt_ejecutivo</span><span class="st"></span></div><div class="ty">Reporte · PBIR · vista ilustrativa</div>
+              <div class="mini" id="mini">
+                <div class="v s3"><b>Resumen ejecutivo · banca minorista</b></div>
+                <div class="v" data-late="1">Canal ▾</div>
+                <div class="v">Importe</div>
+                <div class="v">Transacciones</div>
+                <div class="v">Ticket prom.</div>
+                <div class="v">Variación</div>
+                <div class="v s2"><svg viewBox="0 0 100 24" preserveAspectRatio="none"><polyline class="ln" points="0,19 12,15 24,17 36,9 48,12 60,6 72,10 84,4 100,7"/></svg></div>
+                <div class="v s2"><svg viewBox="0 0 60 24" preserveAspectRatio="none"><rect class="bk" x="2" y="3" width="52" height="4"/><rect class="bk" x="2" y="10" width="38" height="4"/><rect class="bk" x="2" y="17" width="22" height="4"/></svg></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ws opt" id="n-app" style="border-style:dashed">
+          <div class="wh" data-info="app" tabindex="0" role="button"><span>Fabric Apps · <span class="mono">app-banca</span> <span class="pill prev">preview</span></span><span class="st" id="st-app"></span></div>
+          <div class="sm">App de datos React + TypeScript · hosting y autenticación de Fabric</div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+  <div id="pop" role="dialog" aria-label="Detalle del componente" aria-live="polite"></div>
+  <div id="finale" role="dialog" aria-label="Resumen del flujo"><div class="box">
+    <h2>✓ Listo · construido con prompts, bajo guardarraíles</h2>
+    <ul>
+      <li>Un workspace de pruebas en una capacidad asignada por una persona</li>
+      <li>Lakehouse · notebook medallion · pipeline de datos</li>
+      <li>Tablas Delta bronze, silver y gold (datos sintéticos)</li>
+      <li>Modelo semántico Direct Lake (TMDL) con medidas, validado con DAX</li>
+      <li>Reporte (PBIR) publicado y ligado al modelo, tras aprobar la especificación</li>
+      <li>Todo como archivos en Git: revisable y reversible</li>
+      <li id="finOpt">Opcional: app de datos con Fabric Apps (preview)</li>
+    </ul>
+    <button class="btn primary" id="replay" type="button">⟲ Repetir</button> <button class="btn" id="closefin" type="button">Cerrar</button>
+  </div></div>
+  </div>
+
+  <div class="bottom">
+    <div class="card"><div class="bh">Pasos (clic para saltar)</div><div id="steps"></div></div>
+    <div class="card"><div class="bh">Qué hace el agente</div><div id="log" role="log"></div></div>
+  </div>
+</section>
+
+<section class="view" id="view-guard" role="tabpanel" aria-labelledby="tab-guard">
+  <div class="kpis">
+    <div class="card"><div class="lbl">Alcance</div><div class="val">Solo ws-ia-dev*</div></div>
+    <div class="card"><div class="lbl">Datos</div><div class="val">Solo sintéticos</div></div>
+    <div class="card"><div class="lbl">Especificación</div><div class="val">Aprobación humana antes de construir</div></div>
+    <div class="card"><div class="lbl">Capacidad</div><div class="val">Sin operaciones del agente</div></div>
+    <div class="card"><div class="lbl">Cambios</div><div class="val">Diff revisable en Git</div></div>
+  </div>
+
+  <div class="callout warn"><b>Honestidad técnica:</b> las reglas del proyecto <i>guían</i> al agente, pero no son un control técnico. El control real son los permisos de tu identidad (rol en el workspace, acceso a la capacidad), la aprobación de comandos de terminal en VS Code y la revisión del diff en Git. Usa las tres capas juntas.</div>
+
+  <div class="sec-h">Los guardarraíles y dónde se ven en la demo</div>
+  <div class="grid3">
+    <div class="card"><h3>1 · Alcance de workspaces</h3><p>Las reglas nombran el prefijo donde el agente puede crear o modificar (<span class="cmd">ws-ia-dev*</span>) y listan lo que nunca debe tocar (laboratorios y demos de otros equipos).</p><p class="muted">Se ve en: <b>Prompt 0</b> (en vivo).</p></div>
+    <div class="card"><h3>2 · Datos sintéticos</h3><p>El notebook genera los datos; el agente no lee ni copia datos de clientes. Es lo que permite practicar sin riesgo.</p><p class="muted">Se ve en: <b>Prompt 1</b>.</p></div>
+    <div class="card"><h3>3 · Aprobación humana de la especificación</h3><p>El skill de reportes escribe una especificación (<span class="cmd">_brief/report-spec.md</span>) y se detiene. Nada se construye ni se publica hasta que una persona aprueba.</p><p class="muted">Se ve en: <b>Prompt 5 → 6</b>.</p></div>
+    <div class="card"><h3>4 · Sin operaciones de capacidad</h3><p>El agente no pausa, reanuda, escala ni borra la capacidad. Una persona confirma que está activa antes de la sesión y no la toca durante la demo.</p><p class="muted">Se ve en: verificación previa.</p></div>
+    <div class="card"><h3>5 · Cambios revisables en Git</h3><p>Modelos (TMDL) y reportes (PBIR) son archivos de texto en <span class="cmd">models/</span> y <span class="cmd">reports/</span>: cada edición es un diff que se revisa o se revierte.</p><p class="muted">Se ve en: <span class="cmd">git diff --stat</span> tras el Prompt 4.</p></div>
+    <div class="card"><h3>6 · Identidad explícita</h3><p>Antes de llamar a Azure o Fabric, el agente verifica la cuenta con <span class="cmd">az account show</span> y no ejecuta <span class="cmd">az login</span> ni <span class="cmd">az account set</span> si no se lo piden.</p><p class="muted">Se ve en: <b>Prompt 0</b>.</p></div>
+  </div>
+
+  <div class="sec-h">Ejemplo genérico de reglas (<span class="mono">.github/copilot-instructions.md</span>) <span class="rcs" data-r="15"></span></div>
+  <div class="card"><p class="muted">El archivo es para el agente, por eso va en inglés. Adáptalo a tu entorno; los nombres son ficticios.</p>
+<pre class="code" id="rules-example"># AI-assisted Fabric development (synthetic data only)
+
+## Before any Fabric or Azure call
+- Run `az account show --query "{user:user.name,tenant:tenantId}" -o json` and confirm the account and tenant are the expected ones. If not, stop and tell the user.
+- Never run `az login`, `az account set` or change any Azure CLI setting unless the user asks.
+- Use the Fabric skills in `.github/skills` (and `.github/common`) for every Fabric task.
+
+## Scope and safety rails
+- Run every command in PowerShell. Do not use WSL.
+- Create or modify items only in workspaces named `ws-ia-dev*`. Never touch any other workspace.
+- Never pause, resume, scale or delete the Fabric capacity.
+- Synthetic data only. Never read or copy customer data.
+- Keep semantic models (TMDL) and reports (PBIR) as files in this repo so every change is a Git diff.
+- For reports: write a spec first, show it, and wait for explicit approval before building or publishing.
+- Prefer the local `powerbi-authoring-local` MCP server. Do not enable a second Power BI authoring server.
+
+## Validated in this environment (replace with your own findings)
+- Direct Lake: use the lakehouse SQL endpoint variant (the OneLake variant failed to refresh in our rehearsal).
+- First use of the Authoring MCP: ask the user to review and accept the EULA; accept it only after the user explicitly authorizes it.</pre>
+    <div class="row" style="margin-top:8px"><button class="btn" type="button" data-copy="rules-example">Copiar reglas</button> <span class="muted" data-copystate="rules-example"></span></div>
+  </div>
+
+  <div class="sec-h">Cuidados aprendidos en el ensayo</div>
+  <details class="care" open><summary>La autenticación de la terminal <span class="pill vf">verificar antes de la demo</span></summary><div class="body">
+    <span class="k2">Síntoma</span><p>El agente dice estar firmado con otra cuenta o tenant, o <span class="cmd">az</span> falla con «subscription not found». Pasa con una terminal restaurada, con un perfil de Azure CLI distinto o al usar un shell de WSL.</p>
+    <span class="k2">Qué hacer</span><p>Abre una terminal PowerShell <b>nueva</b> dentro del proyecto y ejecuta <span class="cmd">az account show</span>. Si el proyecto usa un perfil aislado de Azure CLI, la regla indica cómo restablecer la variable <span class="cmd">AZURE_CONFIG_DIR</span> en esa terminal. No ejecutes <span class="cmd">az login</span> salvo que el token haya expirado (lo hace una persona).</p>
+    <span class="k2">Frase</span><p>«El agente no se autentica solo: usa la sesión de mi terminal, y por eso lo primero que hace es comprobar quién es.»</p>
+  </div></details>
+  <details class="care"><summary>EULA del servidor MCP en el primer uso <span class="pill vf">verificar antes de la demo</span></summary><div class="body">
+    <span class="k2">Síntoma</span><p>El servidor MCP de autoría bloquea todas las llamadas hasta aceptar el EULA. En el ensayo no estaba aceptado y el agente escribió el TMDL a mano, sin usar el MCP.</p>
+    <span class="k2">Qué hacer</span><p>Una persona revisa el EULA y autoriza la herramienta <span class="cmd">accept_eula</span>. Para ejecución desatendida existen <span class="cmd">--accepteula</span> o <span class="cmd">PBI_MODELING_MCP_ACCEPT_EULA=true</span>, solo después de revisarlo. Comprueba con «MCP: List Servers» que el servidor está iniciado. <span class="rcs" data-r="3"></span></p>
+    <span class="k2">Frase</span><p>«Aceptar el EULA es una decisión humana; el agente la ejecuta solo si yo lo autorizo.»</p>
+  </div></details>
+  <details class="care"><summary>Qué skill elegir: despliegue vs. sincronización Git <span class="pill vf">corregir si pasa</span></summary><div class="body">
+    <span class="k2">Síntoma</span><p>El agente carga <span class="cmd">deployment-pipelines-authoring-cli</span> (promoción dev/test/prod) o <span class="cmd">git-integration-operations-cli</span> (sincronizar workspace con Git) cuando querías un pipeline de datos o archivos locales.</p>
+    <span class="k2">Qué hacer</span><p>Detén al agente y repite la frase explícita: «(not a deployment pipeline)» o «do not use Fabric Git integration». Los prompts 2 y 3 ya la incluyen. Es una buena lección: el prompt también enruta el skill.</p>
+    <span class="k2">Frase</span><p>«Si elige mal, no es un fallo del flujo: es la señal para ser más específico y volver a pedirlo.»</p>
+  </div></details>
+  <details class="care"><summary>Direct Lake sobre el endpoint SQL <span class="pill vf">observado en un ensayo</span></summary><div class="body">
+    <span class="k2">Qué se observó</span><p>La variante Direct Lake sobre OneLake, creada por API, falló en el refresh («source tables do not exist or access was denied»); la variante sobre el <b>endpoint SQL</b> del lakehouse funcionó. La regla del proyecto la fija. En lakehouses con esquemas, el endpoint REST de «tables» no se admite: lista las tablas por OneLake o por el endpoint SQL.</p>
+    <span class="k2">Qué hacer</span><p>Si el refresh falla, es justo para lo que sirven el validador y el agente: volver a la variante del endpoint SQL. <b>Es una observación de un entorno concreto, no una regla general: verifícala en el tuyo.</b></p>
+  </div></details>
+  <details class="care"><summary>El reporte completo no cabe en una demo de 8 minutos <span class="pill vf">tiempo observado</span></summary><div class="body">
+    <p>En un ensayo, armar y publicar el reporte llevó cerca de 23 min de tiempo de agente, con aprobación humana de la especificación. Es un tiempo observado en un ensayo, <b>sin línea base manual</b>: no es una cifra de beneficio. Por eso se muestra prearmado.</p>
+  </div></details>
+  <details class="care"><summary>Sin Power BI Desktop no hay vista previa local</summary><div class="body">
+    <p>El agente puede validar y publicar el PBIR sin Desktop, pero sin él no hay capturas locales: la verificación visual se hace en el servicio, tras publicar.</p>
+  </div></details>
+
+  <div class="sec-h">Dos pistas, nunca mezcladas</div>
+  <div class="grid2">
+    <div class="card"><h3>Pista 1 · Flujo de desarrollo asistido <span class="pill live">esta demo</span></h3><p>Agente de GitHub Copilot + skills + servidor MCP + Git para construir artefactos de Fabric más rápido y de forma revisable. No exige cambiar la arquitectura actual para empezar.</p></div>
+    <div class="card"><h3>Pista 2 · Copilot dentro de Fabric y Power BI <span class="pill opt">otro tema</span></h3><p>Asistencia dentro del portal (notebooks, Data Factory, warehouse, Power BI) y preguntas en lenguaje natural. Depende de capacidad, región y de decisiones de gobierno; no se demuestra aquí. <span class="rcs" data-r="7 6"></span></p></div>
+  </div>
+</section>
+<section class="view" id="view-repl" role="tabpanel" aria-labelledby="tab-repl">
+  <div class="progress"><b id="chkcount">0/0</b><div class="bar" aria-hidden="true"><i id="chkbar"></i></div><span class="muted">Marca lo que ya tienes (solo en esta pestaña; no se guarda).</span></div>
+
+  <div class="grid2">
+    <div class="card"><h3>1 · Estación de trabajo</h3>
+      <label class="chk"><input type="checkbox"><span>VS Code con la extensión de GitHub Copilot (Chat) y el agente en modo <b>Agent</b>. <span class="rcs" data-r="5"></span></span></label>
+      <label class="chk"><input type="checkbox"><span>Una cuenta de GitHub con acceso a GitHub Copilot (ver «Licencias»). <span class="rcs" data-r="11"></span></span></label>
+      <label class="chk"><input type="checkbox"><span>Node.js y npm: los usan <span class="cmd">npx</span> (servidor MCP) y la CLI de Rayfin; la receta de Fabric Apps con Copilot pide Node.js 20 o posterior. <span class="rcs" data-r="19"></span></span></label>
+      <label class="chk"><input type="checkbox"><span>Azure CLI (<span class="cmd">az</span>) instalada; <span class="cmd">az account show</span> muestra la cuenta y el tenant de pruebas.</span></label>
+      <label class="chk"><input type="checkbox"><span>Git instalado; carpeta del proyecto con <span class="cmd">git init</span> y un primer commit (línea base para ver diffs).</span></label>
+      <label class="chk"><input type="checkbox"><span>Terminal por defecto en PowerShell (Windows), fijada en <span class="cmd">.vscode/settings.json</span>; evita WSL si su <span class="cmd">az</span> apunta a otro tenant. Opcional: aprobar automáticamente solo comandos de solo lectura como <span class="cmd">az account show</span>.</span></label>
+      <label class="chk"><input type="checkbox"><span>Un modelo de razonamiento profundo elegido en el selector de modelos del chat (la documentación del MCP lo recomienda). <span class="rcs" data-r="3 10"></span></span></label>
+    </div>
+    <div class="card"><h3>2 · Estructura del proyecto</h3>
+<pre class="code tree" style="user-select:text">proyecto-fabric-ia/
+├─ .github/
+│  ├─ copilot-instructions.md   ← reglas y guardarraíles
+│  ├─ agents/                   ← agentes personalizados (*.agent.md)
+│  ├─ skills/                   ← skills de Fabric (carpeta + SKILL.md)
+│  └─ common/                   ← material compartido de los skills
+├─ .vscode/
+│  ├─ mcp.json                  ← servidor MCP (formato «servers»)
+│  └─ settings.json             ← terminal PowerShell, aprobaciones
+├─ tools/                       ← scripts de apoyo
+├─ models/                      ← modelos semánticos (TMDL)
+├─ reports/                     ← reportes (PBIR / PBIP)
+└─ _brief/                      ← especificaciones aprobadas</pre>
+      <label class="chk"><input type="checkbox"><span><span class="cmd">.github/skills/</span> y <span class="cmd">.github/common/</span>: GitHub Copilot lee skills de proyecto desde <span class="cmd">.github/skills</span>, <span class="cmd">.claude/skills</span> o <span class="cmd">.agents/skills</span>. <span class="rcs" data-r="4 8"></span></span></label>
+      <label class="chk"><input type="checkbox"><span><span class="cmd">.github/copilot-instructions.md</span> con guardarraíles (pestaña «Guardarraíles»). <span class="rcs" data-r="15"></span></span></label>
+      <label class="chk"><input type="checkbox"><span><span class="cmd">.github/agents/*.agent.md</span>: agentes personalizados (opcional); en el proyecto de ejemplo hay cuatro perfiles de Fabric (administración, ingeniería de datos, desarrollo de apps y consultas de Power BI). <span class="rcs" data-r="14"></span></span></label>
+      <label class="chk"><input type="checkbox"><span>Carpetas <span class="cmd">models/</span>, <span class="cmd">reports/</span>, <span class="cmd">_brief/</span> y <span class="cmd">tools/</span>.</span></label>
+    </div>
+  </div>
+
+  <div class="sec-h">3 · Skills de Fabric: de dónde salen <span class="rcs" data-r="8"></span></div>
+  <div class="card">
+    <p>Los skills del proyecto de ejemplo provienen del repositorio público <b>microsoft/skills-for-fabric</b> (licencia MIT). Tres formas de obtenerlos; las dos primeras vienen del README del repositorio:</p>
+<pre class="code" id="skills-cmds"># 1) Plugins en Copilot CLI (ruta recomendada por el repositorio)
+/plugin marketplace add microsoft/skills-for-fabric
+/plugin install fabric-skills@fabric-collection
+/plugin install powerbi-authoring@fabric-collection
+
+# 2) Un solo skill con APM
+apm install microsoft/skills-for-fabric --skill sqldw-cli --target copilot
+
+# 3) Copiar las carpetas de skills a .github/skills de tu proyecto para versionarlas con Git</pre>
+    <div class="row" style="margin-top:8px"><button class="btn" type="button" data-copy="skills-cmds">Copiar comandos</button> <span class="muted" data-copystate="skills-cmds"></span> <span class="pill vf">verificar versión instalada</span></div>
+    <label class="chk"><input type="checkbox"><span>Pregunta al agente qué skills ve (Prompt «Pre-flight») y confirma que aparecen los de modelos semánticos, reportes, Spark y medallion.</span></label>
+  </div>
+
+  <div class="sec-h">4 · Servidor MCP de autoría de Power BI <span class="rcs" data-r="3 10 5 13"></span></div>
+  <div class="grid2">
+    <div class="card"><h3>Formato que documenta VS Code hoy <span class="pill ga">recomendado</span></h3>
+      <p>Archivo <span class="cmd">.mcp.json</span> en la raíz del proyecto, con la clave <span class="cmd">mcpServers</span>.</p>
+<pre class="code" id="mcp-a">{
+  "mcpServers": {
+    "powerbi-authoring-local": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@microsoft/powerbi-modeling-mcp@1.0.0", "--start"]
+    }
+  }
+}</pre>
+      <div class="row" style="margin-top:8px"><button class="btn" type="button" data-copy="mcp-a">Copiar JSON</button> <span class="muted" data-copystate="mcp-a"></span></div>
+    </div>
+    <div class="card"><h3>Formato usado en el ensayo <span class="pill vf">verificar</span></h3>
+      <p>Archivo <span class="cmd">.vscode/mcp.json</span>, con la clave <span class="cmd">servers</span>. La documentación actual de VS Code lo asocia al arnés «Local», marcado como deprecado (retiro anunciado para febrero de 2027).</p>
+<pre class="code" id="mcp-b">{
+  "servers": {
+    "powerbi-authoring-local": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@microsoft/powerbi-modeling-mcp@1.0.0", "--start"]
+    }
+  }
+}</pre>
+      <div class="row" style="margin-top:8px"><button class="btn" type="button" data-copy="mcp-b">Copiar JSON</button> <span class="muted" data-copystate="mcp-b"></span></div>
+    </div>
+  </div>
+  <div class="card">
+    <label class="chk"><input type="checkbox"><span>Versión fijada (en el ensayo se usó la 1.0.0; al preparar este material npm mostraba la 1.0.1). Prueba la versión que fijes antes de la demo.</span></label>
+    <label class="chk"><input type="checkbox"><span>Una persona revisó y aceptó el EULA (<span class="cmd">accept_eula</span> o <span class="cmd">--accepteula</span> tras revisarlo).</span></label>
+    <label class="chk"><input type="checkbox"><span>Para modelos dentro de un workspace de Fabric con el servidor local: punto de conexión XMLA en <b>lectura y escritura</b> en la capacidad, y permiso de Write (con solo Build el servidor únicamente ejecuta DAX).</span></label>
+    <label class="chk"><input type="checkbox"><span>Un solo servidor de autoría registrado: no combines el local y el hospedado (el agente vería herramientas duplicadas).</span></label>
+    <label class="chk"><input type="checkbox"><span>Entiende el alcance: el MCP solo modela; no cambia páginas de reportes. La documentación recomienda el servidor hospedado (preview) para modelos en un workspace de Fabric; el local es el que trabaja con archivos TMDL/PBIP en disco, como en este flujo.</span></label>
+    <label class="chk"><input type="checkbox"><span>En el ensayo el <span class="cmd">env</span> fijó un identificador de tenant; aquí se omitió. Si lo necesitas, defínelo en tu configuración personal, no en un repositorio compartido.</span></label>
+  </div>
+
+  <div class="sec-h">5 · Capacidad y permisos de Fabric</div>
+  <div class="card">
+    <label class="chk"><input type="checkbox"><span>Capacidad de Fabric asignada al workspace de pruebas; la administra y verifica una persona (el agente no la opera).</span></label>
+    <label class="chk"><input type="checkbox"><span>Permiso para crear el workspace de pruebas, o un workspace existente con rol Contributor, Member o Admin.</span></label>
+    <label class="chk"><input type="checkbox"><span>Antes de la sesión: <span class="cmd">az account get-access-token --resource https://api.fabric.microsoft.com --query expiresOn</span> devuelve un token vigente. <span class="rcs" data-r="8"></span></span></label>
+  </div>
+
+  <div class="sec-h">6 · Rama opcional · Fabric Apps con la CLI de Rayfin <span class="pill prev">preview</span> <span class="rcs" data-r="1 2 9 16 18"></span></div>
+  <div class="grid2">
+    <div class="card">
+      <label class="chk"><input type="checkbox"><span>Un administrador habilita <b>Fabric Apps (preview)</b> en el portal de administración → Tenant settings (toda la organización o grupos concretos).</span></label>
+      <label class="chk"><input type="checkbox"><span>Región compatible: Fabric Apps aún no está disponible en todas las regiones.</span></label>
+      <label class="chk"><input type="checkbox"><span>Workspace con capacidad asignada (Fabric Apps consume unidades de capacidad) y rol Contributor, Member o Admin.</span></label>
+      <label class="chk"><input type="checkbox"><span>Para una app conectada a un modelo semántico: configuración de tenant de la API «Execute Queries» y permisos Build y Read sobre el modelo. <span class="rcs" data-r="19"></span></span></label>
+    </div>
+    <div class="card"><h3>Comandos (verificados en la documentación)</h3>
+<pre class="code" id="rayfin-cmds">npm create @microsoft/rayfin@latest -- app-banca --workspace ws-ia-dev
+cd app-banca
+npm run dev                # script del template; ejecuta «rayfin dev»
+npx rayfin up --dry-run    # vista previa del despliegue, sin cambios
+npx rayfin up              # despliega en Fabric
+npx rayfin up status       # estado del despliegue</pre>
+      <div class="row" style="margin-top:8px"><button class="btn" type="button" data-copy="rayfin-cmds">Copiar comandos</button> <span class="muted" data-copystate="rayfin-cmds"></span> <span class="pill vf">verificar según versión</span></div>
+      <p class="muted" style="margin-top:8px">La guía de Learn usa <span class="cmd">npx rayfin dev</span>; el script <span class="cmd">npm run dev</span> viene del template «Universal App» y llama a <span class="cmd">rayfin dev</span>. La documentación describe <span class="cmd">dev</span> de dos maneras (servidor del frontend y ejecución local completa): confirma el comportamiento exacto en tu versión. Paquetes en npm al preparar este material: <span class="cmd">@microsoft/create-rayfin</span> y <span class="cmd">@microsoft/rayfin-cli</span> 1.36.2.</p>
+    </div>
+  </div>
+
+  <div class="sec-h">7 · Licencias: tres «Copilot» distintos</div>
+  <div class="grid3">
+    <div class="card"><h3>GitHub Copilot <span class="pill live">este flujo</span></h3><p>Suscripción de GitHub (planes Free, Student, Pro, Pro+, Max, Business y Enterprise según la documentación de GitHub). Es lo que usa el agente en VS Code o Copilot CLI. En cuentas de organización, algunas capacidades las controla una política del administrador de GitHub: por ejemplo, «MCP servers in Copilot» viene deshabilitada por defecto en cuentas enterprise. <span class="rcs" data-r="11 3"></span></p></div>
+    <div class="card"><h3>Copilot en Fabric y Power BI <span class="pill opt">otra pista</span></h3><p>Experiencias dentro de Fabric. La documentación indica que está habilitado por defecto en tenants con capacidades de pago F2 o superior y que consume capacidad. Varias funciones, como Copilot en notebooks, están en vista previa. <span class="rcs" data-r="7 6"></span></p></div>
+    <div class="card"><h3>Microsoft 365 Copilot <span class="pill opt">otro producto</span></h3><p>Copilot en las apps de Microsoft 365. La documentación indica que sus experiencias difieren en datos, integración y licenciamiento respecto de otros Copilot. <span class="rcs" data-r="12"></span></p></div>
+  </div>
+  <div class="callout"><b>Regla práctica:</b> tener uno no habilita los otros. Confirma el licenciamiento de cada uno con su administrador antes de comprometer una fecha.</div>
+
+  <div class="sec-h">8 · Estado de cada pieza: qué es GA y qué es preview <span class="rcs" data-r="17"></span></div>
+  <div class="tablewrap"><table class="t">
+    <thead><tr><th>Pieza</th><th>Estado</th><th>Nota</th><th>Ref.</th></tr></thead>
+    <tbody>
+      <tr><td>Fabric Apps y CLI de Rayfin</td><td><span class="pill prev">preview</span></td><td>Requiere habilitar «Fabric Apps (preview)» en el tenant; no disponible en todas las regiones.</td><td><span class="rcs" data-r="9 1 18"></span></td></tr>
+      <tr><td>Servidor MCP de autoría de Power BI · local</td><td><span class="pill ga">GA</span></td><td>Según Learn: local disponible de forma general.</td><td><span class="rcs" data-r="10"></span></td></tr>
+      <tr><td>Servidor MCP de autoría de Power BI · hospedado</td><td><span class="pill prev">preview</span></td><td>Recomendado por la documentación para modelos en un workspace; requiere un ajuste de tenant.</td><td><span class="rcs" data-r="10 3"></span></td></tr>
+      <tr><td>Copilot en notebooks (Data Engineering y Data Science)</td><td><span class="pill prev">preview</span></td><td>Funciones como «Fix with Copilot» también están en preview.</td><td><span class="rcs" data-r="6 7"></span></td></tr>
+      <tr><td>Skills de Fabric (skills-for-fabric)</td><td><span class="pill vf">verificar</span></td><td>Repositorio público con versiones y changelog; algunos skills se marcan como experimentales en su encabezado (p. ej., sincronización Git). Verifica la versión instalada.</td><td><span class="rcs" data-r="8"></span></td></tr>
+      <tr><td>CLI de autoría de reportes (paquete npm)</td><td><span class="pill vf">verificar</span></td><td>Versión 0.x (0.5.0 al preparar este material): confirma madurez y cambios antes de depender de ella.</td><td>—</td></tr>
+      <tr><td>Ubicación y formato de la configuración MCP en VS Code</td><td><span class="pill vf">verificar</span></td><td>La documentación actual recomienda <span class="cmd">.mcp.json</span> con <span class="cmd">mcpServers</span>; <span class="cmd">.vscode/mcp.json</span> corresponde al arnés Local (deprecado).</td><td><span class="rcs" data-r="13 5"></span></td></tr>
+      <tr><td>Direct Lake sobre endpoint SQL</td><td><span class="pill vf">observado</span></td><td>Resultado de un ensayo en un entorno concreto; verifícalo en el tuyo.</td><td>—</td></tr>
+      <tr><td>Tiempos de pipeline, modelo y reporte</td><td><span class="pill vf">observado</span></td><td>Observados en un ensayo, sin línea base manual; varían con el entorno.</td><td>—</td></tr>
+    </tbody></table></div>
+</section>
+<section class="view" id="view-prompts" role="tabpanel" aria-labelledby="tab-prompts">
+  <div class="callout"><b>Cómo usarlos:</b> los prompts van en inglés porque los skills funcionan mejor así; las notas están en español. Cada botón copia el texto al portapapeles (o lo deja seleccionado para Ctrl+C). Los nombres son genéricos: <span class="cmd">ws-ia-dev</span>, <span class="cmd">lh_banca</span>, <span class="cmd">nb_medallion</span>, <span class="cmd">pl_medallion</span>, <span class="cmd">sm_kpis</span>, <span class="cmd">rpt_ejecutivo</span>. La capacidad se toma de las reglas del proyecto.</div>
+  <div class="grid2" id="prompt-list"></div>
+</section>
+<section class="view" id="view-refs" role="tabpanel" aria-labelledby="tab-refs">
+  <div class="callout"><b>Verificación:</b> todas las URL de esta pestaña respondieron HTTP 200 el 12-nov-2026. Las de «Solicitadas» son las del temario; las «Adicionales» son las que se citan en las otras pestañas.</div>
+  <div class="sec-h">Solicitadas</div>
+  <div id="refs-main"></div>
+  <div class="sec-h">Adicionales citadas en este material</div>
+  <div id="refs-extra"></div>
+</section>
+
+<div class="foot">Material didáctico · datos sintéticos · estados Preview/GA verificados el 12-nov-2026 en la documentación enlazada; pueden cambiar.</div>
+</div>
+<script>
+(() => {
+"use strict";
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const SVGNS = "http://www.w3.org/2000/svg";
+const mqReduce = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
+const reduced = () => mqReduce.matches;
+const root = document.documentElement;
+function h(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  if (props) for (const k in props) { if (k === "class") e.className = props[k]; else if (k === "text") e.textContent = props[k]; else e.setAttribute(k, props[k]); }
+  kids.flat().forEach((c) => { if (c != null) e.append(c); });
+  return e;
+}
+
+/* ================= DATOS ================= */
+const REFS = [
+  ["1", "Learn · Crear y desplegar tu primera app de Fabric con la CLI de Rayfin", "https://learn.microsoft.com/en-us/fabric/apps/create-app-with-cli", "Comandos de scaffolding, ejecución local y despliegue (npm create, rayfin dev, rayfin up). Requisitos: workload habilitado, Node.js, rol en el workspace."],
+  ["2", "GitHub · microsoft/rayfin", "https://github.com/microsoft/rayfin", "Repositorio de Rayfin (plataforma backend-as-a-service sobre Fabric): inicio rápido, plugins para agentes."],
+  ["3", "GitHub · microsoft/powerbi-modeling-mcp", "https://github.com/microsoft/powerbi-modeling-mcp", "Servidor MCP de autoría de Power BI: instalación, EULA, ejemplos y advertencias de privacidad."],
+  ["4", "GitHub Docs · Agent skills", "https://docs.github.com/en/copilot/concepts/customizations/agent-skills", "Qué son los skills, dónde se guardan (.github/skills, .claude/skills, .agents/skills) y en qué superficies funcionan."],
+  ["5", "VS Code · Añadir y usar servidores MCP", "https://code.visualstudio.com/docs/agent-customization/mcp-servers", "Cómo agregar, verificar y administrar servidores MCP en VS Code."],
+  ["6", "Learn · Copilot para Data Engineering y Data Science (preview)", "https://learn.microsoft.com/en-us/fabric/data-engineering/copilot-notebooks-overview", "Copilot dentro de los notebooks de Fabric (otra pista distinta de este flujo)."],
+  ["7", "Learn · Visión general de Copilot en Fabric", "https://learn.microsoft.com/en-us/fabric/fundamentals/copilot-fabric-overview", "Copilot en las cargas de trabajo de Fabric: habilitación (capacidades F2 o superior), costo y privacidad."],
+  ["8", "GitHub · microsoft/skills-for-fabric", "https://github.com/microsoft/skills-for-fabric", "Repositorio público (MIT) de skills de Fabric: marketplace de plugins, APM, bundles fabric-skills y powerbi-authoring."],
+  ["9", "Learn · ¿Qué es Fabric Apps? (preview)", "https://learn.microsoft.com/en-us/fabric/apps/overview", "Resumen de Fabric Apps, prerrequisitos (capacidad, ajuste de tenant) y servicios hijos."],
+  ["10", "Learn · Servidor MCP de autoría de Power BI", "https://learn.microsoft.com/en-us/power-bi/developer/mcp/power-bi-authoring-mcp", "Hospedado (preview) frente a local (GA), prerrequisitos (XMLA lectura/escritura, permisos) y emparejamiento con skills."],
+  ["11", "GitHub Docs · Planes de GitHub Copilot", "https://docs.github.com/en/copilot/get-started/plans", "Planes y licenciamiento de GitHub Copilot (Free, Pro, Pro+, Max, Business, Enterprise)."],
+  ["12", "Learn · ¿Qué es Microsoft Copilot?", "https://learn.microsoft.com/en-us/copilot/plan/copilot-overview", "Microsoft 365 Copilot y su licenciamiento, distinto de GitHub Copilot y de Copilot en Fabric."],
+  ["13", "VS Code · Referencia de configuración MCP", "https://code.visualstudio.com/docs/agents/reference/mcp-configuration", "Ubicaciones y formato de la configuración (.mcp.json, mcpServers) y estado del arnés Local."],
+  ["14", "GitHub Docs · Custom agents", "https://docs.github.com/en/copilot/concepts/customizations/custom-agents", "Perfiles de agente en Markdown (.agent.md) y dónde se pueden usar."],
+  ["15", "GitHub Docs · Instrucciones personalizadas del repositorio", "https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/add-custom-instructions/add-repository-instructions", "Cómo crear .github/copilot-instructions.md."],
+  ["16", "Learn · Referencia de la CLI de Rayfin", "https://learn.microsoft.com/en-us/fabric/apps/cli-reference", "Comandos de la CLI (init, dev, up, login…); indica que los comandos pueden variar según la versión."],
+  ["17", "Learn · Funciones en preview de Fabric", "https://learn.microsoft.com/en-us/fabric/fundamentals/preview", "Qué significa «preview» en Fabric y qué cabe esperar de esas funciones."],
+  ["18", "Learn · Disponibilidad por región", "https://learn.microsoft.com/en-us/fabric/admin/region-availability", "Regiones donde está disponible cada función de Fabric, incluida Fabric Apps."],
+  ["19", "Learn · Crear una app con GitHub Copilot (Fabric Apps)", "https://learn.microsoft.com/en-us/fabric/apps/create-app-with-github-copilot", "Receta con GitHub Copilot en modo Agent: prerrequisitos (Node.js 20+, permisos sobre el modelo) y prompts."]
+];
+
+const PROMPTS = [
+  { id: "pre", n: "Pre-flight", title: "¿Qué skills ve el agente?", mode: "pre", when: "ANTES DE LA DEMO", demo: "Confirma que la carpeta .github/skills está detectada. Esperado: una lista que incluye semantic-model-authoring, powerbi-report-cli, spark-cli y e2e-medallion-architecture (25 skills en el proyecto de ejemplo).", text: "Which Fabric skills do you have available in this project? List their names only.", note: "Si la lista sale vacía, revisa que abriste la carpeta del proyecto (no una carpeta padre) y que el agente está en modo Agent." },
+  { id: "p0", n: "Prompt 0", title: "Guardarraíles", mode: "live", when: "EN VIVO · ~20 s", demo: "El agente lee las reglas del proyecto y comprueba su identidad antes de actuar: cuenta, tenant y los únicos workspaces donde puede crear o modificar.", text: "Which Azure account and tenant are you using, and which Fabric workspaces are you allowed to create or modify in this project? Answer from the project rules and a read-only `az account show`; do not change anything.", note: "Esperado: la cuenta de pruebas y solo workspaces ws-ia-dev*; los demás están protegidos. Si responde con otra cuenta, aplica el Plan B (terminal nueva)." },
+  { id: "p1", n: "Prompt 1", title: "Workspace, lakehouse y notebook medallion", mode: "prep", when: "PREARMADO", demo: "Los skills (medallion y Spark) y las APIs REST crean los artefactos de datos sin que nadie escriba el notebook a mano. El notebook queda sin ejecutar.", text: "Using the Fabric skills, create a workspace named ws-ia-dev on the capacity defined in the project rules and a schema-enabled lakehouse named lh_banca in it. Then create a PySpark notebook nb_medallion bound to that lakehouse that generates 200,000 synthetic bank transactions (account_id, txn_ts within the last 90 days, channel ATM/POS/ONLINE/BRANCH, amount, currency USD) into bronze.transactions, cleans and de-duplicates them into silver.transactions, and builds gold.daily_channel_kpis (daily transaction count, total amount and distinct active accounts by channel). Do not run it yet.", note: "Aprovecha para hablar de gobierno: solo el workspace permitido y datos sintéticos." },
+  { id: "p2", n: "Prompt 2", title: "Pipeline y capas bronze · silver · gold", mode: "prep", when: "PREARMADO", demo: "Orquestación con un pipeline de datos (no de implementación) y verificación en OneLake. Tiempo observado en un ensayo: ~80–104 s con sesión Spark caliente, ~3.5 min en frío.", text: "Create a Fabric Data Factory data pipeline (not a deployment pipeline) named pl_medallion that runs nb_medallion, run it, and confirm through OneLake that the bronze, silver and gold tables exist.", note: "La frase «(not a deployment pipeline)» evita que el agente elija el skill de promoción dev/test/prod." },
+  { id: "p3", n: "Prompt 3", title: "Modelo semántico Direct Lake en TMDL", mode: "prep", when: "PREARMADO", demo: "El modelo vive como archivos TMDL en el repo local, se publica, se refresca y se valida con DAX. Tiempo observado en un ensayo: ~3.5 min.", text: "Create a Direct Lake semantic model sm_kpis on gold.daily_channel_kpis in lh_banca. Use Direct Lake on the SQL endpoint. Use friendly column names, hide the raw numeric columns, and add measures Total Amount, Transactions and Avg Ticket with descriptions and format strings. Save it as TMDL under models/ in this local repo (do not use Fabric Git integration), publish it to ws-ia-dev, refresh it and validate it with a DAX query by channel.", note: "«do not use Fabric Git integration» evita el skill de sincronización Git. Direct Lake sobre el endpoint SQL fue lo que funcionó en el ensayo: verifícalo en tu entorno." },
+  { id: "p4", n: "Prompt 4", title: "MCP: revisión de buenas prácticas y traducción", mode: "prep", when: "PREARMADO", demo: "El valor real del MCP: cambios en lote sobre un modelo existente (buenas prácticas, nombres, traducciones). Después, git diff --stat para ver qué cambió.", text: "Review sm_kpis against modeling best practices and naming conventions. Apply the fixes you are confident about and list the rest. Then add a Spanish translation for all tables, columns and measures.", note: "Requiere EULA aceptado y XMLA en lectura/escritura si el modelo está en un workspace. Muestra solo la configuración del MCP; no afirmes que funciona con otros orígenes (p. ej., Analysis Services) si no lo probaste." },
+  { id: "p5", n: "Prompt 5", title: "Especificación del reporte", mode: "prep", when: "PREARMADO", demo: "Aprobación humana antes de construir: el skill produce una especificación y espera.", text: "Plan a one-page executive report named rpt_ejecutivo on sm_kpis for the head of retail banking. Write the spec to _brief/report-spec.md and show it to me before building anything.", note: "Revisa la especificación en voz alta (audiencia, KPIs, diseño) y solo entonces aprueba." },
+  { id: "p6", n: "Prompt 6", title: "Construir, validar y publicar el reporte", mode: "prep", when: "PREARMADO", demo: "Planear → aprobar → construir → validar → publicar. Tiempo observado en un ensayo: ~23 min de agente, sin línea base manual; por eso no se ejecuta en vivo.", text: "Approved. Build it as PBIR under reports/, validate it, publish it to ws-ia-dev bound to sm_kpis, and give me the URL.", note: "Abre el reporte ya publicado. No inventes un tiempo «manual» para comparar." },
+  { id: "p7", n: "Prompt 7", title: "Iterar sobre lo construido", mode: "opt", when: "OPCIONAL", demo: "Iteración sobre el reporte existente; cada cambio es un diff y se valida antes de republicar.", text: "Add a Channel slicer to rpt_ejecutivo, then validate and republish.", note: "Variante útil si los datos sintéticos tienen días parciales: «End the trend and the 30-day windows on the last complete day, then validate and republish.»" },
+  { id: "pa", n: "Opcional", title: "Fabric Apps con la CLI de Rayfin (preview)", mode: "opt", when: "OPCIONAL · PREVIEW", demo: "Rama opcional: una app de datos React + TypeScript creada con la CLI de Rayfin. Requiere habilitar el workload en el tenant.", text: "Set up a new Fabric App project called \"app-banca\".\n\n1. Run: npx -y @microsoft/create-rayfin@latest --project-name app-banca --template blankapp\n2. Open the scaffolded project directory and read any copilot-instructions.md or agent guidance it includes.\n3. Explore the project structure and understand the Rayfin app framework.\n4. Run: npm run dev\n5. Make the changes I ask for next.\n6. Show me the result of `npx rayfin up --dry-run` first; deploy with `npx rayfin up` only after I approve.", note: "Adaptado del prompt de la guía de Learn. Revisa los archivos generados y la salida de los comandos antes de desplegar." }
+];
+const MODE = { live: ["live", "pill live"], prep: ["pre", "pill pre"], pre: ["pre", "pill"], opt: ["opt", "pill opt"] };
+
+const STEPS = [
+  { t: 0, tag: "Verificación previa", title: "Cuenta, capacidad, skills y MCP", cap: "Antes de empezar, una persona confirma que la cuenta de Azure CLI es la esperada, que la capacidad de Fabric está activa, que el agente detecta los skills y que el servidor MCP está iniciado con el EULA aceptado." },
+  { t: 9, tag: "Prompt 0", title: "Guardarraíles", cap: "El agente lee las reglas del proyecto y responde con qué cuenta trabaja y dónde puede crear o modificar. Es lo único que se ejecuta en vivo (~20 s)." },
+  { t: 17, tag: "Prompt 1", title: "Workspace, lakehouse y notebook", cap: "Los skills dicen cómo; las APIs REST de Fabric (vía az) hacen el trabajo. Los artefactos aparecen a la derecha. En la demo se muestra prearmado." },
+  { t: 31, tag: "Prompt 2", title: "Pipeline y capas medallion", cap: "El pipeline de datos ejecuta el notebook y escribe las tablas Delta. Tiempo observado en un ensayo: ~80–104 s con sesión caliente, ~3.5 min en frío." },
+  { t: 45, tag: "Prompt 3", title: "Modelo semántico Direct Lake (TMDL en Git)", cap: "El modelo se escribe como TMDL en el repo local, se publica, se refresca y se valida con DAX. Tiempo observado en un ensayo: ~3.5 min." },
+  { t: 61, tag: "Prompt 4", title: "MCP: revisión y traducción", cap: "Para modelos que ya existen: revisión de buenas prácticas, nombres y traducciones en lote. Cada cambio aparece como un diff en Git." },
+  { t: 70, tag: "Prompt 5", title: "Especificación y aprobación humana", cap: "El skill de reportes escribe una especificación primero. No se construye nada hasta que una persona la aprueba." },
+  { t: 78, tag: "Prompts 6–7", title: "Construir, validar, publicar e iterar", cap: "Se genera el PBIR, se valida con la CLI de autoría y se publica ligado al modelo. Tiempo observado en un ensayo: ~23 min de agente, sin línea base manual; por eso se muestra prearmado." },
+  { t: 96, tag: "Cierre", title: "Punto de control en Git", cap: "El trabajo queda confirmado en Git: modelos, reportes y especificación como archivos revisables y reversibles." },
+  { t: 100, tag: "Opcional · preview", title: "Fabric Apps con la CLI de Rayfin", cap: "Rama opcional (preview): se crea la app con la CLI de Rayfin, se prueba en local, se revisa un despliegue en seco y solo después de aprobarlo se despliega.", opt: true }
+];
+
+const INFO = {
+  dev: { t: "Desarrollador", d: "Escribe instrucciones en lenguaje natural en el chat de VS Code (modo Agent) o en Copilot CLI, y revisa y aprueba lo que el agente propone: la especificación, los comandos de terminal y los diffs.", w: "En vivo: el Prompt 0. Todo lo demás se muestra prearmado.", p: "p0" },
+  agent: { t: "Agente de GitHub Copilot", d: "Planifica el trabajo, carga el skill que corresponde, llama herramientas y escribe archivos en el repo. Conviene elegir un modelo de razonamiento profundo.", w: "Todo pasa por él. En vivo solo se ve el Prompt 0.", c: "Pide aprobación antes de ejecutar comandos de terminal: no la desactives para la demo." },
+  rules: { t: "Reglas del proyecto y agentes personalizados", d: ".github/copilot-instructions.md fija el alcance de workspaces, los datos sintéticos, la terminal correcta y qué nunca debe hacer (p. ej., operar la capacidad). Los agentes de .github/agents/*.agent.md definen perfiles de trabajo que delegan en los skills.", w: "En vivo: abrir el archivo (~10 s) y ejecutar el Prompt 0.", c: "Son instrucciones, no un control técnico: los permisos reales son los de tu identidad en Azure y Fabric.", p: "p0" },
+  skills: { t: "Skills de Fabric", d: "Carpetas con un SKILL.md y referencias que enseñan al agente a hacer cada tarea de Fabric de la forma recomendada (medallion, Spark, modelos semánticos, reportes…). El agente carga el que coincide con la tarea. Origen público: microsoft/skills-for-fabric; el proyecto de ejemplo trae 25 skills más material compartido en .github/common. Cada skill pide un encabezado de telemetría en las llamadas a la API de Fabric.", w: "En vivo: mostrar la carpeta (~10 s). Antes de la demo: preguntar qué skills detecta.", c: "El prompt también enruta el skill: «despliegue» y «Git» pueden activar el skill equivocado. Los skills son una copia de un repositorio que cambia: verifica la versión.", p: "pre" },
+  repo: { t: "Repositorio Git local", d: "Modelos (TMDL) y reportes (PBIR) son archivos de texto en models/ y reports/; la especificación vive en _brief/. Cada cambio del agente es un diff revisable y reversible. En este flujo no se usa la integración Git del workspace.", w: "En vivo: panel de control de código fuente. Prearmado: git diff --stat tras el Prompt 4.", p: "p4" },
+  az: { t: "Azure CLI", d: "Obtiene los tokens que usan las llamadas REST. La regla del proyecto exige comprobar la cuenta con az account show antes de cualquier llamada y prohíbe az login y az account set si nadie lo pide.", w: "En vivo: el Prompt 0 muestra la comprobación de identidad.", c: "La autenticación de la terminal es el fallo más común: una terminal restaurada o un shell de WSL pueden apuntar a otro tenant.", p: "p0" },
+  rest: { t: "APIs REST de Fabric y Power BI", d: "Crean workspaces, lakehouses, notebooks y pipelines; ejecutan trabajos; publican modelos y reportes; refrescan modelos y ejecutan consultas DAX de validación.", w: "Detrás de cada artefacto de la derecha; se ve en el registro «Qué hace el agente».", p: "p1" },
+  mcp: { t: "Servidor MCP de autoría de Power BI (local)", d: "Da al agente herramientas para leer y editar modelos semánticos: tablas, columnas, medidas, relaciones, traducciones, roles y consultas DAX, en lote. Los skills son el «cómo»; el MCP es el «qué». Se configura en un archivo JSON y corre como proceso local (stdio) con npx.", w: "Prompt 4 (prearmado). En vivo solo se muestra la configuración.", c: "EULA en el primer uso; XMLA en lectura/escritura para modelos en un workspace; no registres a la vez el servidor local y el hospedado. El MCP solo modela: no cambia páginas de reportes.", p: "p4" },
+  rpt: { t: "CLI de autoría de reportes", d: "Valida las definiciones PBIR y las empaqueta para publicar. El skill de reportes la exige. Paquete npm @microsoft/powerbi-report-authoring-cli (versión 0.x).", w: "Prompt 6 (prearmado).", c: "Sin Power BI Desktop no hay vista previa local: la verificación visual se hace en el servicio, tras publicar. Versión 0.x: verifica madurez.", p: "p6" },
+  rayfin: { t: "CLI de Rayfin (opcional · preview)", d: "Crea una app de Fabric desde una plantilla, la ejecuta en local y la despliega: npm create @microsoft/rayfin@latest -- app-banca --workspace ws-ia-dev, npm run dev (script del template; ejecuta rayfin dev), npx rayfin up --dry-run y npx rayfin up.", w: "Rama opcional: solo mención, salvo que sobre tiempo.", c: "Fabric Apps está en preview y requiere habilitar el workload en el tenant. Confirma el comportamiento de «dev» en tu versión.", p: "pa" },
+  cap: { t: "Capacidad de Fabric", d: "Cómputo detrás de todos los elementos. La asigna y administra una persona; las reglas prohíben al agente pausarla, reanudarla, escalarla o borrarla.", w: "Mención en la verificación previa: debe estar activa antes de empezar.", c: "No la toques durante la demo." },
+  ws: { t: "Workspace ws-ia-dev", d: "Workspace de pruebas: el único donde las reglas permiten crear o modificar. Contiene lakehouse, notebook, pipeline, modelo semántico y reporte.", w: "Se muestra prearmado (Prompt 1).", p: "p1" },
+  lh: { t: "Lakehouse lh_banca", d: "Lakehouse con esquemas habilitados; guarda las tablas bronze, silver y gold como Delta. Su endpoint SQL es el que usa el modelo semántico.", w: "Prearmado (Prompt 1).", c: "En lakehouses con esquemas, lista las tablas por OneLake o por el endpoint SQL.", p: "p1" },
+  tables: { t: "Capas medallion", d: "bronze: datos sintéticos tal como se generan. silver: limpios y sin duplicados. gold: KPIs diarios por canal (conteo, importe total y cuentas activas distintas).", w: "Las escribe la ejecución del pipeline (Prompt 2).", p: "p2" },
+  nb: { t: "Notebook nb_medallion", d: "Notebook PySpark ligado a lh_banca. Genera datos sintéticos y construye bronze → silver → gold. Lo crea el agente con los skills e2e-medallion-architecture y spark-cli.", w: "Prearmado: abre el notebook y muestra las tres celdas.", p: "p1" },
+  pl: { t: "Pipeline pl_medallion", d: "Pipeline de datos (Data Factory) con una actividad de notebook. No es un pipeline de implementación. Tiempo observado en un ensayo: ~80–104 s con sesión caliente, ~3.5 min en frío.", w: "Prearmado: muestra el historial de ejecución.", c: "Si el agente carga el skill de pipelines de implementación, detenlo y repite «(not a deployment pipeline)».", p: "p2" },
+  sm: { t: "Modelo semántico sm_kpis", d: "Direct Lake sobre el endpoint SQL del lakehouse, con nombres amigables, columnas crudas ocultas y medidas con descripción y formato. El TMDL vive en models/. Validado con una consulta DAX por canal.", w: "Prearmado (Prompt 3, ~3.5 min en un ensayo) y Prompt 4 para el MCP.", c: "Direct Lake sobre el endpoint SQL funcionó en el ensayo; la variante OneLake falló el refresh. Verifícalo en tu entorno.", p: "p3" },
+  rp: { t: "Reporte rpt_ejecutivo", d: "Una página en PBIR (resumen para dirección): tarjetas de KPI, tendencia, ranking por canal y un segmentador de canal. La vista pequeña del diagrama es ilustrativa: abre el reporte real.", w: "Prearmado: muestra la especificación aprobada y el reporte publicado. Armado completo ~23 min de agente en un ensayo, sin línea base manual.", p: "p6" },
+  app: { t: "Fabric Apps · app-banca (preview)", d: "App de datos con frontend React + TypeScript, modelos de datos en TypeScript, autenticación con Fabric SSO y hosting estático. Puede conectarse a datos de Fabric (lakehouse, warehouse, SQL database o modelo semántico) mediante conectores.", w: "Rama opcional; no se ejecuta en vivo.", c: "Preview. Requiere que un administrador habilite «Fabric Apps (preview)», una capacidad asignada y una región compatible.", p: "pa" }
+};
+
+/* ================= HASH, TEMA, PESTAÑAS ================= */
+let currentTab = "flow";
+const TABS = ["flow", "guard", "repl", "prompts", "refs"];
+function writeHash() {
+  const p = new URLSearchParams(); p.set("tema", root.getAttribute("data-theme")); p.set("v", currentTab);
+  try { history.replaceState(null, "", "#" + p.toString()); } catch (e) { /* hash opcional */ }
+}
+function setTheme(t) {
+  const dark = t === "dark"; root.setAttribute("data-theme", dark ? "dark" : "light");
+  const b = $("#theme"); b.textContent = dark ? "Modo claro" : "Modo oscuro"; b.setAttribute("aria-pressed", String(dark)); writeHash();
+}
+function showTab(id, focus) {
+  if (!TABS.includes(id)) id = "flow"; currentTab = id;
+  $$(".tab").forEach((t) => { const on = t.dataset.tab === id; t.classList.toggle("active", on); t.setAttribute("aria-selected", String(on)); t.tabIndex = on ? 0 : -1; if (on && focus) t.focus(); });
+  $$(".view").forEach((v) => v.classList.toggle("active", v.id === "view-" + id));
+  if (id === "flow") requestAnimationFrame(layoutEdges);
+  writeHash();
+}
+$$(".tab").forEach((t, i, all) => {
+  t.addEventListener("click", () => showTab(t.dataset.tab));
+  t.addEventListener("keydown", (e) => {
+    let j = -1;
+    if (e.key === "ArrowRight") j = (i + 1) % all.length; else if (e.key === "ArrowLeft") j = (i - 1 + all.length) % all.length; else if (e.key === "Home") j = 0; else if (e.key === "End") j = all.length - 1;
+    if (j >= 0) { e.preventDefault(); showTab(all[j].dataset.tab, true); }
+  });
+});
+$("#theme").addEventListener("click", () => setTheme(root.getAttribute("data-theme") === "dark" ? "light" : "dark"));
+
+/* ================= COPIAR (selección + execCommand) ================= */
+function copyFrom(id) {
+  const pre = document.getElementById(id); if (!pre) return false;
+  const range = document.createRange(); range.selectNodeContents(pre);
+  const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+  let ok = false; try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+  return ok;
+}
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-copy]"); if (!b) return;
+  const id = b.dataset.copy, ok = copyFrom(id), st = document.querySelector('[data-copystate="' + id + '"]');
+  const msg = ok ? "Copiado ✓" : "Texto seleccionado: pulsa Ctrl+C";
+  if (st) st.textContent = msg; const old = b.textContent; b.textContent = ok ? "Copiado ✓" : "Seleccionado"; b.classList.toggle("ok", ok);
+  setTimeout(() => { b.textContent = old; b.classList.remove("ok"); if (st) st.textContent = ""; }, 2200);
+});
+
+/* ================= REFERENCIAS Y PROMPTS (render) ================= */
+function renderRefs() {
+  REFS.forEach((r) => {
+    const item = h("div", { class: "card refitem", id: "ref-r" + r[0] }, h("span", { class: "id", text: "R" + r[0] }),
+      h("div", null, h("b", { text: r[1] }), h("div", { class: "muted", text: r[3] }), h("a", { class: "u", href: r[2], target: "_blank", rel: "noopener noreferrer", text: r[2] })));
+    item.style.marginBottom = "10px";
+    $(Number(r[0]) <= 8 ? "#refs-main" : "#refs-extra").append(item);
+  });
+  $("#nrf").textContent = String(REFS.length);
+}
+function renderPrompts() {
+  PROMPTS.forEach((p) => {
+    const m = MODE[p.mode];
+    const card = h("div", { class: "card pcard", id: "pc-" + p.id },
+      h("div", { class: "top" }, h("span", { class: "pill", text: p.n }), h("h3", { text: p.title }), h("span", { class: m[1] + " when", text: p.when })),
+      h("div", null, h("span", { class: "k2", text: "Qué demuestra" }), h("span", { text: p.demo })),
+      h("pre", { class: "code", id: "pt-" + p.id, text: p.text }),
+      h("div", { class: "row" }, h("span", { class: "muted", "data-copystate": "pt-" + p.id }), h("button", { class: "btn", type: "button", "data-copy": "pt-" + p.id, text: "Copiar" })),
+      h("div", { class: "muted" }, h("b", { text: "Nota: " }), p.note));
+    $("#prompt-list").append(card);
+  });
+  $("#npr").textContent = String(PROMPTS.length);
+}
+function fillRefChips() {
+  $$(".rcs").forEach((s) => { s.textContent = ""; s.dataset.r.split(/\s+/).filter(Boolean).forEach((n) => s.append(h("a", { class: "rc", href: "#ref-r" + n, "data-ref": n, title: "Ver referencia R" + n, text: "R" + n }))); });
+}
+function flash(el) { el.classList.add("flash"); setTimeout(() => el.classList.remove("flash"), 1800); }
+document.addEventListener("click", (e) => {
+  const a = e.target.closest("a[data-ref]"); if (a) { e.preventDefault(); showTab("refs"); const t = document.getElementById("ref-r" + a.dataset.ref); if (t) { t.scrollIntoView({ block: "center" }); flash(t); } return; }
+  const g = e.target.closest("[data-goprompt]"); if (g) { showTab("prompts"); const t = document.getElementById("pc-" + g.dataset.goprompt); if (t) { t.scrollIntoView({ block: "center" }); flash(t); } }
+});
+function updateChecklist() {
+  const all = $$("#view-repl input[type=checkbox]"), n = all.filter((c) => c.checked).length;
+  $("#chkcount").textContent = n + "/" + all.length; $("#chkbar").style.width = (all.length ? (100 * n) / all.length : 0) + "%";
+}
+$$("#view-repl input[type=checkbox]").forEach((c) => c.addEventListener("change", updateChecklist));
+
+/* ================= FLUJO ANIMADO ================= */
+const IDS = { dev: "n-dev", agent: "n-agent", rules: "n-rules", skills: "n-skills", repo: "n-repo", az: "n-az", rest: "n-rest", mcp: "n-mcp", rpt: "n-rpt", rayfin: "n-rayfin", cap: "n-cap", ws: "n-ws", lh: "a-lh", nb: "a-nb", pl: "a-pl", sm: "a-sm", rp: "a-rp", app: "n-app" };
+const EDGES = [["dev", "agent"], ["agent", "rules"], ["agent", "skills"], ["agent", "repo", "left"], ["agent", "az"], ["agent", "mcp"], ["agent", "rpt"], ["az", "rest"], ["rest", "ws"], ["mcp", "sm"], ["rpt", "rp"], ["agent", "rayfin"], ["rayfin", "app"]];
+const OPT_EDGES = ["agent|rayfin", "rayfin|app"];
+const plane = $("#plane"), svg = $("#edges"), logEl = $("#log");
+const el = (k) => document.getElementById(IDS[k]);
+const edgeEls = {};
+const anims = [];
+let clock = 0, speed = 1, playing = false, last = 0, ptr = 0, stopAt = null;
+let ACTIVE = [], EV = [], TOTAL = 0;
+const ALLEV = [];
+const ease = (p) => (p < 0.5 ? 2 * p * p : 1 - Math.pow(-2 * p + 2, 2) / 2);
+const fmt = (ms) => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"); };
+function addAnim(dur, update, done, delay = 0) { anims.push({ s: clock + delay, d: dur, u: update, f: done }); }
+function runAnims() {
+  for (let i = anims.length - 1; i >= 0; i--) {
+    const a = anims[i], p = (clock - a.s) / a.d;
+    if (p < 0) continue;
+    if (p >= 1) { a.u(1); anims.splice(i, 1); if (a.f) a.f(); } else a.u(p);
+  }
+}
+
+function rel(node) {
+  const r = node.getBoundingClientRect(), s = plane.getBoundingClientRect();
+  const o = { l: r.left - s.left, r: r.right - s.left, t: r.top - s.top, b: r.bottom - s.top };
+  o.cx = (o.l + o.r) / 2; o.cy = (o.t + o.b) / 2; return o;
+}
+function pathD(a, b, mode) {
+  const ra = rel(el(a)), rb = rel(el(b));
+  if (mode === "left") { const K = 46; return "M" + ra.l + "," + ra.cy + " C" + (ra.l - K) + "," + ra.cy + " " + (rb.l - K) + "," + rb.cy + " " + rb.l + "," + rb.cy; }
+  const sameCol = Math.abs(ra.l - rb.l) < 60 || (rb.l < ra.r && rb.r > ra.l);
+  if (sameCol && rb.t >= ra.b - 1) {
+    const ex = rb.cx, sx = Math.min(Math.max(ex, ra.l + 24), ra.r - 24), my = (ra.b + rb.t) / 2;
+    return "M" + sx + "," + ra.b + " C" + sx + "," + my + " " + ex + "," + my + " " + ex + "," + rb.t;
+  }
+  const ex = rb.l, ey = b === "ws" ? rel($("#ws-h")).cy : rb.cy, sx = ra.r, sy = ra.cy, k = Math.max(30, (ex - sx) * 0.5);
+  return "M" + sx + "," + sy + " C" + (sx + k) + "," + sy + " " + (ex - k) + "," + ey + " " + ex + "," + ey;
+}
+function layoutEdges() {
+  if (!plane.offsetWidth) return;
+  EDGES.forEach(([a, b, mode]) => {
+    const k = a + "|" + b;
+    if (!edgeEls[k]) { const p = document.createElementNS(SVGNS, "path"); p.setAttribute("class", "edge"); svg.appendChild(p); edgeEls[k] = p; }
+    edgeEls[k].setAttribute("d", pathD(a, b, mode));
+  });
+}
+function packet(a, b, instant) {
+  const e = edgeEls[a + "|" + b]; if (!e || instant || e.classList.contains("hide")) return;
+  e.classList.add("on"); addAnim(1, () => {}, () => e.classList.remove("on"), 1500);
+  if (reduced()) return;
+  const len = e.getTotalLength(), c = document.createElementNS(SVGNS, "circle");
+  c.setAttribute("r", "5"); c.setAttribute("class", "packet"); svg.appendChild(c);
+  addAnim(900, (p) => { const pt = e.getPointAtLength(len * ease(p)); c.setAttribute("cx", pt.x); c.setAttribute("cy", pt.y); }, () => c.remove());
+}
+function lit(k, instant, dur = 1500) { if (instant) return; const n = el(k); n.classList.add("active"); addAnim(1, () => {}, () => n.classList.remove("active"), dur); }
+
+const logLine = (txt, cls = "") => { const d = document.createElement("div"); d.className = "ln " + cls; d.textContent = txt; logEl.appendChild(d); while (logEl.children.length > 300) logEl.firstChild.remove(); const sc = logEl.parentElement; sc.scrollTop = sc.scrollHeight; };
+function say(label, text, instant) {
+  $("#prompt").classList.add("on"); $("#plabel").textContent = label; const t = "“" + text + "”", out = $("#ptext");
+  if (instant || reduced()) { out.textContent = t; return; }
+  addAnim(Math.min(1500, t.length * 14), (p) => { out.textContent = t.slice(0, Math.ceil(p * t.length)); });
+}
+const agent = (t) => { $("#agst").textContent = t; };
+const ARTS = ["ws", "lh", "nb", "pl", "sm", "rp"];
+const ARTEL = { ws: "n-ws", lh: "a-lh", nb: "a-nb", pl: "a-pl", sm: "a-sm", rp: "a-rp", app: "n-app" };
+const LBL = { empty: "", creating: "creando…", running: "ejecutando…", ready: "✓ creado" };
+function art(k, st) {
+  const e = document.getElementById(ARTEL[k]); ["empty", "creating", "running", "ready"].forEach((c) => e.classList.remove(c)); e.classList.add(st);
+  const s = $(".st", e); if (s) s.textContent = k === "app" && st === "ready" ? "✓ desplegada" : LBL[st];
+  $("#artn").textContent = ARTS.filter((x) => { const c = document.getElementById(ARTEL[x]).classList; return c.contains("ready") || c.contains("running"); }).length;
+}
+function tbl(k, st) { const e = $("#t-" + k); ["empty", "creating", "ready"].forEach((c) => e.classList.remove(c)); e.classList.add(st); }
+function skillsOn(...n) { $$("#skillchips .tagc").forEach((c) => { if (n.includes(c.dataset.sk)) c.classList.add("on"); }); }
+function file(n) { const d = document.createElement("div"); d.className = "file"; d.textContent = n; $("#files").appendChild(d); while ($("#files").children.length > 4) $("#files").firstChild.remove(); }
+function gate(mode) { const g = $("#gate"); g.classList.add("on"); g.classList.toggle("ok", mode === "ok"); g.textContent = mode === "ok" ? "✓ Aprobado por la persona" : "✋ Esperando tu aprobación"; }
+function prog(to, dur, instant) { const bar = $("#plbar"); if (instant) { bar.style.width = to + "%"; return; } const from = parseFloat(bar.style.width) || 0; addAnim(dur, (p) => { bar.style.width = from + (to - from) * p + "%"; }); }
+const MINI = $$("#mini .v");
+function step(i) {
+  $$("#steps .step").forEach((s, j) => { s.classList.toggle("cur", j === i); s.classList.toggle("done", j < i); if (j === i) s.setAttribute("aria-current", "step"); else s.removeAttribute("aria-current"); });
+  const S = STEPS[i]; $("#capline").innerHTML = ""; $("#capline").append(h("b", { text: S.tag + " · " + S.title + ". " }), S.cap);
+}
+function setCap(txt) { const p = $("#cappill"); p.textContent = txt; p.classList.toggle("st-ok", txt.startsWith("✓")); }
+const finale = () => $("#finale").classList.add("on");
+
+function resetAll() {
+  anims.length = 0; $$(".packet").forEach((n) => n.remove());
+  Object.values(edgeEls).forEach((e) => e.classList.remove("on")); $$(".node.active").forEach((n) => n.classList.remove("active"));
+  logEl.innerHTML = ""; $("#files").innerHTML = ""; $("#commit").classList.remove("on"); $("#gate").className = "gate"; $("#gate").textContent = "";
+  $("#prompt").classList.remove("on"); $("#ptext").textContent = ""; $("#plabel").textContent = ""; agent("en espera");
+  ARTS.concat("app").forEach((k) => art(k, "empty")); ["bronze", "silver", "gold"].forEach((k) => tbl(k, "empty"));
+  $("#plbar").style.width = "0%"; $("#plnote").textContent = ""; setCap("sin verificar");
+  $$("#rulechips .tagc, #skillchips .tagc").forEach((c) => c.classList.remove("on"));
+  $("#dax").classList.remove("on"); $("#mchipEs").classList.remove("on"); MINI.forEach((v) => { v.classList.remove("on", "hl"); });
+  $("#finale").classList.remove("on");
+  $$("#steps .step").forEach((s) => { s.classList.remove("cur", "done"); s.removeAttribute("aria-current"); });
+}
+
+/* línea de tiempo: E(segundo, fn, bandera) · bandera "opt" = solo con rama opcional, "base" = solo sin ella */
+const E = (t, fn, f) => ALLEV.push({ t: t * 1000, fn, f });
+E(0, () => { step(0); logLine("Verificación previa (la hace una persona antes de la demo)"); });
+E(0.9, (i) => { lit("cap", i); setCap("✓ activa"); logLine("Capacidad de Fabric activa · la gestiona una persona; el agente no la toca", "ok"); });
+E(2.4, (i) => { lit("az", i); packet("agent", "az", i); logLine("az account show → cuenta y tenant esperados ✓", "ok"); });
+E(4.2, (i) => { lit("skills", i); logLine("El agente detecta los skills del proyecto (25 en el ejemplo)"); });
+E(5.8, (i) => { lit("mcp", i); logLine("Servidor MCP iniciado · EULA aceptada por una persona en el primer uso"); });
+E(7.4, () => agent("listo"));
+
+E(9, (i) => { step(1); say("Prompt 0", "Which Azure account and tenant are you using, and which Fabric workspaces are you allowed to create or modify in this project?", i); packet("dev", "agent", i); agent("leyendo las reglas…"); });
+E(10.8, (i) => { lit("rules", i); packet("agent", "rules", i); logLine("Lee .github/copilot-instructions.md y el agente personalizado"); });
+E(12.2, (i) => { lit("az", i); packet("agent", "az", i); logLine("az account show (solo lectura) → cuenta esperada", "ok"); });
+E(13.6, () => { $$("#rulechips .tagc").forEach((c) => c.classList.add("on")); agent("respondió"); logLine("→ solo workspaces ws-ia-dev* · datos sintéticos · sin operar la capacidad · cambios como archivos en Git", "ok"); });
+
+E(17, (i) => { step(2); say("Prompt 1", "Using the Fabric skills, create a workspace and a schema-enabled lakehouse, then a PySpark medallion notebook with synthetic bank transactions. Do not run it yet.", i); packet("dev", "agent", i); agent("planificando…"); });
+E(18.6, (i) => { skillsOn("e2e-medallion-architecture", "spark-cli"); lit("skills", i); packet("agent", "skills", i); logLine("Carga los skills e2e-medallion-architecture y spark-cli"); agent("llamando a la API de Fabric…"); });
+E(20, (i) => { packet("agent", "az", i); art("ws", "creating"); logLine("POST /workspaces → ws-ia-dev (con el encabezado de telemetría del skill)"); });
+E(21.4, (i) => { packet("az", "rest", i); packet("rest", "ws", i); art("ws", "ready"); logLine("Workspace creado en la capacidad asignada", "ok"); });
+E(22.4, (i) => { packet("rest", "ws", i); art("lh", "creating"); logLine("POST /lakehouses → lh_banca (esquemas habilitados)"); });
+E(24, () => { art("lh", "ready"); logLine("Lakehouse listo · endpoint SQL disponible", "ok"); });
+E(25, () => { art("nb", "creating"); logLine("POST /notebooks → nb_medallion (ligado a lh_banca · celdas bronze, silver y gold)"); });
+E(27.6, () => { art("nb", "ready"); agent("notebook listo"); logLine("Notebook listo (aún no ejecutado)", "ok"); });
+
+E(31, (i) => { step(3); say("Prompt 2", "Create a Fabric Data Factory data pipeline (not a deployment pipeline) that runs the notebook, run it, and confirm the tables exist.", i); packet("dev", "agent", i); agent("creando el pipeline…"); });
+E(32.4, () => { art("pl", "creating"); logLine("POST /dataPipelines → pl_medallion (Data Factory; no es un pipeline de implementación)"); });
+E(34, (i) => { art("pl", "running"); prog(100, 7000, i); packet("rest", "ws", i); logLine("Ejecución del pipeline · arranca Spark y corre el notebook"); });
+E(36.2, () => tbl("bronze", "creating")); E(37, () => { tbl("bronze", "ready"); logLine("bronze.transactions · datos sintéticos generados"); });
+E(38, () => tbl("silver", "creating")); E(38.8, () => { tbl("silver", "ready"); logLine("silver.transactions · limpios y sin duplicados"); });
+E(39.6, () => tbl("gold", "creating")); E(40.4, () => { tbl("gold", "ready"); logLine("gold.daily_channel_kpis · KPIs diarios por canal"); });
+E(41.4, () => { art("pl", "ready"); $("#plnote").textContent = "✓ completado · observado en un ensayo: ~80–104 s"; logLine("Pipeline completado · tiempo observado en un ensayo: ~80–104 s (sesión caliente)", "ok"); });
+E(43, () => { agent("verificado"); logLine("El agente confirma en OneLake: bronze · silver · gold ✓", "ok"); });
+
+E(45, (i) => { step(4); say("Prompt 3", "Create a Direct Lake semantic model on gold.daily_channel_kpis. Friendly names, hidden raw columns, measures with descriptions. Save the TMDL in this repo, publish, refresh and validate with DAX.", i); packet("dev", "agent", i); agent("planificando el modelo…"); });
+E(46.6, (i) => { skillsOn("semantic-model-authoring"); lit("skills", i); packet("agent", "skills", i); logLine("Carga semantic-model-authoring (Direct Lake y guías de modelado)"); });
+E(48, (i) => { packet("agent", "repo", i); lit("repo", i); file("models/sm_kpis.SemanticModel/"); logLine("Escribe el TMDL en el repo local (sin la integración Git del workspace)"); });
+E(48.7, () => file("  definition.pbism · model.tmdl")); E(49.2, () => file("  expressions.tmdl · tables/*.tmdl"));
+E(50.4, (i) => { packet("agent", "az", i); art("sm", "creating"); logLine("POST /semanticModels (TMDL) → sm_kpis"); });
+E(52.4, (i) => { packet("az", "rest", i); packet("rest", "ws", i); art("sm", "ready"); logLine("Direct Lake sobre el endpoint SQL de lh_banca", "ok"); });
+E(54.4, () => logLine("Actualización (refresh) completada · observado en un ensayo: ~10 s", "ok"));
+E(56, () => { $("#dax").classList.add("on"); agent("validado"); logLine("La consulta DAX por canal coincide con el endpoint SQL ✓", "ok"); });
+
+E(61, (i) => { step(5); say("Prompt 4", "Review sm_kpis against modeling best practices and naming conventions. Apply the safe fixes, then add a Spanish translation.", i); packet("dev", "agent", i); agent("usando el servidor MCP…"); });
+E(62.6, (i) => { lit("mcp", i); packet("agent", "mcp", i); logLine("Herramientas MCP: buenas prácticas · nombres · ediciones en lote · traducciones"); });
+E(64.2, (i) => { packet("mcp", "sm", i); lit("sm", i); $("#mchipEs").classList.add("on"); logLine("Aplica los arreglos seguros y agrega la traducción al español"); });
+E(65.8, (i) => { lit("repo", i); packet("agent", "repo", i); file("git diff --stat → cada cambio es revisable"); logLine("git diff --stat: los cambios del agente son un diff que se revisa o se revierte"); });
+E(67.4, () => logLine("Lo que no es seguro queda en una lista para decisión humana", "warn"));
+
+E(70, (i) => { step(6); say("Prompt 5", "Plan a one-page executive report on sm_kpis for the head of retail banking. Show me the spec before building anything.", i); packet("dev", "agent", i); agent("planificando el reporte…"); });
+E(71.6, (i) => { skillsOn("powerbi-report-cli"); lit("skills", i); packet("agent", "skills", i); logLine("Carga powerbi-report-cli: planificar → diseñar → construir → publicar"); });
+E(73, (i) => { packet("agent", "repo", i); file("_brief/report-spec.md"); logLine("Escribe la especificación: audiencia, KPIs y diseño"); });
+E(75, () => { gate("wait"); agent("esperando aprobación"); logLine("⏸ Puerta humana: no se construye nada hasta aprobar la especificación", "warn"); });
+
+E(78, (i) => { step(7); gate("ok"); say("Prompt 6", "Approved. Build it as PBIR under reports/, validate it, publish it to ws-ia-dev bound to sm_kpis, and give me the URL.", i); packet("dev", "agent", i); agent("construyendo el reporte…"); });
+E(79.6, (i) => { lit("rpt", i); packet("agent", "rpt", i); art("rp", "creating"); logLine("Genera el PBIR (página y visuales) y lo valida con la CLI de autoría"); });
+MINI.forEach((v, k) => { if (!v.dataset.late) E(80.2 + k * 0.9, () => v.classList.add("on")); });
+E(88, (i) => { packet("rpt", "rp", i); packet("agent", "repo", i); file("reports/rpt_ejecutivo.Report/"); logLine("validate → 0 errores", "ok"); });
+E(89, (i) => { packet("agent", "az", i); logLine("Publica en ws-ia-dev, ligado a sm_kpis"); });
+E(90.4, (i) => { packet("az", "rest", i); packet("rest", "ws", i); art("rp", "ready"); agent("publicado"); logLine("Reporte publicado y ligado al modelo · observado en un ensayo: ~23 min de agente, sin línea base manual", "ok"); });
+E(92, (i) => { say("Prompt 7", "Add a Channel slicer to rpt_ejecutivo, then validate and republish.", i); packet("dev", "agent", i); MINI.forEach((v) => { if (v.dataset.late) v.classList.add("on", "hl"); }); logLine("Itera: agrega el segmentador, valida y republica", "ok"); });
+
+E(96, (i) => { step(8); lit("repo", i); packet("agent", "repo", i); $("#commit").classList.add("on"); agent("hecho"); logLine("git commit → punto de control de models/, reports/ y _brief/", "ok"); });
+E(98.5, () => { logLine("Listo · artefactos creados por prompts, bajo guardarraíles", "ok"); finale(); }, "base");
+
+E(100, (i) => { step(9); say("Prompt opcional", "Set up a new Fabric App project called \"app-banca\" with the Rayfin CLI, run it locally, then show me a deployment dry run.", i); packet("dev", "agent", i); agent("preparando la app…"); });
+E(101.6, (i) => { lit("rayfin", i); packet("agent", "rayfin", i); logLine("npm create @microsoft/rayfin@latest -- app-banca --workspace ws-ia-dev  (preview)"); });
+E(103.4, (i) => { packet("agent", "repo", i); file("app-banca/ (rayfin/ · packages/frontend · data · shared)"); art("app", "creating"); logLine("Estructura de la app: backend en rayfin/, frontend React en packages/frontend"); });
+E(105.4, () => logLine("npm run dev → servidor de desarrollo local"));
+E(107, () => { gate("wait"); agent("esperando aprobación"); logLine("npx rayfin up --dry-run → vista previa del despliegue, sin cambios", "warn"); });
+E(109, (i) => { gate("ok"); packet("rayfin", "app", i); logLine("Aprobado → npx rayfin up (despliegue en Fabric)"); });
+E(111, () => { art("app", "ready"); agent("app desplegada"); logLine("App desplegada como elemento de Fabric (preview)", "ok"); });
+E(112.6, () => { logLine("Listo · incluida la rama opcional de Fabric Apps (preview)", "ok"); finale(); }, "opt");
+
+function build() {
+  const inc = $("#optToggle").checked;
+  ACTIVE = STEPS.filter((s) => !s.opt || inc);
+  EV = ALLEV.filter((e) => (e.f === "opt" ? inc : e.f === "base" ? !inc : true)).sort((a, b) => a.t - b.t);
+  TOTAL = (inc ? 113.6 : 99.5) * 1000;
+  $("#scrub").max = TOTAL;
+  const box = $("#steps"); box.innerHTML = "";
+  ACTIVE.forEach((s, i) => {
+    const d = h("button", { class: "step", type: "button" }, h("span", { class: "tg", text: s.tag }), h("span", { text: s.title }));
+    d.addEventListener("click", () => { stopAt = null; seek(s.t * 1000); }); box.append(d);
+  });
+  $$("#plane .opt").forEach((n) => n.classList.toggle("dim", !inc)); OPT_EDGES.forEach((k) => edgeEls[k] && edgeEls[k].classList.toggle("hide", !inc));
+  $("#finOpt").style.display = inc ? "" : "none";
+}
+function execUntil(t, instant) { let ran = false; while (ptr < EV.length && EV[ptr].t <= t) { EV[ptr].fn(instant); ptr++; ran = true; } if (ran) layoutEdges(); }
+function ui() {
+  $("#scrub").value = clock; $("#time").textContent = fmt(clock) + " / " + fmt(TOTAL);
+  $("#play").textContent = playing ? "⏸ Pausar" : clock >= TOTAL ? "⟲ Repetir" : "▶ Reproducir";
+}
+function seek(t) { resetAll(); clock = Math.max(0, Math.min(TOTAL, t)); ptr = 0; execUntil(clock, true); anims.length = 0; ui(); }
+function setPlaying(v) { playing = v; last = 0; ui(); }
+function frame(ts) {
+  if (!last) last = ts;
+  const dt = Math.min(250, ts - last) * speed; last = ts;
+  if (playing) {
+    clock = Math.min(TOTAL, clock + dt);
+    if (stopAt != null && clock >= stopAt) clock = stopAt;
+    execUntil(clock, false); runAnims(); ui();
+    if (stopAt != null && clock >= stopAt) { stopAt = null; setPlaying(false); }
+    else if (clock >= TOTAL) setPlaying(false);
+  }
+  requestAnimationFrame(frame);
+}
+const ends = () => ACTIVE.map((s, i) => (i + 1 < ACTIVE.length ? ACTIVE[i + 1].t * 1000 - 1 : TOTAL));
+function stepFwd() {
+  if (clock >= TOTAL - 1) seek(0);
+  const nxt = ends().find((e) => e > clock + 0.5); if (nxt == null) return;
+  stopAt = nxt; setPlaying(true);
+}
+function stepBack() {
+  stopAt = null; setPlaying(false);
+  const prev = ends().filter((e) => e < clock - 1500); seek(prev.length ? prev[prev.length - 1] : 0);
+}
+$("#play").addEventListener("click", () => { if (clock >= TOTAL) seek(0); stopAt = null; setPlaying(!playing); });
+$("#restart").addEventListener("click", () => { stopAt = null; seek(0); setPlaying(true); });
+$("#fwd").addEventListener("click", stepFwd); $("#back").addEventListener("click", stepBack);
+$("#scrub").addEventListener("input", (e) => { stopAt = null; seek(+e.target.value); });
+$("#speed").addEventListener("change", (e) => { speed = +e.target.value; });
+$("#optToggle").addEventListener("change", () => { const keep = clock; stopAt = null; setPlaying(false); build(); seek(keep); layoutEdges(); });
+$("#replay").addEventListener("click", () => { stopAt = null; seek(0); setPlaying(true); });
+$("#closefin").addEventListener("click", () => $("#finale").classList.remove("on"));
+document.addEventListener("keydown", (e) => {
+  if (currentTab !== "flow") return;
+  if (/^(INPUT|SELECT|BUTTON|TEXTAREA|SUMMARY|A)$/.test(e.target.tagName) || (e.target.closest && e.target.closest("[data-info]"))) return;
+  if (e.code === "Space") { e.preventDefault(); $("#play").click(); } else if (e.code === "ArrowRight") stepFwd(); else if (e.code === "ArrowLeft") stepBack();
+});
+
+/* detalle de componentes: ventana junto al componente */
+function closePop() { $("#pop").classList.remove("on"); $$(".sel").forEach((n) => n.classList.remove("sel")); }
+function showInfo(key, node) {
+  const d = INFO[key]; if (!d) return;
+  $$(".sel").forEach((n) => n.classList.remove("sel")); if (node) node.classList.add("sel");
+  const pop = $("#pop"); pop.textContent = "";
+  pop.append(h("button", { class: "btn x", type: "button", "aria-label": "Cerrar detalle", "data-closepop": "1", text: "×" }), h("h3", { text: d.t }),
+    h("p", null, h("span", { class: "k", text: "Qué hace" }), d.d),
+    h("p", null, h("span", { class: "k", text: "Dónde aparece en la demo" }), d.w));
+  if (d.c) pop.append(h("p", { class: "care" }, h("span", { class: "k", text: "Cuidado" }), d.c));
+  if (d.p) pop.append(h("button", { class: "btn", type: "button", "data-goprompt": d.p, text: "Ver el prompt relacionado" }));
+  pop.classList.add("on");
+  const wrap = $(".stagewrap").getBoundingClientRect(), nr = node.getBoundingClientRect();
+  const pw = Math.min(380, wrap.width - 16); pop.style.width = pw + "px";
+  const ph = pop.offsetHeight; let left = nr.left - wrap.left; left = Math.max(8, Math.min(left, wrap.width - pw - 8));
+  let top = nr.bottom - wrap.top + 8; if (top + ph > wrap.height - 8) top = Math.max(8, nr.top - wrap.top - ph - 8);
+  pop.style.left = left + "px"; pop.style.top = top + "px";
+}
+document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-closepop]")) { closePop(); return; }
+  const n = e.target.closest("[data-info]"); if (n) showInfo(n.dataset.info, n);
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") { closePop(); return; }
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("[data-info]")) { e.preventDefault(); showInfo(e.target.dataset.info, e.target); }
+});
+/* ================= ARRANQUE ================= */
+renderRefs(); renderPrompts(); fillRefChips(); updateChecklist();
+speed = +$("#speed").value || 1; build(); resetAll(); ui();
+if (window.ResizeObserver) new ResizeObserver(layoutEdges).observe(plane);
+window.addEventListener("resize", layoutEdges);
+window.addEventListener("load", () => { layoutEdges(); build(); });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(layoutEdges);
+const hs = new URLSearchParams(location.hash.slice(1));
+setTheme(hs.get("tema") === "dark" ? "dark" : "light"); showTab(hs.get("v") || "flow");
+window.addEventListener("hashchange", () => { const p = new URLSearchParams(location.hash.slice(1)); const th = p.get("tema") === "dark" ? "dark" : "light"; if (th !== root.getAttribute("data-theme")) setTheme(th); const v = p.get("v") || "flow"; if (v !== currentTab) showTab(v); });
+layoutEdges(); build(); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

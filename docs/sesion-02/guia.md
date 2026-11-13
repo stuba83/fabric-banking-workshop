@@ -48,7 +48,7 @@ Usar los archivos de [`dataset/csv`](../../dataset/csv), no una copia editada o 
 | Minutos | Actividad | Resultado |
 |---|---|---|
 | 00–10 | Revisar entregas de S1 y dudas consolidadas | Confirmar fuentes y accesos; derivar bloqueos administrativos |
-| 10–20 | Orquestación frente a movimiento de datos; contrato de bronce | Entender por qué no tipamos ni limpiamos todavía |
+| 10–20 | Orquestación frente a movimiento de datos; contrato de bronce; patrón guiado por catálogo (demostración del facilitador) | Entender por qué no tipamos ni limpiamos todavía |
 | 20–30 | Configurar parámetros del notebook y crear el pipeline | Una actividad Notebook conectada al artefacto propio |
 | 30–45 | Ejecutar el pipeline y observar su estado | Seguir la actividad y los controles de ingesta |
 | 45–55 | Revisar tablas y resultados medidos | Comprobar conteos, tipos y contenido conservado |
@@ -80,6 +80,15 @@ El notebook:
 - Propaga errores: un control fallido debe verse como ejecución fallida del notebook y de su actividad.
 
 **Alcance de la implementación:** estos archivos pequeños se leen en la memoria del proceso conductor antes de crear los DataFrames. Es una simplificación didáctica para unos pocos MB, no un patrón para ingestas de GB o TB.
+
+> **Complemento del facilitador (sin evidencia).** Estos temas se muestran, no se practican: el laboratorio sigue sin conectores externos, gateways ni fuentes de producción.
+>
+> - **Ingesta guiada por metadatos (*metadata-driven*).** En lugar de un pipeline por tabla, un **catálogo** (una tabla con una fila por tabla de destino: origen, formato, tipo de carga, columna de marca y si está activa) le dice a un solo pipeline qué cargar. Una actividad **Lookup** lee el catálogo, un **ForEach** recorre sus filas y una actividad **Notebook** parametrizada carga cada una. Agregar una tabla es agregar una fila.
+> - **Carga completa frente a incremental.** Las tablas pequeñas se reemplazan enteras, que es lo que hace el laboratorio. Una carga **incremental con marca de agua** guarda la última marca cargada (por ejemplo, la mayor fecha y hora) y en la corrida siguiente lee solo lo posterior. Debe seguir siendo idempotente (por ejemplo, con un `MERGE` por llave), porque escribir y avanzar la marca no es una operación atómica.
+> - **Bitácora.** Una fila por corrida y tabla (filas leídas y escritas, estado, mensaje y marca) deja constancia aunque una carga falle.
+> - **Gateway y secretos, solo como concepto.** Según la documentación, para leer un origen detrás de un firewall o dentro de una red virtual, las conexiones de Data Factory en Fabric pueden apoyarse en una *gateway de datos local* o en una *gateway de datos de red virtual*. Las credenciales no se escriben en notebooks ni en parámetros: se guardan en Azure Key Vault y se referencian desde la conexión. Qué opción corresponde depende de la red, del origen y de las políticas de cada organización.
+>
+> Demostración y notebooks de ejemplo: [`complementos/metadata-driven`](../../complementos/metadata-driven/README-metadata-driven.md) (opcional; requiere una capacidad activa). Enlaces de estudio: [referencias complementarias](../referencias-complementarias.md#2-conectividad-y-secretos-s2-y-s5) y la sección Referencias de esta guía.
 
 ## 4. Configurar el pipeline
 
@@ -172,7 +181,7 @@ Los 720 canales con espacios/minúsculas y los 360 canales vacíos se mantienen 
 
 ### Reejecución y fallos
 
-Reejecutar con los mismos parámetros y las mismas fuentes debe dejar los mismos conteos y contenido. Es idempotencia del **resultado del lote**, no una carga incremental ni ausencia de nuevas versiones Delta.
+Reejecutar con los mismos parámetros y las mismas fuentes debe dejar los mismos conteos y contenido. Es idempotencia del **resultado del lote**, no una carga incremental ni ausencia de nuevas versiones Delta. La carga incremental con marca de agua es otro patrón: el facilitador puede mostrarlo (ver el complemento de la sección 3, sin evidencia).
 
 Las seis escrituras **no forman una transacción única**. Un error tardío puede dejar algunas tablas actualizadas y otras no. No declarar completo el lote ni consumirlo como si lo estuviera; corregir la causa y reejecutar el pipeline entero. No borrar tablas de otros prefijos para resolver un problema.
 
@@ -214,5 +223,6 @@ Un bloqueo de identidad, capacidad o configuración no se resuelve ampliando la 
 - [Leer y escribir datos de Lakehouse con un notebook](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-notebook-load-data).
 - [Contexto del runtime de NotebookUtils](https://learn.microsoft.com/en-us/fabric/data-engineering/notebookutils/notebookutils-runtime).
 - [Diccionario del dataset](../../dataset/diccionario.md).
+- Complementos de estudio del facilitador, sin evidencia (más enlaces en las [referencias complementarias](../referencias-complementarias.md)): [actividad Lookup](https://learn.microsoft.com/en-us/fabric/data-factory/lookup-activity), [actividad ForEach](https://learn.microsoft.com/en-us/fabric/data-factory/foreach-activity), [Copy job (carga incremental)](https://learn.microsoft.com/en-us/fabric/data-factory/what-is-copy-job), [gateway de datos local](https://learn.microsoft.com/en-us/data-integration/gateway/service-gateway-onprem), [gateway de datos de red virtual](https://learn.microsoft.com/en-us/data-integration/vnet/overview) y [referencias de Azure Key Vault en conexiones](https://learn.microsoft.com/en-us/fabric/data-factory/azure-key-vault-reference-configure).
 
 Los controles locales del repositorio no sustituyen la prueba de integración en el tenant del participante. La actividad Notebook, la autenticación, el montaje de OneLake y las escrituras Delta deben comprobarse allí; el repositorio no se conecta a ningún tenant ni despliega artefactos automáticamente.

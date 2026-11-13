@@ -45,7 +45,9 @@ No hace falta instalar Python para usar los CSV y los notebooks en Fabric.
 
 Material de apoyo: [requisitos del laboratorio](docs/requisitos.md), [guía del dataset](dataset/README.md) y [diccionario de datos](dataset/diccionario.md).
 
-**Esta versión incluye las cinco sesiones y un bonus opcional de ciencia de datos y ML.** No contiene un calendario ni compromisos de acompañamiento para una organización particular.
+**Complementos del facilitador.** Material **opcional**, que no forma parte de las evidencias, para quien facilita el entrenamiento: una ingesta guiada por catálogo (Sesión 2), una demostración de Warehouse y de bibliotecas compartidas (Sesión 3) y hojas interactivas sobre Git y despliegue entre ambientes y sobre desarrollo asistido por IA (Sesión 5). Según el caso requieren una capacidad de pago o Trial. Están en [`complementos/`](complementos/README.md) y sus referencias de estudio en [`docs/referencias-complementarias.md`](docs/referencias-complementarias.md). Son apoyo didáctico con datos sintéticos, no una implementación productiva; ninguna sesión se extiende por ellos.
+
+**Esta versión incluye las cinco sesiones y dos bonus opcionales: ciencia de datos y ML, y desarrollo asistido por IA.** No contiene un calendario ni compromisos de acompañamiento para una organización particular.
 
 ## Bonus: ciencia de datos y ciclo de vida de ML
 
@@ -71,6 +73,15 @@ En la Sesión 3, una segunda actividad Notebook lee esas seis tablas, aplica tip
 En la Sesión 4, cada participante crea un modelo semántico Direct Lake sobre las tablas plata, un reporte de una página y dos roles de seguridad por filas que verifica con «Probar como rol»; después revisa el linaje y el catálogo de OneLake y promueve su modelo. Los pasos en el editor web no se prueban automáticamente: deben comprobarse en el tenant del participante.
 
 La Sesión 5 no introduce una práctica nueva: revisa las evidencias, repite el flujo de punta a punta, consolida los bloqueos y prepara el paso del laboratorio a un proyecto real.
+
+## Bonus: desarrollo asistido por IA
+
+Guía de estudio **opcional**, más corta que la de ML: qué es un skill, un servidor MCP, las reglas del proyecto y un agente, cómo replicar el entorno, qué guardarraíles poner y qué está en vista previa (Fabric Apps con la CLI de Rayfin, servidor MCP de Power BI, formato de configuración MCP). No tiene ejercicios ni evidencias y no forma parte de las cinco sesiones.
+
+| Material | Tema | Enlace |
+|---|---|---|
+| Guía del bonus | Piezas del flujo, entorno, guardarraíles, límites y bloqueos frecuentes | [Guía](docs/bonus-desarrollo-asistido/guia.md) |
+| Hoja interactiva y guion | Demostración del facilitador de ≈8 minutos para la Sesión 5 | [Complementos](complementos/desarrollo-asistido-ia/guion-demo.md) |
 
 ## Datos sintéticos
 
@@ -140,7 +151,7 @@ python -m unittest tests.test_ml_actividad tests.test_mlops_actividad tests.test
 
 El participante importa cada `.ipynb` en **Fabric PySpark**, adjunta su Lakehouse y configura su pipeline según la guía. No necesita instalar Python localmente. El runtime de Fabric aporta Spark; la versión 3.14 indicada arriba corresponde al generador local del dataset.
 
-Las pruebas locales comprueban la lógica y los contratos documentados, pero no acreditan una ejecución en un tenant. La importación, identidad ejecutora, parámetros del pipeline y persistencia Delta requieren la comprobación de integración en Fabric.
+Las pruebas locales comprueban la lógica y los contratos documentados, pero no acreditan una ejecución en un tenant. La importación, identidad ejecutora, parámetros del pipeline y persistencia Delta requieren la comprobación de integración en Fabric. `tests/test_complementos.py` comprueba además que los complementos del facilitador están completos: JSON y notebooks válidos, hojas HTML autocontenidas, enlaces que resuelven y ningún término ni dato sensible.
 
 ## Uso responsable
 

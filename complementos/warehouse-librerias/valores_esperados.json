@@ -1,0 +1,138 @@
+{
+  "origen": "implementacion de referencia del repo (plata_silver.transformar) sobre los CSV",
+  "cuadre_laboratorio": {
+    "bronce_transacciones": 72360,
+    "duplicadas": 288,
+    "cuarentena": 72,
+    "plata_transacciones": 72000,
+    "formula": "72360 - 288 - 72 = 72000"
+  },
+  "tablas_lakehouse_filas": {
+    "silver_clientes": 1200,
+    "silver_cuentas": 1800,
+    "silver_sucursales": 7,
+    "silver_productos": 5,
+    "silver_calendario": 183,
+    "silver_transacciones": 72000,
+    "silver_transacciones_cuarentena": 72,
+    "silver_transacciones_duplicadas": 288,
+    "gold_transacciones_mes_canal": 30
+  },
+  "dimensiones_warehouse_filas": {
+    "clientes.dim_sucursal": 7,
+    "clientes.dim_cliente": 1200,
+    "cuentas.dim_producto": 5,
+    "cuentas.dim_cuenta": 1800
+  },
+  "fact_transaccion": {
+    "filas": 72000,
+    "monto_creditos": "14976153627.79",
+    "monto_debitos": "4530373831.90",
+    "cuentas_con_movimiento": 1800,
+    "fecha_hora_min": "2026-04-01 06:04:03",
+    "fecha_hora_max": "2026-09-30 22:57:33"
+  },
+  "cuentas_saldo_inicial": "2306760167.48",
+  "saldo_final_calculado": "12752539963.37",
+  "resumen_mes_canal": {
+    "filas": 30,
+    "transacciones": 72000,
+    "monto_creditos": "14976153627.79",
+    "monto_debitos": "4530373831.90"
+  },
+  "negocio_mes_provincia_canal": {
+    "grupos": 210,
+    "transacciones": 72000,
+    "monto_creditos": "14976153627.79",
+    "monto_debitos": "4530373831.90",
+    "primeras_filas": [
+      {
+        "mes": "2026-04",
+        "provincia": "Alajuela",
+        "canal": "ATM",
+        "transacciones": 263,
+        "monto_creditos": "51557009.90",
+        "monto_debitos": "15618682.13"
+      },
+      {
+        "mes": "2026-04",
+        "provincia": "Alajuela",
+        "canal": "BANCA_MOVIL",
+        "transacciones": 1221,
+        "monto_creditos": "245354511.87",
+        "monto_debitos": "79199137.51"
+      },
+      {
+        "mes": "2026-04",
+        "provincia": "Alajuela",
+        "canal": "NO_INFORMADO",
+        "transacciones": 4,
+        "monto_creditos": "1297316.78",
+        "monto_debitos": "228283.46"
+      },
+      {
+        "mes": "2026-04",
+        "provincia": "Alajuela",
+        "canal": "SUCURSAL",
+        "transacciones": 189,
+        "monto_creditos": "35593966.06",
+        "monto_debitos": "11935952.52"
+      },
+      {
+        "mes": "2026-04",
+        "provincia": "Alajuela",
+        "canal": "WEB",
+        "transacciones": 450,
+        "monto_creditos": "96896563.05",
+        "monto_debitos": "28148216.49"
+      }
+    ],
+    "por_provincia_coincide_con_guia_sesion_4": true
+  },
+  "hash_fila": {
+    "columnas": [
+      "transaccion_id",
+      "cuenta_id",
+      "direccion",
+      "canal",
+      "monto"
+    ],
+    "separador": "|",
+    "sentinela_nulo": "~NULL~",
+    "muestras": [
+      {
+        "transaccion_id": "TX00000001",
+        "valores": [
+          "TX00000001",
+          "CTA001562",
+          "DEBITO",
+          "BANCA_MOVIL",
+          "129883.86"
+        ],
+        "hash_sha256": "4d01750fa7d9891609de2ddfaca0af9f435d9037944b6d3d49948a8cbea76a50"
+      },
+      {
+        "transaccion_id": "TX00000002",
+        "valores": [
+          "TX00000002",
+          "CTA001031",
+          "DEBITO",
+          "BANCA_MOVIL",
+          "139912.04"
+        ],
+        "hash_sha256": "967eb9eeb586c00246cccfccdd521ce6f72750fa24275b6850caf7ad9697ff99"
+      },
+      {
+        "transaccion_id": "TX00000003",
+        "valores": [
+          "TX00000003",
+          "CTA001644",
+          "DEBITO",
+          "BANCA_MOVIL",
+          "57378.25"
+        ],
+        "hash_sha256": "bcec1f1f890d7e1d57e575cdf6fa6a5902f8c7d2061ff70e0e5fef85e0aff819"
+      }
+    ]
+  }
+}

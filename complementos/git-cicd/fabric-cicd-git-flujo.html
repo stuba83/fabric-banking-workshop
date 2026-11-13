@@ -1,0 +1,1767 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Microsoft Fabric · Git y el viaje de un cambio (Git integration, Deployment pipelines, fabric-cicd, Terraform)</title>
+<style>
+/* Tema Microsoft azul. El tema claro es el predeterminado; el oscuro es su variante (botón del encabezado).
+   Todo el color vive en este bloque; el resto de reglas usa var(--token). */
+:root,[data-theme="light"]{
+color-scheme:light;
+--bg:#f3f6fa;--bg2:#e9eff6;--card:#ffffff;--card2:#eef3fa;--hover:#e6f0fa;--surface:#ffffff;--input:#ffffff;
+--border:#dde3ea;--border2:#c2cddb;--text:#201f1e;--text2:#3b3a39;--muted:#605e5c;--faint:#6b6a68;
+--accent:#0078d4;--accent2:#0f6cbd;--on-accent:#ffffff;--accentg:linear-gradient(135deg,#0078d4,#2ba3f0);
+--hi:#d83b01;--mid:#b86a00;--lo:#00828c;--green:#107c10;--purple:#5c2d91;
+--data:#00b7c3;--on-data:#04121a;--dataglow:rgba(0,120,212,.14);
+--heading:#003a6c;--ink:#04121a;--on-fill:#ffffff;--shade:rgba(0,0,0,.45);--bar-glow:rgba(0,40,90,.25);
+--hero:linear-gradient(120deg,#002b52 0%,#0078d4 70%,#2ba3f0 100%);--hero-fg:#ffffff;
+--k1:#0078d4;--k2:#003a6c;--k3:#00b7c3;--k4:#ffb900;--k5:#107c10;
+--elev:0 2px 10px rgba(0,40,90,.08);--modal-shadow:0 18px 48px rgba(0,40,90,.22);--scrim:rgba(15,23,34,.55);
+}
+[data-theme="dark"]{
+color-scheme:dark;
+--bg:#0f1722;--bg2:#131c2a;--card:#1a2433;--card2:#1f2b3d;--hover:#243348;--surface:#1a2433;--input:#111a27;
+--border:#2d3b52;--border2:#3d4e68;--text:#e6ebf2;--text2:#c3cfdf;--muted:#9fb0c6;--faint:#8396ae;
+--accent:#4da6ff;--accent2:#6cb8ff;--on-accent:#0b1220;--accentg:linear-gradient(135deg,#0b5cad,#4da6ff);
+--hi:#ff8a65;--mid:#ffc83d;--lo:#3fd0da;--green:#6ccb5f;--purple:#b79ced;
+--data:#3fd0da;--on-data:#04121a;--dataglow:rgba(77,166,255,.16);
+--heading:#e6ebf2;--ink:#04121a;--on-fill:#ffffff;--shade:rgba(0,0,0,.55);--bar-glow:rgba(255,255,255,.3);
+--hero:linear-gradient(120deg,#0a1b30 0%,#0b4d8c 70%,#1b78c2 100%);--hero-fg:#ffffff;
+--k1:#4da6ff;--k2:#7fb2e5;--k3:#3fd0da;--k4:#ffc83d;--k5:#6ccb5f;
+--elev:0 2px 12px rgba(0,0,0,.35);--modal-shadow:0 18px 48px rgba(0,0,0,.5);--scrim:rgba(4,8,16,.7);
+}
+:root{
+--hi-soft:color-mix(in srgb,var(--hi) 16%,transparent);--mid-soft:color-mix(in srgb,var(--mid) 16%,transparent);
+--green-soft:color-mix(in srgb,var(--green) 16%,transparent);--purple-soft:color-mix(in srgb,var(--purple) 16%,transparent);
+--accent-soft:color-mix(in srgb,var(--accent) 14%,transparent);--data-soft:color-mix(in srgb,var(--data) 18%,transparent);
+--lo-soft:color-mix(in srgb,var(--lo) 16%,transparent);
+}
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:"Segoe UI",Aptos,Calibri,-apple-system,sans-serif;font-size:14px;line-height:1.45}
+.app{max-width:1560px;margin:0 auto;padding:20px}
+a{color:var(--accent2);text-decoration:none}
+a:hover{text-decoration:underline}
+h1{font-size:20px;font-weight:680;margin:0}
+h2{font-size:16px;font-weight:700;margin:0 0 8px;color:var(--heading)}
+h3{font-size:13.5px;font-weight:700;margin:0 0 6px;color:var(--text2)}
+p{margin:0 0 8px}
+.sub{color:var(--muted);font-size:12px}
+.mono{font-family:Consolas,"Cascadia Mono",monospace}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Hero */
+.hero{background:var(--hero);color:var(--hero-fg);box-shadow:0 4px 18px var(--bar-glow)}
+.hero-in{max-width:1560px;margin:0 auto;padding:16px 20px 18px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.hero .brand{display:flex;align-items:center;gap:13px}
+.logo{width:34px;height:34px;border-radius:9px;background:color-mix(in srgb,var(--hero-fg) 18%,transparent);border:1px solid color-mix(in srgb,var(--hero-fg) 50%,transparent);display:flex;align-items:center;justify-content:center}
+.logo svg{width:20px;height:20px}
+.logo .g{fill:none;stroke:var(--hero-fg);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.logo .d{fill:var(--hero-fg)}
+.hero .brand-divider{width:1px;height:36px;background:color-mix(in srgb,var(--hero-fg) 40%,transparent)}
+.hero .brand-txt h1{margin:0;font-size:18px;font-weight:620;letter-spacing:-.01em;color:var(--hero-fg)}
+.hero .brand-txt p{margin:2px 0 0;font-size:12.5px;color:color-mix(in srgb,var(--hero-fg) 88%,transparent)}
+.hero .hdr-controls{margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.hero .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:color-mix(in srgb,var(--hero-fg) 80%,transparent)}
+.seg{display:inline-flex;border:1px solid color-mix(in srgb,var(--hero-fg) 60%,transparent);border-radius:20px;overflow:hidden}
+.seg button{font-size:12.5px;font-weight:600;color:var(--hero-fg);background:transparent;border:0;padding:6px 14px;cursor:pointer;transition:all .15s}
+.seg button:hover{background:color-mix(in srgb,var(--hero-fg) 16%,transparent)}
+.seg button.active{background:var(--hero-fg);color:var(--accent)}
+.hero .icon-btn{font-size:12.5px;font-weight:600;cursor:pointer;color:var(--hero-fg);background:color-mix(in srgb,var(--hero-fg) 14%,transparent);border:1px solid color-mix(in srgb,var(--hero-fg) 60%,transparent);border-radius:20px;padding:6px 14px;transition:all .15s}
+.hero .icon-btn:hover{background:var(--hero-fg);color:var(--accent);border-color:var(--hero-fg)}
+.hero a{color:var(--hero-fg)}
+
+/* Tabs */
+.tabs{display:flex;gap:6px;margin:16px 0;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.tab{padding:9px 16px;cursor:pointer;font-weight:640;font-size:13px;color:var(--muted);border:0;background:transparent;border-bottom:2px solid transparent;user-select:none}
+.tab:hover{color:var(--text2)}
+.tab.active{color:var(--text);border-bottom-color:var(--accent2)}
+.tab .n{display:inline-block;margin-left:6px;font-size:11px;background:var(--card2);color:var(--accent2);border-radius:999px;padding:1px 7px}
+.view{display:none}.view.active{display:block}
+
+/* Cards, KPIs, chips */
+.card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;box-shadow:var(--elev)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:11px;margin-bottom:14px}
+.kpi .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--faint)}
+.kpi .val{font-size:23px;font-weight:700;margin-top:3px;color:var(--heading)}
+.kpi .val small{font-size:12px;font-weight:600;color:var(--muted)}
+.chip{border:1px solid var(--border2);background:var(--surface);color:var(--muted);border-radius:999px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600;user-select:none;transition:all .15s}
+.chip:hover{color:var(--text2);border-color:var(--accent2)}
+.chip.active{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.chip.data.active{background:var(--data);border-color:var(--data);color:var(--on-data)}
+.tag{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:var(--card2);color:var(--accent2);white-space:nowrap}
+.pill{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;border-radius:6px;white-space:nowrap}
+.pill.prev{background:var(--purple-soft);color:var(--purple)}
+.pill.ver{background:var(--mid-soft);color:var(--mid)}
+.pill.ok{background:var(--green-soft);color:var(--green)}
+.pill.no{background:var(--hi-soft);color:var(--hi)}
+.pill.info{background:var(--accent-soft);color:var(--accent2)}
+.filterbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0}
+.filterbar .f-meta{margin-left:auto;color:var(--faint);font-size:12px}
+input[type=search]{font:inherit;color:var(--text);background:var(--input);border:1px solid var(--border2);border-radius:9px;padding:7px 10px;min-width:200px}
+.section-h{font-size:13px;font-weight:700;color:var(--text2);margin:18px 2px 8px;padding-top:6px;border-top:1px solid var(--border)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;margin-bottom:14px}
+@media(max-width:900px){.grid2{grid-template-columns:1fr}}
+.note{border-left:3px solid var(--accent2);background:var(--accent-soft);padding:8px 12px;border-radius:0 10px 10px 0;font-size:12.5px;margin:10px 0}
+.note.warn{border-left-color:var(--mid);background:var(--mid-soft)}
+.foot{color:var(--faint);font-size:11px;margin-top:18px;text-align:center}
+ul.tight{margin:4px 0 8px;padding-left:18px}
+ul.tight li{margin:3px 0}
+
+/* Flow tab */
+.flowgrid{display:grid;grid-template-columns:minmax(0,1fr) 350px;gap:14px;align-items:start}
+@media(max-width:1180px){.flowgrid{grid-template-columns:minmax(0,1fr)}.side{position:static}}
+.diagcard{padding:10px 12px}
+.diagwrap{overflow-x:auto}
+svg.diag{display:block;width:100%;min-width:940px;height:auto}
+.zone{fill:color-mix(in srgb,var(--card2) 70%,transparent);stroke:var(--border2);stroke-width:1;stroke-dasharray:5 4;transition:stroke .3s}
+.zone.on{stroke:var(--accent);stroke-dasharray:none;stroke-width:2}
+.zlabel{fill:var(--muted);font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.node{cursor:pointer;opacity:.5;transition:opacity .35s}
+.node.lit{opacity:1}
+.node:hover{opacity:1}
+.node .nb{fill:var(--card);stroke:var(--border2);stroke-width:1.3;transition:stroke .3s}
+.node .hl{fill:var(--accent-soft);opacity:0;transition:opacity .3s}
+.node.on .hl{opacity:1}
+.node.on .nb{stroke:var(--accent);stroke-width:2.4}
+.node.on{animation:glow 1.6s ease-in-out infinite}
+.node:focus-visible .nb{stroke:var(--accent);stroke-width:2.6}
+@keyframes glow{0%,100%{filter:drop-shadow(0 0 0 var(--dataglow))}50%{filter:drop-shadow(0 0 7px var(--accent))}}
+.nt{fill:var(--text);font-size:12.5px;font-weight:700}
+.ns{fill:var(--muted);font-size:10.3px}
+.ng{fill:var(--accent2);font-size:10px;font-weight:700}
+.pillnode .nt{font-size:11px}
+.sk-code{fill:var(--accent)}.sk-ci{fill:var(--green)}.sk-deploy{fill:var(--purple)}.sk-infra{fill:var(--mid)}.sk-id{fill:var(--lo)}.sk-cfg{fill:var(--hi)}.sk-env{fill:var(--k2)}
+.gate .nb{fill:var(--card)}
+.edge{fill:none;stroke:var(--border2);stroke-width:1.5;opacity:.75;marker-end:url(#ah-base)}
+.edge.bi{marker-start:url(#ah-base)}
+.edge.lit{opacity:1;stroke-width:1.9}
+.edge.lit.k-code{stroke:var(--accent);marker-end:url(#ah-code)}
+.edge.lit.k-ci{stroke:var(--green);marker-end:url(#ah-ci)}
+.edge.lit.k-deploy{stroke:var(--purple);marker-end:url(#ah-deploy)}
+.edge.lit.k-infra{stroke:var(--mid);marker-end:url(#ah-infra)}
+.edge.lit.k-id{stroke:var(--lo);marker-end:url(#ah-id)}
+.edge.lit.k-cfg{stroke:var(--hi);marker-end:url(#ah-cfg)}
+.edge.lit.bi.k-infra{marker-start:url(#ah-infra)}
+.edge.on{stroke-width:2.8;stroke-dasharray:7 5;animation:dash .8s linear infinite}
+.edge.soft{stroke-dasharray:4 4}
+@keyframes dash{to{stroke-dashoffset:-24}}
+.mk-base{fill:var(--border2)}.mk-code{fill:var(--accent)}.mk-ci{fill:var(--green)}.mk-deploy{fill:var(--purple)}.mk-infra{fill:var(--mid)}.mk-id{fill:var(--lo)}.mk-cfg{fill:var(--hi)}
+.elabel{fill:var(--faint);font-size:9.5px;transition:fill .3s}
+.elabel.lit{fill:var(--text2);font-weight:600}
+.pkt circle{stroke:var(--card);stroke-width:2}
+.pkt text{font-size:10px;font-weight:700;text-anchor:middle;fill:var(--text);paint-order:stroke;stroke:var(--card);stroke-width:3.5px;stroke-linejoin:round}
+.pkt.k-code circle{fill:var(--accent)}.pkt.k-ci circle{fill:var(--green)}.pkt.k-deploy circle{fill:var(--purple)}.pkt.k-infra circle{fill:var(--mid)}.pkt.k-id circle{fill:var(--lo)}.pkt.k-cfg circle{fill:var(--hi)}
+.lg-dot.k-code{fill:var(--accent)}.lg-dot.k-ci{fill:var(--green)}.lg-dot.k-deploy{fill:var(--purple)}.lg-dot.k-infra{fill:var(--mid)}.lg-dot.k-id{fill:var(--lo)}.lg-dot.k-cfg{fill:var(--hi)}
+.lg-t{fill:var(--text2);font-size:10.5px}
+.lg-h{fill:var(--muted);font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+.player{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.pbtn{font-weight:700;cursor:pointer;border:1px solid var(--border2);background:var(--surface);color:var(--text);border-radius:10px;padding:7px 12px;min-width:40px;font-size:13px}
+.pbtn:hover{border-color:var(--accent2);background:var(--hover)}
+.pbtn.primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent);min-width:46px}
+.pbtn.primary:hover{background:var(--accent2)}
+.spd{display:inline-flex;border:1px solid var(--border2);border-radius:10px;overflow:hidden}
+.spd button{border:0;background:var(--surface);color:var(--muted);padding:7px 10px;font-weight:700;font-size:12px;cursor:pointer}
+.spd button.active{background:var(--accent);color:var(--on-accent)}
+.timeline{position:relative;flex:1;min-width:340px;height:36px}
+.tl-track{position:absolute;left:11px;right:11px;top:16px;height:4px;border-radius:3px;background:var(--card2);box-shadow:inset 0 0 0 1px var(--border)}
+.tl-fill{position:absolute;left:0;top:0;height:100%;border-radius:3px;background:var(--accentg);transition:width .3s}
+.tl-dot{position:absolute;top:9px;width:20px;height:20px;margin-left:-10px;border-radius:50%;border:2px solid var(--border2);background:var(--card);color:var(--muted);font-size:9.5px;font-weight:700;padding:0;cursor:pointer;display:grid;place-items:center;transition:all .2s}
+.tl-dot:hover{border-color:var(--accent2);color:var(--text)}
+.tl-dot.done{background:var(--accent-soft);border-color:var(--accent2);color:var(--accent2)}
+.tl-dot.cur{background:var(--accent);border-color:var(--accent);color:var(--on-accent);transform:scale(1.18)}
+.side{position:sticky;top:12px}
+.step-h{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.step-n{background:var(--accentg);color:var(--on-accent);border-radius:10px;padding:2px 10px;font-weight:700;font-size:12px;white-space:nowrap}
+.step-t{font-size:15px;font-weight:700;color:var(--heading)}
+.side .chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.side .chips .chip{padding:3px 9px;font-size:11px}
+.side .kv{font-size:12.5px}
+.side .hint a{word-break:break-all}
+.side .kv li{margin:4px 0}
+.side-lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);margin:10px 0 4px}
+.hint{font-size:11.5px;color:var(--faint)}
+
+/* Drawer (component details) */
+.scrim{position:fixed;inset:0;background:var(--scrim);z-index:50;opacity:0;visibility:hidden;transition:opacity .2s,visibility .2s}
+.scrim.open{opacity:1;visibility:visible}
+.drawer{position:fixed;top:0;right:0;height:100%;width:min(500px,100%);background:var(--surface);color:var(--text);box-shadow:var(--modal-shadow);z-index:60;transform:translateX(105%);visibility:hidden;transition:transform .25s,visibility .25s;overflow:auto;padding:18px 20px 28px}
+.drawer.open{transform:none;visibility:visible}
+.drawer .dh{display:flex;align-items:flex-start;gap:10px;margin-bottom:8px}
+.drawer .dh h2{flex:1;margin:0;font-size:17px}
+.drawer .x{border:1px solid var(--border2);background:var(--card);color:var(--text);border-radius:9px;width:32px;height:32px;cursor:pointer;font-size:15px}
+.drawer .x:hover{background:var(--hover)}
+.drawer h3{margin-top:16px;padding-top:10px;border-top:1px solid var(--border);text-transform:uppercase;font-size:11px;letter-spacing:.05em;color:var(--muted)}
+.drawer .urlbox{font-family:Consolas,"Cascadia Mono",monospace;font-size:11.5px;background:var(--input);border:1px dashed var(--border2);border-radius:8px;padding:6px 9px;word-break:break-all;margin:5px 0}
+
+/* Checklists */
+.chk{display:flex;gap:10px;align-items:flex-start;padding:7px 9px;border-radius:10px;cursor:pointer;border:1px solid transparent}
+.chk:hover{background:var(--hover)}
+.chk input{margin-top:3px;width:16px;height:16px;accent-color:var(--accent);flex:none;cursor:pointer}
+.chk.done span.tx{color:var(--faint);text-decoration:line-through}
+.chk .tx{flex:1}
+.chk .why{display:block;font-size:11.5px;color:var(--muted);margin-top:1px}
+.progress{height:9px;border-radius:6px;background:var(--card2);overflow:hidden;box-shadow:inset 0 0 0 1px var(--border)}
+.progress>i{display:block;height:100%;background:var(--accentg);transition:width .3s}
+.setupgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:14px}
+@media(max-width:520px){.setupgrid{grid-template-columns:1fr}}
+.gh{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.gh .gn{background:var(--accentg);color:var(--on-accent);border-radius:8px;padding:1px 8px;font-size:11px;font-weight:700}
+
+/* Tables */
+.tw{overflow:auto;border:1px solid var(--border);border-radius:12px;background:var(--card);max-height:680px}
+.tw table{width:100%;border-collapse:collapse;table-layout:auto}
+.tw th,.tw td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);font-size:12.5px;vertical-align:top;white-space:normal}
+.tw th{position:sticky;top:0;background:var(--bg2);font-weight:640;color:var(--muted);border-bottom:2px solid var(--border2);z-index:2;font-size:11px;text-transform:uppercase;letter-spacing:.03em}
+.tw tbody tr:hover{background:var(--hover)}
+.tw td.c,.tw th.c{text-align:center;white-space:nowrap}
+.tw tr.grp td{background:var(--card2);font-weight:700;color:var(--text2);font-size:11.5px;text-transform:uppercase;letter-spacing:.04em}
+.cmp td:first-child{font-weight:640;color:var(--text2);width:17%}
+.cmp td.a{background:var(--accent-soft)}
+.cmp td.b{background:var(--purple-soft)}
+.cmp th.a{color:var(--accent2)}.cmp th.b{color:var(--purple)}
+.stratgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:14px}
+@media(max-width:900px){.stratgrid{grid-template-columns:1fr}}
+.strat h2 span{font-size:11px;font-weight:700;padding:2px 9px;border-radius:8px;margin-right:6px;vertical-align:middle}
+.strat.a h2 span{background:var(--accent);color:var(--on-accent)}
+.strat.b h2 span{background:var(--purple);color:var(--on-fill)}
+.minflow{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin:8px 0 10px}
+.minflow .mf{border:1px solid var(--border2);background:var(--surface);border-radius:9px;padding:5px 9px;font-size:11.5px;font-weight:600}
+.minflow .ar{color:var(--faint);font-weight:700}
+.strat.a .mf.hot{border-color:var(--accent);background:var(--accent-soft)}
+.strat.b .mf.hot{border-color:var(--purple);background:var(--purple-soft)}
+.tally{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.tbar{flex:1;min-width:200px;height:14px;border-radius:8px;display:flex;overflow:hidden;background:var(--card2);box-shadow:inset 0 0 0 1px var(--border)}
+.tbar i{display:block;height:100%;transition:width .3s}
+.tbar i.a{background:var(--accent)}.tbar i.b{background:var(--purple)}
+
+/* Code */
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 10px}
+.subtab{padding:6px 13px;cursor:pointer;font-weight:640;font-size:12.5px;color:var(--muted);border-radius:8px;user-select:none;border:1px solid transparent;background:transparent}
+.subtab:hover{color:var(--text2)}
+.subtab.active{background:var(--surface);color:var(--text);border-color:var(--border2);box-shadow:inset 0 0 0 1px var(--border2)}
+.code{font-family:Consolas,"Cascadia Mono",monospace;font-size:12px;background:var(--input);border:1px solid var(--border);border-radius:10px;padding:12px 14px;overflow:auto;white-space:pre;line-height:1.55;max-height:560px;margin:0;tab-size:2}
+.code .cm{color:var(--faint);font-style:italic}.code .ky{color:var(--accent2)}.code .st{color:var(--green)}.code .kw{color:var(--purple)}
+.cmdrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.cmd{display:inline-block;font-family:Consolas,monospace;font-size:11px;padding:3px 8px;border-radius:6px;background:var(--input);border:1px dashed var(--border2);color:var(--accent2);cursor:pointer;white-space:nowrap}
+.cmd:hover{background:var(--hover);border-style:solid}
+.cmd.copied{border-color:var(--green);color:var(--green)}
+
+/* No-travel cards and refs */
+.nogrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.nocard h3{color:var(--heading);text-transform:none;font-size:13.5px;letter-spacing:0}
+.refgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:14px}
+@media(max-width:520px){.refgrid{grid-template-columns:1fr}}
+.ref{padding:8px 0;border-top:1px solid var(--border)}
+.ref:first-of-type{border-top:0}
+.ref a.t{font-weight:700}
+.ref .u{font-family:Consolas,"Cascadia Mono",monospace;font-size:11px;color:var(--muted);word-break:break-all;display:block;margin:2px 0}
+.ref .d{font-size:12.5px;color:var(--text2)}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
+
+</style>
+</head><body>
+<header class="hero"><div class="hero-in">
+  <div class="brand">
+    <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path class="g" d="M3 6h6l3 6h9"/><path class="g" d="M3 18h6l3-6"/><circle class="d" cx="3" cy="6" r="1.8"/><circle class="d" cx="3" cy="18" r="1.8"/><circle class="d" cx="21" cy="12" r="1.8"/></svg></div>
+    <div class="brand-divider"></div>
+    <div class="brand-txt">
+      <h1>Microsoft Fabric · Git y el viaje de un cambio</h1>
+      <p>Branches, PRs, workspaces y ambientes con Git integration, Deployment pipelines, fabric-cicd y Terraform · datos sintéticos · material de apoyo del taller</p>
+    </div>
+  </div>
+  <div class="hdr-controls">
+    <span class="lbl">Proveedor Git / CI</span>
+    <div class="seg" role="group" aria-label="Proveedor Git y CI">
+      <button type="button" data-prov="gh" aria-pressed="true">GitHub (Actions)</button>
+      <button type="button" data-prov="ado" aria-pressed="false">Azure DevOps (Repos + Pipelines)</button>
+    </div>
+    <button type="button" class="icon-btn" id="themeBtn" aria-label="Alternar tema claro y oscuro">Tema oscuro</button>
+  </div>
+</div></header>
+
+<div class="app">
+  <div class="tabs" role="tablist" aria-label="Secciones">
+    <button type="button" class="tab" role="tab" data-tab="flow">Flujo de un cambio <span class="n">14</span></button>
+    <button type="button" class="tab" role="tab" data-tab="estr">Dos estrategias</button>
+    <button type="button" class="tab" role="tab" data-tab="setup">Configuración inicial</button>
+    <button type="button" class="tab" role="tab" data-tab="viaja">Qué viaja y qué no</button>
+    <button type="button" class="tab" role="tab" data-tab="refs">Referencias</button>
+  </div>
+
+  <!-- 1 · Flujo -->
+  <section class="view" id="v-flow" role="tabpanel">
+    <div class="kpis" id="flowKpis"></div>
+    <div class="flowgrid">
+      <div class="card diagcard">
+        <div class="diagwrap"><svg class="diag" id="diag" viewBox="0 0 1240 620" role="img" aria-label="Diagrama animado del flujo de un cambio en Fabric: rama de trabajo, workspace aislado, PR, checks, merge, workspace Dev, Test y Prod, y carril de Terraform"></svg></div>
+        <div class="player" role="group" aria-label="Reproductor del flujo">
+          <button type="button" class="pbtn" id="bReset" title="Reiniciar" aria-label="Reiniciar">&#8634;</button>
+          <button type="button" class="pbtn" id="bPrev" title="Paso anterior" aria-label="Paso anterior">&#9664;&#9664;</button>
+          <button type="button" class="pbtn primary" id="bPlay" title="Reproducir / pausar" aria-label="Reproducir">&#9654;</button>
+          <button type="button" class="pbtn" id="bNext" title="Paso siguiente" aria-label="Paso siguiente">&#9654;&#9654;</button>
+          <div class="spd" role="group" aria-label="Velocidad">
+            <button type="button" data-spd="0.5">0.5&times;</button>
+            <button type="button" data-spd="1" class="active">1&times;</button>
+            <button type="button" data-spd="2">2&times;</button>
+          </div>
+          <div class="timeline" id="timeline" aria-label="Línea de tiempo (clic para saltar a un paso)"></div>
+        </div>
+        <p class="hint" style="margin:8px 2px 0">Clic en cualquier componente del diagrama para ver qué es, qué configurar y su referencia. Teclas: <span class="mono">Espacio</span> reproducir/pausar, <span class="mono">&larr; &rarr;</span> cambiar de paso.</p>
+      </div>
+      <aside class="card side" id="sidePanel" aria-live="polite"></aside>
+    </div>
+  </section>
+
+  <!-- 2 · Estrategias -->
+  <section class="view" id="v-estr" role="tabpanel">
+    <div class="stratgrid">
+      <div class="card strat a">
+        <h2><span>A</span>Workspaces por rama + Deployment pipelines</h2>
+        <p class="sub">Construir una vez y promover: el contenido validado en Dev viaja a Test y Prod dentro de Fabric.</p>
+        <div class="minflow"><span class="mf">Rama de trabajo + workspace aislado</span><span class="ar">&rarr;</span><span class="mf">PR + checks</span><span class="ar">&rarr;</span><span class="mf">Merge</span><span class="ar">&rarr;</span><span class="mf">Update from Git (Dev)</span><span class="ar">&rarr;</span><span class="mf hot">Deployment pipeline Dev &rarr; Test &rarr; Prod</span></div>
+        <h3>Encaja cuando</h3>
+        <ul class="tight"><li>Prefieres la experiencia nativa de Fabric y poco código de despliegue.</li><li>Usas Git solo para desarrollo y quieres comparar etapas y ver el historial de despliegues dentro de Fabric.</li><li>Las reglas de despliegue y el autobinding bastan para la configuración por ambiente.</li></ul>
+        <h3>Ten presente</h3>
+        <ul class="tight"><li>Estructura lineal (2 a 10 etapas); el número y los nombres de las etapas no cambian después de crear el pipeline.</li><li>No copia datos, permisos ni ajustes del workspace.</li><li>Git solo llega hasta Dev: Test y Prod se alimentan del workspace anterior.</li></ul>
+      </div>
+      <div class="card strat b">
+        <h2><span>B</span>Despliegue basado en Git con fabric-cicd</h2>
+        <p class="sub">Una carpeta del repo, un workspace por ambiente: tu CI publica un commit o tag concreto.</p>
+        <div class="minflow"><span class="mf">Rama de trabajo + workspace aislado</span><span class="ar">&rarr;</span><span class="mf">PR + checks</span><span class="ar">&rarr;</span><span class="mf">Merge / tag</span><span class="ar">&rarr;</span><span class="mf hot">fabric-cicd &rarr; Test</span><span class="ar">&rarr;</span><span class="mf">Aprobación</span><span class="ar">&rarr;</span><span class="mf hot">fabric-cicd &rarr; Prod</span></div>
+        <h3>Encaja cuando</h3>
+        <ul class="tight"><li>Quieres el repo como fuente de verdad y de todos los despliegues, con releases por tag.</li><li>Necesitas parametrizar por ambiente o ejecutar scripts/pruebas de build antes de publicar.</li><li>Tienes muchos workspaces destino (por ejemplo, uno por cliente).</li></ul>
+        <h3>Ten presente</h3>
+        <ul class="tight"><li>Despliegue completo en cada ejecución (sin diffs) y solo para tipos de ítem soportados por la librería.</li><li>Las conexiones no están bajo control de código: se crean por ambiente.</li><li>La documentación indica que fabric-cicd no soporta deployment plans.</li></ul>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:14px">
+      <h2>Comparación honesta</h2>
+      <p class="sub">Basada en «CI/CD workflow options in Fabric», «Overview of Fabric deployment pipelines» y la documentación de fabric-cicd. Las filas marcadas como <span class="pill ver">criterio del taller</span> son una apreciación, no una afirmación de la documentación.</p>
+      <div class="filterbar" id="cmpFilters"></div>
+      <div class="tw"><table class="cmp"><thead><tr><th>Criterio</th><th class="a">A · Deployment pipelines</th><th class="b">B · fabric-cicd (Git)</th></tr></thead><tbody id="cmpBody"></tbody></table></div>
+      <div class="note">Muchas organizaciones combinan ambas vías (la documentación lo menciona como enfoque híbrido). Si lo haces, elige una sola vía por ítem y por ambiente para que dos mecanismos no se sobrescriban entre sí.</div>
+    </div>
+
+    <div class="grid2">
+      <div class="card">
+        <h2>¿Cuál me conviene? (orientativo)</h2>
+        <p class="sub">Marca lo que aplica a tu equipo; el resultado solo orienta la conversación.</p>
+        <div class="filterbar" id="decChips" style="margin-top:6px"></div>
+        <div class="tally"><span class="pill info" id="tallyA">A: 0</span><div class="tbar"><i class="a" id="tbA" style="width:0%"></i><i class="b" id="tbB" style="width:0%"></i></div><span class="pill prev" id="tallyB">B: 0</span></div>
+        <p class="hint" id="decMsg" style="margin-top:8px"></p>
+      </div>
+      <div class="card">
+        <h2>Dónde encaja Terraform</h2>
+        <p>Terraform no es una tercera estrategia de promoción: aprovisiona la <b>plataforma</b> (workspaces, asignación de capacidad, roles con grupos de Entra y la conexión workspace&nbsp;&harr;&nbsp;Git). El contenido (notebooks, pipelines, modelos) viaja por A o por B.</p>
+        <div class="note warn">Criterio del taller: define un único dueño por recurso. Si Terraform gestiona un ítem, no lo gestiones también por Git/fabric-cicd.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2 id="snipTitle">Ejemplo mínimo · estrategia B</h2>
+      <p class="sub" id="snipSub"></p>
+      <div class="subtabs" id="snipTabs"></div>
+      <div class="cmdrow"><span class="cmd" id="snipCopy" role="button" tabindex="0">Copiar</span><span class="hint" id="snipHint"></span></div>
+      <pre class="code" id="snipCode" tabindex="0"></pre>
+    </div>
+  </section>
+
+  <!-- 3 · Configuración inicial -->
+  <section class="view" id="v-setup" role="tabpanel">
+    <div class="kpis">
+      <div class="card kpi"><div class="lbl">Avance de la lista</div><div class="val"><span id="chkDone">0</span> <small>de <span id="chkTotal">0</span></small></div><div class="progress" style="margin-top:8px"><i id="chkBar" style="width:0%"></i></div></div>
+      <div class="card kpi"><div class="lbl">Se hace una sola vez</div><div class="val">6 <small>bloques</small></div></div>
+      <div class="card kpi"><div class="lbl">Proveedor activo</div><div class="val" id="setupProv">GitHub</div></div>
+      <div class="card kpi"><div class="lbl">Estado de las casillas</div><div class="val" style="font-size:13px;font-weight:600;color:var(--muted)">En memoria y en la URL (#)</div><button type="button" class="chip" id="chkReset" style="margin-top:8px">Limpiar casillas</button></div>
+    </div>
+    <div class="setupgrid" id="setupGrid"></div>
+
+    <div class="grid2" style="margin-top:14px">
+      <div class="card">
+        <h2>Estructura sugerida del repositorio</h2>
+        <pre class="code" id="repoTree"></pre>
+        <p class="hint" style="margin-top:8px">fabric-cicd espera que el directorio de ítems contenga solo lo confirmado desde Fabric (más parameter.yml). Los nombres de carpeta de cada ítem siguen el patrón &lt;nombre&gt;.&lt;Tipo&gt;.</p>
+      </div>
+      <div class="card">
+        <h2>Roles de ejemplo (grupos de Entra)</h2>
+        <div class="tw" style="max-height:none"><table><thead><tr><th>Grupo</th><th>Dev</th><th>Test</th><th>Prod</th></tr></thead><tbody>
+          <tr><td>Ingenieros de datos</td><td>Contributor</td><td>Contributor</td><td>Viewer</td></tr>
+          <tr><td>Revisores / QA</td><td>Viewer</td><td>Contributor</td><td>Viewer</td></tr>
+          <tr><td>Consumidores</td><td>&mdash;</td><td>Viewer (UAT)</td><td>Viewer</td></tr>
+          <tr><td>Service principal de CI/CD</td><td>Contributor (Admin para conectar Git)</td><td>Contributor</td><td>Contributor</td></tr>
+        </tbody></table></div>
+        <p class="hint" style="margin-top:8px">Ejemplo didáctico (criterio del taller). Conectar o desconectar un workspace de Git exige rol Admin; confirmar/actualizar requiere Contributor y permisos de Git.</p>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px">
+      <h2 id="tfTitle">Terraform: plataforma como código</h2>
+      <p class="sub" id="tfSub"></p>
+      <div class="subtabs" id="tfTabs"></div>
+      <div class="cmdrow"><span class="cmd" id="tfCopy" role="button" tabindex="0">Copiar</span><span class="hint" id="tfHint"></span></div>
+      <pre class="code" id="tfCode" tabindex="0"></pre>
+    </div>
+  </section>
+
+  <!-- 4 · Qué viaja -->
+  <section class="view" id="v-viaja" role="tabpanel">
+    <div class="kpis" id="viajaKpis"></div>
+    <div class="card">
+      <h2>Ítems y cómo viajan</h2>
+      <p class="sub">Listas de «Overview of Fabric Git integration», «Deployment pipelines» y «fabric-cicd» (documentación vigente al contrastarla). «No figura» significa que no aparece en la lista actual de esa herramienta, no que esté descartado para siempre.</p>
+      <div class="filterbar"><input type="search" id="itemSearch" placeholder="Buscar ítem…" aria-label="Buscar ítem"><span id="itemChips" style="display:contents"></span><span class="f-meta" id="itemCount"></span></div>
+      <div class="tw"><table><thead><tr><th>Ítem</th><th class="c">Git integration</th><th class="c">Deployment pipelines</th><th class="c">fabric-cicd</th><th>Notas</th></tr></thead><tbody id="itemBody"></tbody></table></div>
+    </div>
+    <div class="section-h">Qué NO viaja (o no viaja solo)</div>
+    <div class="nogrid" id="noGrid"></div>
+    <div class="section-h">Límites que conviene conocer</div>
+    <div class="card"><ul class="tight" id="limitsList"></ul></div>
+  </section>
+
+  <!-- 5 · Referencias -->
+  <section class="view" id="v-refs" role="tabpanel">
+    <p class="sub">Todas las URLs se muestran como texto para estudio sin conexión y también como enlaces. Verificadas con respuesta HTTP 200 al preparar este material.</p>
+    <div class="card" style="margin-bottom:14px">
+      <h2>Marcado como «vista previa» o «verificar»</h2>
+      <div class="grid2" style="margin-bottom:0">
+        <div>
+          <h3><span class="pill prev">vista previa</span> según la documentación consultada</h3>
+          <ul class="tight">
+            <li>Deployment plans (orden y acciones en despliegues) y la nueva interfaz de Deployment pipelines.</li>
+            <li>Perfil de administrador del workspace de rama y la API Create Workspace Relation.</li>
+            <li>Commit a nivel de archivo desde la comparación de cambios.</li>
+            <li>Muchos tipos de ítem (ver «Qué viaja y qué no»): modelos semánticos, informes, ML, Airflow, Ontology, entre otros.</li>
+            <li>fabric-cicd: despliegue selectivo y detección de cambios basada en Git son funciones experimentales.</li>
+            <li>Provider de Terraform: modo <span class="mono">preview</span> para recursos en vista previa.</li>
+          </ul>
+        </div>
+        <div>
+          <h3><span class="pill ver">verificar</span> antes de comprometerte</h3>
+          <ul class="tight">
+            <li>Cómo fija fabric-cicd el value set activo de la Variable library en cada ambiente.</li>
+            <li>Si la credencial de la conexión Git que guarda Fabric admite identidad federada (la documentación describe PAT en GitHub y secreto de service principal en Azure DevOps).</li>
+            <li>Tenant settings adicionales para que un service principal cree workspaces, conexiones o deployment pipelines.</li>
+            <li>Si el provider de Terraform puede crear la conexión Git (<span class="mono">connection_id</span>) para tu proveedor.</li>
+            <li>Los YAML de Terraform para Azure Pipelines son ilustrativos: agente, versión de Terraform y nombres de service connection.</li>
+            <li>Límites de tamaño de commit y la fecha del 28-feb-2027 para permisos de lectura y escritura: confirma la vigencia.</li>
+          </ul>
+        </div>
+      </div>
+    </div>    <div class="refgrid" id="refGrid"></div>
+  </section>
+
+  <div class="foot">Material genérico de apoyo, con datos sintéticos. Contrastado con la documentación pública el 12 de noviembre de 2026; las funciones en vista previa pueden cambiar. Verifica siempre contra la documentación vigente.</div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle" aria-hidden="true">
+  <div class="dh"><h2 id="dTitle"></h2><button type="button" class="x" id="dClose" aria-label="Cerrar panel">&#10005;</button></div>
+  <div id="dBody"></div>
+</aside>
+
+<script type="text/plain" id="sn-gh-deploy">name: Desplegar Fabric (fabric-cicd)
+
+on:
+  push:
+    tags: ['v*']              # release por tag sobre la rama de integración
+
+permissions:
+  id-token: write             # permite pedir el token OIDC a Entra ID
+  contents: read
+
+jobs:
+  deploy-test:
+    runs-on: ubuntu-latest
+    environment: test         # variables, secretos y revisores del environment
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install fabric-cicd
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - run: python deploy.py --environment test
+
+  deploy-prod:
+    needs: deploy-test
+    runs-on: ubuntu-latest
+    environment: prod         # revisores requeridos = aprobación antes de Prod
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install fabric-cicd
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - run: python deploy.py --environment prod
+</script>
+
+<script type="text/plain" id="sn-ado-deploy">trigger:
+  branches:
+    exclude: ['*']
+  tags:
+    include: ['v*']            # release por tag sobre la rama de integración
+
+pool:
+  vmImage: windows-latest      # igual que en los ejemplos de fabric-cicd
+
+stages:
+  - stage: Test
+    jobs:
+      - deployment: deploy_test
+        environment: fabric-test        # Approvals & checks del Environment
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: UsePythonVersion@0
+                  inputs:
+                    versionSpec: '3.12'
+                    addToPath: true
+                - script: pip install fabric-cicd
+                  displayName: Instalar fabric-cicd
+                - task: AzureCLI@2
+                  displayName: Desplegar a Test
+                  inputs:
+                    azureSubscription: 'sc-fabric-wif'   # service connection ARM (workload identity federation)
+                    scriptType: ps
+                    scriptLocation: inlineScript
+                    workingDirectory: $(Build.SourcesDirectory)
+                    inlineScript: python -u deploy.py --environment test
+
+  - stage: Prod
+    dependsOn: Test
+    jobs:
+      - deployment: deploy_prod
+        environment: fabric-prod        # aprobación requerida antes de Prod
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: UsePythonVersion@0
+                  inputs:
+                    versionSpec: '3.12'
+                    addToPath: true
+                - script: pip install fabric-cicd
+                  displayName: Instalar fabric-cicd
+                - task: AzureCLI@2
+                  displayName: Desplegar a Prod
+                  inputs:
+                    azureSubscription: 'sc-fabric-wif'
+                    scriptType: ps
+                    scriptLocation: inlineScript
+                    workingDirectory: $(Build.SourcesDirectory)
+                    inlineScript: python -u deploy.py --environment prod
+</script>
+
+<script type="text/plain" id="sn-py">import argparse
+from pathlib import Path
+
+from azure.identity import AzureCliCredential
+from fabric_cicd import deploy_with_config
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--environment", required=True)   # test | prod
+args = parser.parse_args()
+
+# La credencial es obligatoria: el job ya inició sesión (azure/login o AzureCLI@2)
+deploy_with_config(
+    config_file_path=str(Path(__file__).resolve().parent / "config.yml"),
+    token_credential=AzureCliCredential(),
+    environment=args.environment,
+)
+</script>
+
+<script type="text/plain" id="sn-cfg">core:
+  workspace_id:
+    test: "ID-DEL-WORKSPACE-TEST"   # identificador (GUID) del workspace Test
+    prod: "ID-DEL-WORKSPACE-PROD"   # identificador (GUID) del workspace Prod
+  repository_directory: "workspace"
+  item_types_in_scope:
+    - Notebook
+    - DataPipeline
+    - Environment
+    - Lakehouse
+    - VariableLibrary
+  parameter: "workspace/parameter.yml"
+
+# publish y unpublish se ejecutan por defecto.
+# unpublish elimina del workspace los ítems que ya no están en el repo.
+</script>
+
+<script type="text/plain" id="sn-param">find_replace:
+  - find_value: "ID-DEL-LAKEHOUSE-EN-DEV"   # GUID del lakehouse en Dev, tal como está en Git
+    replace_value:
+      test: "ID-DEL-LAKEHOUSE-EN-TEST"
+      prod: "ID-DEL-LAKEHOUSE-EN-PROD"
+
+key_value_replace:
+  - find_key: $.variables[?(@.name=="Environment")].value
+    replace_value:
+      test: "test"
+      prod: "prod"
+
+# Las claves (test, prod) deben coincidir con el valor de --environment.
+# Para que un ambiente no tenga reemplazos, simplemente omítelo.
+</script>
+
+<script type="text/plain" id="sn-tf-main">terraform {
+  required_version = ">= 1.8, < 2.0"
+  required_providers {
+    fabric = {
+      source  = "microsoft/fabric"
+      version = "~> 1.15"        # fija la versión que hayas probado (ver el Registry)
+    }
+  }
+}
+
+provider "fabric" {
+  use_oidc = true                # FABRIC_TENANT_ID y FABRIC_CLIENT_ID por variables de entorno
+}
+
+variable "capacity_name"       { type = string }   # capacidad Fabric ya aprovisionada en Azure
+variable "grupo_ingenieria_id" { type = string }   # object id del grupo de Entra
+variable "git_connection_id"   { type = string }   # conexión Git creada en Fabric
+
+locals {
+  ambientes = toset(["dev", "test", "prod"])
+}
+
+data "fabric_capacity" "main" {
+  display_name = var.capacity_name
+}
+
+resource "fabric_workspace" "env" {
+  for_each     = local.ambientes
+  display_name = "taller-datos-${each.key}"
+  capacity_id  = data.fabric_capacity.main.id
+}
+
+resource "fabric_workspace_role_assignment" "ingenieria" {
+  for_each     = fabric_workspace.env
+  workspace_id = each.value.id
+  principal    = { id = var.grupo_ingenieria_id, type = "Group" }
+  role         = each.key == "prod" ? "Viewer" : "Contributor"
+}
+
+# Solo Dev se conecta a Git (rama de integración)
+%%GITBLOCK%%
+</script>
+
+<script type="text/plain" id="sn-tf-git-gh">resource "fabric_workspace_git" "dev" {
+  workspace_id            = fabric_workspace.env["dev"].id
+  initialization_strategy = "PreferRemote"
+  git_provider_details = {
+    git_provider_type = "GitHub"
+    owner_name        = "mi-organizacion"
+    repository_name   = "fabric-taller"
+    branch_name       = "main"
+    directory_name    = "/workspace"
+  }
+  git_credentials = {
+    source        = "ConfiguredConnection"     # con service principal es la única opción
+    connection_id = var.git_connection_id
+  }
+}
+</script>
+
+<script type="text/plain" id="sn-tf-git-ado">resource "fabric_workspace_git" "dev" {
+  workspace_id            = fabric_workspace.env["dev"].id
+  initialization_strategy = "PreferRemote"
+  git_provider_details = {
+    git_provider_type = "AzureDevOps"
+    organization_name = "mi-organizacion"
+    project_name      = "fabric-taller"
+    repository_name   = "fabric-taller"
+    branch_name       = "main"
+    directory_name    = "/workspace"
+  }
+  git_credentials = {
+    source        = "ConfiguredConnection"     # "Automatic" solo funciona con identidad de usuario
+    connection_id = var.git_connection_id
+  }
+}
+</script>
+
+<script type="text/plain" id="sn-tf-backend-gh">terraform {
+  backend "azurerm" {
+    resource_group_name  = "rg-tfstate-taller"
+    storage_account_name = "sttfstatetaller001"    # nombre globalmente único
+    container_name       = "tfstate"
+    key                  = "fabric-plataforma.tfstate"
+    use_oidc             = true                    # ARM_USE_OIDC: federación hacia el plano de datos
+    use_azuread_auth     = true                    # Entra ID en lugar de claves de la cuenta
+  }
+}
+# Rol recomendado para la identidad: Storage Blob Data Contributor sobre el contenedor.
+# El backend azurerm ofrece bloqueo de estado con las capacidades nativas de Blob Storage.
+# ARM_CLIENT_ID, ARM_TENANT_ID y ARM_SUBSCRIPTION_ID llegan por variables de entorno.
+</script>
+
+<script type="text/plain" id="sn-tf-backend-ado">terraform {
+  backend "azurerm" {
+    resource_group_name  = "rg-tfstate-taller"
+    storage_account_name = "sttfstatetaller001"    # nombre globalmente único
+    container_name       = "tfstate"
+    key                  = "fabric-plataforma.tfstate"
+    use_azuread_auth     = true                    # Entra ID en lugar de claves de la cuenta
+  }
+}
+# Dentro de AzureCLI@2 (service connection con workload identity federation),
+# el backend usa la sesión de Azure CLI; no añadas ajustes OIDC adicionales.
+# Rol recomendado: Storage Blob Data Contributor sobre el contenedor.
+# El backend azurerm ofrece bloqueo de estado con las capacidades nativas de Blob Storage.
+</script>
+
+<script type="text/plain" id="sn-tf-ci-gh">name: terraform
+
+on:
+  pull_request:
+    paths: ['infra/**']
+  push:
+    branches: [main]
+    paths: ['infra/**']
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  FABRIC_USE_OIDC: 'true'
+  FABRIC_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  FABRIC_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_USE_OIDC: 'true'
+  ARM_USE_AZUREAD: 'true'
+  ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+  ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+  ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+  # TF_VAR_capacity_name, TF_VAR_grupo_ingenieria_id, ... como variables del repo
+
+defaults:
+  run:
+    working-directory: infra
+
+jobs:
+  plan:
+    if: github.event_name == 'pull_request'     # el PR muestra qué cambiaría
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform init -input=false
+      - run: terraform plan -input=false
+
+  apply:
+    if: github.event_name == 'push'             # solo tras el merge
+    runs-on: ubuntu-latest
+    environment: infra                          # revisores requeridos = aprobación del apply
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - run: terraform init -input=false
+      - run: terraform apply -input=false -auto-approve
+</script>
+
+<script type="text/plain" id="sn-tf-ci-ado">trigger:
+  branches:
+    include: [main]
+  paths:
+    include: [infra/*]
+
+# En Azure Repos el PR se valida con una política de rama (Build validation)
+# que ejecuta este mismo pipeline; la etapa Apply solo corre en main.
+
+pool:
+  vmImage: ubuntu-latest       # si el agente no trae Terraform, instálalo antes
+
+stages:
+  - stage: Plan
+    jobs:
+      - job: plan
+        steps:
+          - task: AzureCLI@2
+            displayName: terraform plan
+            env:
+              FABRIC_USE_CLI: true
+              ARM_USE_AZUREAD: true
+            inputs:
+              azureSubscription: 'sc-fabric-wif'     # service connection ARM (workload identity federation)
+              scriptType: bash
+              scriptLocation: inlineScript
+              workingDirectory: infra
+              inlineScript: |
+                terraform init -input=false
+                terraform plan -input=false
+
+  - stage: Apply
+    dependsOn: Plan
+    condition: and(succeeded(), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+    jobs:
+      - deployment: apply
+        environment: infra                           # Approvals & checks del Environment
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+                - task: AzureCLI@2
+                  displayName: terraform apply
+                  env:
+                    FABRIC_USE_CLI: true
+                    ARM_USE_AZUREAD: true
+                  inputs:
+                    azureSubscription: 'sc-fabric-wif'
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    workingDirectory: $(Build.SourcesDirectory)/infra
+                    inlineScript: |
+                      terraform init -input=false
+                      terraform apply -input=false -auto-approve
+</script>
+
+<script type="text/plain" id="sn-tree-gh">.
+├─ .github/
+│  ├─ CODEOWNERS                  # revisores por ruta
+│  └─ workflows/
+│     ├─ pr-checks.yml            # validar definiciones, lint, pruebas
+│     ├─ deploy-fabric.yml        # fabric-cicd: Test y luego Prod
+│     └─ terraform.yml            # plan en el PR, apply con aprobación
+├─ workspace/                     # carpeta conectada a Git (ítems de Fabric)
+│  ├─ parameter.yml               # parametrización de fabric-cicd
+│  ├─ Ingesta diaria.Notebook/
+│  ├─ Carga diaria.DataPipeline/
+│  └─ Parametros.VariableLibrary/
+├─ infra/                         # Terraform (workspaces, roles, Git)
+│  └─ main.tf
+├─ config.yml                     # configuración de fabric-cicd
+└─ deploy.py                      # punto de entrada del despliegue
+</script>
+
+<script type="text/plain" id="sn-tree-ado">.
+├─ pipelines/
+│  ├─ pr-checks.yml               # Build validation del PR: definiciones, lint, pruebas
+│  ├─ deploy-fabric.yml           # fabric-cicd: Test y luego Prod
+│  └─ terraform.yml               # plan en el PR, apply con aprobación
+├─ workspace/                     # carpeta conectada a Git (ítems de Fabric)
+│  ├─ parameter.yml               # parametrización de fabric-cicd
+│  ├─ Ingesta diaria.Notebook/
+│  ├─ Carga diaria.DataPipeline/
+│  └─ Parametros.VariableLibrary/
+├─ infra/                         # Terraform (workspaces, roles, Git)
+│  └─ main.tf
+├─ config.yml                     # configuración de fabric-cicd
+└─ deploy.py                      # punto de entrada del despliegue
+# Revisores obligatorios por ruta: branch policy de la rama principal en Azure Repos
+</script>
+
+<script>
+(function(){'use strict';
+var L='https://learn.microsoft.com/en-us/fabric/';
+var CI='https://microsoft.github.io/fabric-cicd/latest/';
+var TFR='https://registry.terraform.io/providers/microsoft/fabric/latest/docs/';
+var U={
+ gitIntro:L+'cicd/git-integration/intro-to-git-integration',
+ gitBranches:L+'cicd/git-integration/manage-branches',
+ gitAuto:L+'cicd/git-integration/git-automation',
+ gitStart:L+'cicd/git-integration/git-get-started',
+ gitProcess:L+'cicd/git-integration/git-integration-process',
+ gitBranched:L+'cicd/git-integration/branched-workspace',
+ gitSp:L+'cicd/git-integration/git-integration-with-service-principal',
+ dpIntro:L+'cicd/deployment-pipelines/intro-to-deployment-pipelines',
+ dpAuto:L+'cicd/deployment-pipelines/pipeline-automation-fabric',
+ dpProc:L+'cicd/deployment-pipelines/understand-the-deployment-process',
+ dpRules:L+'cicd/deployment-pipelines/create-rules',
+ best:L+'cicd/best-practices-cicd',
+ opts:L+'cicd/manage-deployment',
+ vlOver:L+'cicd/variable-library/variable-library-overview',
+ vlCicd:L+'cicd/variable-library/variable-library-cicd',
+ cicdSite:'https://microsoft.github.io/fabric-cicd/',
+ cicdRepo:'https://github.com/microsoft/fabric-cicd',
+ cicdStart:CI+'how_to/getting_started/',
+ cicdOver:CI+'how_to/deployment_overview/',
+ cicdParam:CI+'how_to/parameterization/',
+ cicdCfg:CI+'how_to/config_deployment/',
+ cicdRel:CI+'example/release_pipeline/',
+ cicdItems:CI+'reference/item_types/',
+ tfReg:'https://registry.terraform.io/providers/microsoft/fabric/latest/docs',
+ tfRepo:'https://github.com/microsoft/terraform-provider-fabric',
+ tfGit:TFR+'resources/workspace_git',
+ tfWs:TFR+'resources/workspace',
+ tfBackend:'https://developer.hashicorp.com/terraform/language/backend/azurerm',
+ idSupport:'https://learn.microsoft.com/en-us/rest/api/fabric/articles/identity-support',
+ tenantDev:L+'admin/service-admin-portal-developer',
+ wif:'https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation',
+ wifTrust:'https://learn.microsoft.com/en-us/entra/workload-id/workload-identity-federation-create-trust',
+ azLogin:'https://github.com/Azure/login',
+ adoArm:'https://learn.microsoft.com/en-us/azure/devops/pipelines/library/connect-to-azure',
+ ghEnv:'https://docs.github.com/en/actions/deployment/targeting-different-environments/using-environments-for-deployment',
+ ghOwners:'https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners',
+ adoEnv:'https://learn.microsoft.com/en-us/azure/devops/pipelines/process/environments',
+ adoPol:'https://learn.microsoft.com/en-us/azure/devops/repos/git/branch-policies'
+};
+
+var PROV={gh:{name:'GitHub',short:'GitHub Actions'},ado:{name:'Azure DevOps',short:'Azure Pipelines'}};
+
+var ZONES=[
+ {id:'zG',x:14,y:14,w:744,h:152,t:'1 · Desarrollo aislado (Git + workspace)'},
+ {id:'zC',x:14,y:176,w:744,h:170,t:'2 · Integración (PR + CI)'},
+ {id:'zT',x:14,y:356,w:500,h:250,t:'5 · Infraestructura como código'},
+ {id:'zD',x:526,y:356,w:232,h:250,t:'3 · Despliegue por código'},
+ {id:'zF',x:772,y:14,w:454,h:592,t:'4 · Ambientes Fabric'}
+];
+
+/* s: subtítulo (líneas separadas por \n). Las variantes por proveedor viven en LAB. */
+var NODES=[
+ {id:'dev',x:30,y:52,w:112,h:66,sk:'code',t:'Desarrollador',s:'Fabric · VS Code'},
+ {id:'feat',x:200,y:52,w:130,h:66,sk:'code',t:'Rama de trabajo',s:'feature/ingesta'},
+ {id:'wsf',x:384,y:52,w:150,h:66,sk:'env',t:'Workspace aislado',s:'1 workspace ↔ 1 rama'},
+ {id:'repo',x:576,y:52,w:156,h:66,sk:'code',t:'Rama de integración',s:'main'},
+ {id:'pr',x:200,y:224,w:130,h:60,sk:'code',t:'Pull Request',s:'hacia la integración'},
+ {id:'ci',x:384,y:200,w:150,h:54,sk:'ci',t:'Checks automáticos',s:''},
+ {id:'rev',x:384,y:268,w:150,h:54,sk:'ci',t:'Revisión humana',s:''},
+ {id:'gate',gate:true,cx:654,cy:261,r:24,sk:'ci',t:'Merge',s:''},
+ {id:'cap',x:26,y:392,w:124,h:64,sk:'infra',t:'Capacidad',s:'SKU F en Azure\ncapacity_id'},
+ {id:'tf',x:190,y:392,w:150,h:64,sk:'infra',t:'Terraform',s:'plan en el PR\napply con aprobación'},
+ {id:'tfstate',x:190,y:508,w:150,h:58,sk:'infra',t:'Estado remoto',s:'Azure Storage\ncon bloqueo'},
+ {id:'entra',x:380,y:392,w:124,h:64,sk:'id',t:'Entra ID',s:'grupos · SP\nfederación OIDC'},
+ {id:'fcicd',x:566,y:392,w:150,h:64,sk:'deploy',t:'fabric-cicd',s:'Vía B · job de CI/CD\nlee el repo y publica'},
+ {id:'wsdev',x:830,y:52,w:180,h:66,sk:'env',t:'Workspace Dev',s:'conectado a Git\n(rama de integración)'},
+ {id:'dp1',pill:true,x:832,y:146,w:176,h:28,sk:'deploy',t:'Vía A · Dev → Test'},
+ {id:'wstest',x:830,y:204,w:180,h:66,sk:'env',t:'Workspace Test',s:'simula producción\nvalue set: Test'},
+ {id:'appr',pill:true,x:832,y:300,w:176,h:28,sk:'ci',t:'Aprobación'},
+ {id:'dp2',pill:true,x:832,y:346,w:176,h:28,sk:'deploy',t:'Vía A · Test → Prod'},
+ {id:'wsprod',x:830,y:404,w:180,h:66,sk:'env',t:'Workspace Prod',s:'solo el despliegue escribe\nvalue set: Prod'},
+ {id:'varlib',x:1050,y:204,w:160,h:66,sk:'cfg',t:'Variable library',s:'un value set por ambiente\nuno activo por workspace'}
+];
+
+/* Variantes por proveedor: sobrescriben t/s del nodo */
+var LAB={
+ gh:{repo:{s:'main · GitHub'},ci:{s:'GitHub Actions\nlint · validar · pruebas'},rev:{s:'CODEOWNERS\naprobadores requeridos'},appr:{t:'Revisores del environment'},fcicd:{s:'Vía B · job de CI/CD\nlee el repo y publica'},entra:{s:'grupos · SP\nfederación OIDC'}},
+ ado:{repo:{s:'main · Azure Repos'},ci:{s:'Azure Pipelines\nlint · validar · pruebas'},rev:{s:'revisores requeridos\npor ruta (policy)'},appr:{t:'Approvals del Environment'},fcicd:{s:'Vía B · stage de CI/CD\nlee el repo y publica'},entra:{s:'grupos · SP\nservice connection'}}
+};
+
+/* k: tipo de paquete. pk: etiqueta del paquete. l: etiqueta [x,y,anchor,texto]. */
+var EDGES=[
+ {id:'dev_feat',k:'code',pk:'rama',d:'M142,85 H198',l:[170,76,'middle','crea rama']},
+ {id:'feat_wsf',k:'code',pk:'branch out',d:'M330,76 H382',l:[356,68,'middle','branch out']},
+ {id:'wsf_feat',k:'code',pk:'commit',d:'M382,98 H332',l:[357,112,'middle','commit']},
+ {id:'dev_wsf',k:'code',pk:'edición',d:'M86,118 V148 H459 V120',soft:1,l:[392,143,'middle','edita (portal · IDE)']},
+ {id:'feat_pr',k:'code',pk:'PR',d:'M265,118 V222',l:[272,175,'start','abrir PR']},
+ {id:'pr_ci',k:'ci',pk:'evento',d:'M330,244 H356 V227 H382'},
+ {id:'pr_rev',k:'ci',pk:'solicitud',d:'M330,264 H356 V295 H382'},
+ {id:'pr_tf',k:'infra',pk:'plan',d:'M250,284 V392',l:[258,338,'start','terraform plan']},
+ {id:'ci_gate',k:'ci',pk:'✔ checks',d:'M534,227 H584 V261 H628'},
+ {id:'rev_gate',k:'ci',pk:'✔ aprobado',d:'M534,295 H584 V261 H628'},
+ {id:'gate_repo',k:'code',pk:'merge',d:'M654,237 V120',l:[662,182,'start','merge']},
+ {id:'repo_wsdev',k:'code',pk:'commit',d:'M732,85 H828',l:[780,76,'middle','update from Git']},
+ {id:'repo_fcicd',k:'deploy',pk:'tag · SHA',d:'M708,118 V392',l:[700,332,'end','tag / merge']},
+ {id:'fcicd_wstest',k:'deploy',pk:'defs',d:'M716,410 H760 V237 H828'},
+ {id:'fcicd_wsprod',k:'deploy',pk:'defs',d:'M716,437 H828',l:[772,431,'middle','tras aprobación']},
+ {id:'wsdev_dp1',k:'deploy',pk:'contenido',d:'M920,118 V146'},
+ {id:'dp1_wstest',k:'deploy',pk:'deploy',d:'M920,174 V204'},
+ {id:'wstest_appr',k:'ci',pk:'validado',d:'M920,270 V300'},
+ {id:'appr_dp2',k:'deploy',pk:'OK',d:'M920,328 V346'},
+ {id:'dp2_wsprod',k:'deploy',pk:'deploy',d:'M920,374 V404'},
+ {id:'var_main',k:'cfg',pk:'valores',d:'M1050,237 H1032'},
+ {id:'var_dev',k:'cfg',pk:'',d:'M1032,237 V85 H1012'},
+ {id:'var_test',k:'cfg',pk:'',d:'M1032,237 H1012'},
+ {id:'var_prod',k:'cfg',pk:'',d:'M1032,237 V437 H1012'},
+ {id:'tf_zf',k:'infra',pk:'apply',d:'M340,444 H360 V490 H770',l:[565,484,'middle','crea workspaces · capacidad · roles · conexión Git']},
+ {id:'tf_state',k:'infra',pk:'estado',d:'M265,456 V508',bi:1},
+ {id:'cap_tf',k:'infra',pk:'cap.',d:'M150,424 H188'},
+ {id:'entra_tf',k:'id',pk:'token',d:'M380,424 H342'},
+ {id:'entra_fcicd',k:'id',pk:'token',d:'M504,424 H564',l:[534,416,'middle','OIDC']}
+];
+
+var N_STEPS=14, TRAVEL_MS=2400, STEP_MS=4200;
+
+/* Pasos: nodos/aristas que se encienden; texto con variantes por proveedor {gh,ado} */
+var STEPS=[
+ {t:'Crear la rama de trabajo',nodes:['dev','feat'],edges:['dev_feat'],
+  d:'El desarrollador crea una rama corta a partir de la rama de integración (por ejemplo feature/ingesta). La relación recomendada es 1 workspace ↔ 1 rama.',
+  b:['Un workspace solo se conecta a una rama (y una carpeta) a la vez.','La rama puede crearse en el proveedor Git o directamente con «Branch out» desde Fabric (paso 2).','El nombre de rama admite hasta 244 caracteres.'],
+  ref:['best','gitProcess']},
+ {t:'Branch out: nace un workspace aislado',nodes:['feat','wsf'],edges:['feat_wsf'],
+  d:'«Branch out» crea una rama nueva a partir de la rama conectada del workspace origen y, si lo eliges, un workspace nuevo conectado a ella. Es tu entorno aislado para probar sin pisar a nadie.',
+  b:['Requiere capacidad disponible y rol Contributor o superior en el workspace origen; en Git, permiso de lectura y de crear rama.','La configuración del origen no se copia (ajusta conexiones y parámetros) y los datos no viajan: Git no versiona datos.','Opcional: «Select items individually» para traer solo un subconjunto con sus dependencias.','Si haces branch out hacia un workspace existente, lo que no esté guardado en Git puede perderse.'],
+  ref:['gitBranched','gitProcess']},
+ {t:'Cambiar notebook, pipeline o modelo',nodes:['dev','wsf'],edges:['dev_wsf'],
+  d:'Editas dentro del workspace aislado (o con VS Code / Power BI Desktop). Lo que guardas queda solo en el workspace hasta que lo confirmes con un commit.',
+  b:['Los cambios sin confirmar aparecen como «uncommitted» en el panel Source control y se pueden deshacer (Undo).','Haz cambios pequeños y frecuentes; agrupa en un mismo commit lo que debe desplegarse junto.','Con herramientas cliente no necesitas workspace hasta que quieras probar en Fabric.'],
+  ref:['best','gitStart']},
+ {t:'Commit desde el workspace',nodes:['wsf','feat'],edges:['wsf_feat'],
+  d:'Desde Source control confirmas los ítems elegidos hacia la rama de trabajo. Se exporta la definición de los ítems soportados, no sus datos.',
+  b:['Commit y update no pueden hacerse a la vez: si la rama tiene commits nuevos, primero actualiza el workspace.','Por API: Get Status para elegir ítems, Commit to Git y sondeo de la operación de larga duración.','Límites de tamaño por commit en la documentación: 25 MB (Azure DevOps con service principal), 125 MB (Azure DevOps con usuario), 50 MB (GitHub).','Se confirma en la rama de trabajo porque la política de la rama protegida no permite commits directos.'],
+  ref:['gitStart','gitAuto']},
+ {t:'Abrir el Pull Request',nodes:['feat','pr'],edges:['feat_pr'],
+  d:{gh:'Abres un Pull Request en GitHub hacia la rama de integración. La revisión y el merge los gobierna GitHub; Fabric solo detecta el commit resultante.',ado:'Abres un Pull Request en Azure Repos hacia la rama de integración. La revisión y el merge los gobiernan las branch policies; Fabric solo detecta el commit resultante.'},
+  b:['Plantilla de PR: qué ítems cambian y si afectan datos existentes.','Agrupa en el PR los commits que deben desplegarse juntos.',{gh:'Reglas de rama (ruleset o branch protection): checks requeridos, revisiones y CODEOWNERS.',ado:'Branch policies: revisores mínimos, Build validation y comentarios resueltos.'}],
+  ref:['gitBranched']},
+ {t:'Checks automáticos + revisión humana',nodes:['pr','ci','rev','tf','tfstate'],edges:['pr_ci','pr_rev','pr_tf','tf_state'],
+  d:{gh:'El PR dispara en paralelo los checks de GitHub Actions (validar definiciones, lint, pruebas) y la revisión humana. Si el PR toca /infra, también corre terraform plan contra el estado remoto.',ado:'El PR dispara en paralelo los checks de Azure Pipelines (Build validation) y la revisión humana. Si el PR toca /infra, también corre terraform plan contra el estado remoto.'},
+  b:[{gh:'GitHub Actions: workflow con on: pull_request y jobs marcados como checks requeridos.',ado:'Azure Repos: el trigger pr: no aplica; usa una Build validation en la branch policy.'},'terraform plan es de solo lectura: muestra qué cambiaría; nada se aplica todavía.','El plan se autentica con identidad federada (OIDC): sin secretos en el repositorio.','Revisión humana: diffs de notebooks, JSON de pipelines y modelos; revisa el impacto sobre datos existentes.'],
+  ref:['best','tfReg']},
+ {t:'Merge a la rama de integración',nodes:['ci','rev','gate','repo'],edges:['ci_gate','rev_gate','gate_repo'],
+  d:'Con checks en verde y aprobación humana se hace el merge. A partir de aquí, el commit en la rama de integración es la fuente de verdad.',
+  b:['La protección de rama impone checks requeridos y aprobaciones.','Fabric avisa al workspace Dev de que hay actualizaciones pendientes.','Documenta el método de merge del equipo (merge, squash o rebase).'],
+  ref:['gitBranched']},
+ {t:'El job se autentica sin secretos (OIDC)',nodes:['entra','tf','fcicd'],edges:['entra_tf','entra_fcicd'],
+  d:{gh:'Los jobs piden un token a Entra ID mediante una credencial federada (OIDC) ligada a un service principal. No hay contraseñas guardadas para llamar a Azure ni a las API de Fabric.',ado:'Los stages usan una service connection de Azure Resource Manager con workload identity federation ligada a un service principal. No hay contraseñas guardadas para llamar a Azure ni a las API de Fabric.'},
+  b:[{gh:'La credencial federada define emisor, audiencia (api://AzureADTokenExchange) y subject (entorno, rama, PR o tag) que debe coincidir exactamente.',ado:'La service connection crea la credencial federada; Terraform puede usar AzureCLI@2 o el ID de la service connection.'},'Requiere el tenant setting «Service principals can call Fabric public APIs» y un rol del SP en cada workspace.','Limitación: no todas las APIs ni ítems de Fabric admiten service principals; cada API lo indica.','Verificar: la conexión Git que guarda Fabric usa su propia credencial (PAT en GitHub, secreto de SP en Azure DevOps).'],
+  ref:['idSupport','wifTrust']},
+ {t:'Update from Git en Dev (+ terraform apply)',nodes:['repo','wsdev','tf','tfstate','cap'],edges:['repo_wsdev','cap_tf','tf_zf','tf_state'],zone:['zF'],
+  d:'Un job llama a la API Update From Git para llevar el commit mergeado al workspace Dev. En paralelo, si cambió la infraestructura, terraform apply (tras aprobación) crea o ajusta workspaces, capacidad, roles y la conexión a Git.',
+  b:['API: Get Status → Update From Git (remoteCommitHash y workspaceHead) → sondear la operación hasta terminar.','Update siempre trae toda la rama (no es selectivo); los conflictos se resuelven antes.','Terraform: apply solo tras la aprobación del environment; el estado queda en Azure Storage con bloqueo.','El service principal necesita en Fabric los mismos permisos que un usuario.'],
+  ref:['gitAuto','tfGit']},
+ {t:'Promoción a Test: dos vías',nodes:['wsdev','dp1','wstest','repo','fcicd'],edges:['wsdev_dp1','dp1_wstest','repo_fcicd','fcicd_wstest'],
+  d:'Vía A (Deployment pipelines): Fabric copia el contenido del workspace Dev a Test. Vía B (fabric-cicd): el job lee la carpeta del repo en un commit o tag y la publica en Test, que no necesita conexión Git.',
+  b:['Vía A: API Deploy Stage Content + sondeo; emparejamiento (pairing), reglas de despliegue y autobinding.','Vía B: despliegue completo en cada ejecución, sin comparar commits; unpublish_all_orphan_items retira huérfanos.','Elige una sola vía por ítem y ambiente para que no se sobrescriban (criterio del taller).','Ninguna vía copia datos: solo definiciones y metadatos.'],
+  ref:['opts','dpAuto']},
+ {t:'Variables por ambiente',nodes:['varlib','wsdev','wstest','wsprod'],edges:['var_main','var_dev','var_test','var_prod'],
+  d:'Lo que cambia entre ambientes (lakehouse de origen, conexiones, tamaños) vive en la Variable library: un value set por ambiente y uno activo por workspace. fabric-cicd además reemplaza valores con parameter.yml.',
+  b:['El value set activo es estado del workspace: no viaja por Git y un despliegue no lo cambia. Actívalo y guárdalo una vez en cada workspace.','Los ítems consumidores (pipelines, notebooks, Dataflow Gen2…) resuelven el valor según su propio workspace.','Vía A además ofrece deployment rules: fuentes de datos, parámetros y lakehouse por defecto de notebooks.','Verificar: cómo fija fabric-cicd el value set activo por ambiente (no figura en la documentación consultada).'],
+  ref:['vlCicd','dpRules']},
+ {t:'Validación en Test y aprobación',nodes:['wstest','appr'],edges:['wstest_appr'],
+  d:{gh:'Se ejecutan pruebas automáticas y manuales en Test. Un aprobador autoriza el paso a Prod mediante los required reviewers del environment prod de GitHub.',ado:'Se ejecutan pruebas automáticas y manuales en Test. Un aprobador autoriza el paso a Prod mediante las Approvals del Environment de Azure DevOps.'},
+  b:['Test debe parecerse a Prod en volumen de datos, uso y capacidad.','Despliega a Prod exactamente el commit que probaste: registra el tag y el SHA; no muevas el tag.','Vía A: no cambies el contenido de Test entre la validación y el despliegue a Prod sin volver a probar.'],
+  ref:['opts','best']},
+ {t:'Promoción a Prod: lo mismo que se probó',nodes:['appr','dp2','wsprod','fcicd'],edges:['appr_dp2','dp2_wsprod','fcicd_wsprod'],
+  d:'Tras la aprobación se promueve el mismo contenido probado: la vía A despliega Test → Prod con el deployment pipeline; la vía B publica el mismo tag y SHA con fabric-cicd usando los parámetros y el value set de Prod.',
+  b:['En Prod los desarrolladores tienen rol de lectura; solo la identidad de despliegue escribe.','Después del despliegue: pruebas post-despliegue e ingesta o refresh si aplica (los datos no se copian).','Las apps de Power BI no se actualizan con el despliegue; actualízalas por API si las usas.'],
+  ref:['opts','dpProc']},
+ {t:'Cierre y siguiente ciclo',nodes:['dev','feat','wsf'],edges:['dev_feat'],
+  d:'Se borra la rama de trabajo o se reutiliza el workspace cambiando de rama (Switch branch) para la siguiente tarea. Los arreglos urgentes siguen el mismo camino: Dev → Test → Prod.',
+  b:['Switch branch exige que no haya cambios sin confirmar y que la rama destino tenga la misma carpeta; reemplaza el contenido del workspace.','Al desconectar un workspace de rama de Git se pierde su relación con el workspace origen.','Hotfix: impleméntalo primero en Dev; nunca despliegues a Prod sin probar.'],
+  ref:['best','gitBranched']}
+];
+
+/* Detalle por componente. Cada valor puede ser texto o {gh,ado}. */
+var INFO={
+ dev:{t:'Desarrollador',tag:'Persona',
+  que:'Quien construye notebooks, pipelines, modelos o informes. Puede trabajar en su propio workspace de rama (branch out) o con herramientas cliente (VS Code, Power BI Desktop) y subir cambios a su rama sin necesitar workspace hasta que quiera probarlos en Fabric.',
+  cfg:['Rol Contributor o superior en el workspace de origen para poder hacer branch out.','Permisos de Git: lectura y crear rama; para confirmar desde Fabric, escritura en su rama de trabajo.','Tenant: activar «Users can synchronize workspace items with their Git repositories» (y la variante de GitHub si aplica) y «Create workspaces» para el branch out a un workspace nuevo.',{gh:'GitHub: token personal fine-grained con Contents lectura/escritura (o clásico con scope repo). La conexión es por usuario: no compartas un mismo PAT.',ado:'Azure DevOps: cuenta del usuario registrada en Entra (OAuth2) o conexión con service principal. La conexión es por usuario.'},'Capacidad disponible para el workspace nuevo.'],
+  ref:['gitBranched','gitStart']},
+ feat:{t:'Rama de trabajo',tag:'Git',
+  que:'Rama corta creada a partir de la rama de integración. Es la unidad de trabajo: un cambio, una rama y, si usas branch out, un workspace propio (relación 1:1).',
+  cfg:['Convención de nombres (feature/<tema>) y política de borrado tras el merge.','Un workspace solo puede estar conectado a una rama y una carpeta a la vez.','Longitud máxima del nombre de rama: 244 caracteres.','Cambios pequeños y frecuentes; actualiza desde la rama de integración si hay riesgo de conflicto.','Confirma desde Fabric en tu rama de trabajo: la política de la rama protegida no permite commits directos.'],
+  ref:['best','gitProcess']},
+ wsf:{t:'Workspace aislado (de trabajo)',tag:'Fabric',
+  que:'Workspace de desarrollo aislado, conectado a tu rama de trabajo. «Branch out» lo crea (o reutiliza uno existente) y lo sincroniza con la rama nueva; así pruebas sin pisar a nadie.',
+  cfg:['Capacidad disponible y permisos para crear workspaces (Admin, Member o Contributor pueden hacer branch out).','La configuración del workspace origen no se copia: ajusta conexiones y parámetros.','Los datos no se copian: Git solo versiona definiciones.','Opcional: «Select items individually» para traer solo los ítems necesarios (con sus dependencias). El perfil de administrador del workspace de rama está en vista previa.','Si haces branch out hacia un workspace existente, lo no guardado en Git puede perderse: confirma antes.','Alternativa: reutiliza el workspace cambiando de rama (Switch branch) en la siguiente tarea.'],
+  ref:['gitBranched']},
+ repo:{t:{gh:'Rama de integración (GitHub)',ado:'Rama de integración (Azure Repos)'},tag:'Git',
+  que:{gh:'Rama de integración (por ejemplo main) del repositorio de GitHub: la fuente de verdad. El workspace Dev se conecta a ella y los Pull Requests la protegen.',ado:'Rama de integración (por ejemplo main) del repositorio de Azure Repos: la fuente de verdad. El workspace Dev se conecta a ella y los Pull Requests la protegen.'},
+  cfg:[{gh:'Ruleset o branch protection: PR obligatorio, checks requeridos, aprobaciones y sin push directo.',ado:'Branch policies: revisores mínimos, Build validation, comentarios resueltos y sin push directo.'},{gh:'Archivo CODEOWNERS para exigir revisores por ruta.',ado:'Revisores requeridos por ruta en la branch policy.'},'Estructura de carpetas: /workspace (ítems), /infra (Terraform) y los archivos de CI.','La carpeta conectada debe existir en la rama (Switch branch exige la misma carpeta).','Límites: archivo hasta 25 MB, ruta completa hasta 250 caracteres, carpetas hasta 10 niveles.'],
+  ref:{gh:['gitStart','ghOwners'],ado:['gitStart','adoPol']}},
+ pr:{t:'Pull Request',tag:{gh:'GitHub',ado:'Azure Repos'},
+  que:'Solicitud de integración de la rama de trabajo hacia la rama de integración. La revisión y el merge se gestionan en el proveedor Git; Fabric solo detecta el nuevo commit.',
+  cfg:['Plantilla de PR: ítems que cambian, impacto en datos existentes y cómo probar.','Agrupa en el PR los commits que deben desplegarse juntos.',{gh:'Reglas: checks requeridos, revisiones y CODEOWNERS.',ado:'Branch policy: revisores, Build validation y work items vinculados.'}],
+  ref:{gh:['gitBranched','ghOwners'],ado:['gitBranched','adoPol']}},
+ ci:{t:{gh:'Checks automáticos · GitHub Actions',ado:'Checks automáticos · Azure Pipelines'},tag:'CI',
+  que:{gh:'Workflow de GitHub Actions que corre en cada PR (pull_request): valida definiciones, ejecuta lint y pruebas, y terraform plan si cambió /infra.',ado:'Pipeline de Azure Pipelines asociado como Build validation a la branch policy: valida definiciones, ejecuta lint y pruebas, y terraform plan si cambió /infra.'},
+  cfg:['Validar que cada ítem conserve su .platform y que JSON/YAML sean válidos, sin secretos (script propio del equipo).','Lint y pruebas del código (notebooks .py, SQL, scripts) según tu stack.',{gh:'Marca los jobs como status checks requeridos en la protección de rama; permissions mínimos (id-token: write solo donde haga falta).',ado:'Configura la Build validation en la branch policy (el trigger pr: no aplica a Azure Repos Git).'},'Mantén los checks rápidos: son la puerta del PR.'],
+  ref:{gh:['azLogin','ghEnv'],ado:['adoPol','adoArm']}},
+ rev:{t:'Revisión humana',tag:'Gobierno',
+  que:'Revisión de los cambios en las definiciones: diffs de notebooks, JSON de pipelines, modelos. Es el segundo control, complementario a los checks automáticos.',
+  cfg:[{gh:'CODEOWNERS asigna revisores por ruta (por ejemplo, quien responde por los modelos semánticos).',ado:'Revisores requeridos por ruta en la branch policy.'},'Revisa el impacto sobre datos existentes: algunos cambios de definición son cambios que rompen (breaking).','Describe el cambio en el mensaje de commit y en el PR.'],
+  ref:{gh:['best','ghOwners'],ado:['best','adoPol']}},
+ gate:{t:'Merge',tag:'Gobierno',
+  que:'Punto de control: solo se fusiona cuando los checks requeridos están en verde y hay aprobación humana.',
+  cfg:['Exigir estado verde y aprobaciones en la protección de rama.','Elegir y documentar el método de merge (merge, squash o rebase).','Tras el merge, Fabric muestra actualizaciones pendientes en el workspace conectado a esa rama.'],
+  ref:['gitBranched']},
+ wsdev:{t:'Workspace Dev',tag:'Fabric',
+  que:'Workspace conectado a la rama de integración: la única conexión Git en la estrategia A (y en el esquema de despliegue desde un commit compartido). Aquí se integra el trabajo de todo el equipo.',
+  cfg:['Un Admin lo conecta: proveedor, repo, rama y carpeta. En la sincronización inicial elige la dirección si ambos lados tienen contenido.','«Update all» actualiza toda la rama (no por ítem) y no puede hacerse a la vez que un commit.','Automatiza con las Git APIs: Get Status → Update From Git (remoteCommitHash y workspaceHead) → sondear la operación.','El service principal necesita los mismos permisos que un usuario (workspace y Git).','Los ítems no soportados se ignoran: no se guardan ni se borran. Máximo de 1000 ítems por workspace.'],
+  ref:['gitAuto','gitProcess']},
+ wstest:{t:'Workspace Test',tag:'Fabric',
+  que:'Ambiente de validación: debe parecerse a producción en volumen de datos, uso y capacidad.',
+  cfg:['Capacidad de tamaño parecido a Prod pero distinta, para no desestabilizar producción en pruebas de carga.','Fuentes de datos separadas de Dev y lo más parecidas posible a Prod.','Value set «Test» activo en la Variable library (o deployment rules en la vía A).','Roles: QA y revisores con acceso; nadie edita a mano.','Se ejecutan pruebas automáticas y manuales; no se copian datos, permisos ni ajustes del workspace.','Usa el análisis de impacto (lineage) para revisar ítems relacionados.'],
+  ref:['best','dpProc']},
+ wsprod:{t:'Workspace Prod',tag:'Fabric',
+  que:'Producción. Solo la identidad de despliegue escribe; los equipos de desarrollo tienen rol de lectura.',
+  cfg:['Roles: pocos administradores y desarrolladores como Viewer.','Value set «Prod» activo y reglas o parámetros de Prod definidos antes del primer despliegue.','Tras desplegar: pruebas post-despliegue y, si aplica, ingesta o refresh (los datos no viajan).','Si distribuyes con una app de Power BI, actualízala por API: el despliegue no la actualiza.','Arreglos urgentes: primero en Dev y por todo el camino; nunca sin probar.'],
+  ref:['best','opts']},
+ dp1:{alias:'dpipe'},dp2:{alias:'dpipe'},
+ dpipe:{t:'Vía A · Deployment pipelines',tag:'Fabric',
+  que:'Herramienta nativa de Fabric: un pipeline de 2 a 10 etapas (3 por defecto), cada etapa con su workspace. Copia el contenido de una etapa a la siguiente conservando relaciones (autobinding) y aplica reglas por etapa. Se lanza desde la UI o por API (Deploy Stage Content) desde tu CI.',
+  cfg:['Crear el pipeline y asignar los workspaces Dev, Test y Prod a sus etapas (el número y los nombres de las etapas son permanentes tras crearlo).','Definir deployment rules por etapa: fuentes de datos, parámetros y lakehouse por defecto de notebooks.','Revisar el emparejamiento (pairing): los ítems no emparejados se duplican en lugar de sobrescribirse.','Automatizar con la API: listar etapas, Deploy Stage Content y sondear la operación de larga duración.','Un service principal puede usar la API; necesita acceso al pipeline y a los workspaces.','Límites: los dataflows no están soportados en la API de Fabric (usa las APIs de Power BI); la nueva UI y los deployment plans están en vista previa.'],
+  ref:['dpIntro','dpAuto','dpRules']},
+ appr:{t:{gh:'Aprobación · GitHub Environments',ado:'Aprobación · Environments de Azure DevOps'},tag:'Gobierno',
+  que:{gh:'Puerta humana antes de Prod: un environment de GitHub con required reviewers detiene el job hasta que alguien apruebe.',ado:'Puerta humana antes de Prod: un Environment de Azure Pipelines con Approvals and checks detiene el deployment job hasta que alguien apruebe.'},
+  cfg:[{gh:'Crear los environments test, prod e infra en Settings → Environments.',ado:'Crear los Environments (fabric-test, fabric-prod, infra) y añadir Approvals and checks.'},{gh:'Añadir required reviewers y, si quieres, restricciones de rama o tag.',ado:'Usar deployment jobs para que el Environment se evalúe.'},{gh:'Guardar secretos y variables por environment.',ado:'Variable groups o Key Vault por ambiente si hay secretos.'},{gh:'La credencial federada de Entra debe coincidir con el subject (repo + environment).',ado:'La service connection con workload identity federation autentica el stage.'},'Despliega a Prod el mismo commit o tag que probaste: registra tag y SHA.'],
+  ref:{gh:['ghEnv','opts'],ado:['adoEnv','opts']}},
+ fcicd:{t:'Vía B · fabric-cicd',tag:'Librería Python',
+  que:{gh:'Librería de código abierto que publica en un workspace las definiciones de una carpeta del repo. Corre dentro de un job de GitHub Actions y hace un despliegue completo en cada ejecución (no compara commits).',ado:'Librería de código abierto que publica en un workspace las definiciones de una carpeta del repo. Corre dentro de un stage de Azure Pipelines y hace un despliegue completo en cada ejecución (no compara commits).'},
+  cfg:['pip install fabric-cicd (Python 3.9 a 3.14 según su documentación).',{gh:'Credencial explícita (token_credential): AzureCliCredential tras azure/login con OIDC; ya no hay DefaultAzureCredential.',ado:'Credencial explícita (token_credential): AzureCliCredential dentro de AzureCLI@2; ya no hay DefaultAzureCredential.'},'config.yml con workspace_id por ambiente, repository_directory e item_types_in_scope; deploy_with_config(…, environment=…).','parameter.yml para valores por ambiente (find_replace, key_value_replace, spark_pool, semantic_model_binding); las claves deben coincidir con environment.','La identidad necesita Contributor o superior en el workspace destino y acceso a las conexiones que usan los ítems.','unpublish retira los ítems huérfanos; en lakehouse, warehouse y otros está desactivado por defecto (feature flags).','Según «CI/CD workflow options in Fabric», la librería no soporta deployment plans.'],
+  ref:['cicdSite','cicdRepo','cicdRel']},
+ varlib:{t:'Variable library',tag:'Fabric',
+  que:'Ítem que agrupa variables con un value set por ambiente. Cada workspace tiene un value set activo y los ítems consumidores (pipelines, notebooks, Dataflow Gen2, copy job, shortcuts, eventstream, UDF…) resuelven el valor según su propio workspace.',
+  cfg:['Crear la Variable library con value sets Dev, Test y Prod (el valor por defecto sirve de base).','Activar y guardar el value set correcto en cada workspace: la selección activa es estado del workspace, no se guarda en Git y un despliegue no la cambia.','Tras importar a un workspace nuevo queda activo «Default»: cámbialo antes de ejecutar ítems dependientes.','Límites: hasta 1000 variables y 1000 value sets (menos de 10 000 celdas y 1 MB).','Verificar: cómo se fija el value set activo en cada ambiente al desplegar con fabric-cicd (VariableLibrary es un tipo soportado, pero la documentación consultada no lo detalla).'],
+  ref:['vlOver','vlCicd']},
+ tf:{t:'Terraform',tag:'Infraestructura',
+  que:'Provider microsoft/fabric para gestionar la plataforma como código: workspaces con su capacidad, asignaciones de rol (grupos de Entra) y la conexión workspace ↔ Git; opcionalmente, ítems. Plan en el PR y apply tras aprobación.',
+  cfg:['Terraform 1.8 o superior; fija la versión del provider.','Recursos clave: fabric_workspace, fabric_workspace_role_assignment y fabric_workspace_git (con service principal solo con git_credentials.source = ConfiguredConnection).','Autenticación del provider: OIDC, Azure CLI, identidad administrada, secreto o certificado; los secretos solo por variables de entorno.','Limitaciones documentadas: la capacidad de prueba (trial) no está soportada y no todos los recursos soportan service principals todavía.','Un solo dueño por recurso: si Terraform gestiona un ítem, no lo gestiones también por Git (criterio del taller).','Plan en el PR (solo lectura); apply únicamente tras el merge y la aprobación del environment.','Verificar: la conexión Git (connection_id) debe existir antes; confirma si el provider puede crearla para tu proveedor.'],
+  ref:['tfReg','tfRepo','tfGit']},
+ tfstate:{t:'Estado remoto · Azure Storage',tag:'Infraestructura',
+  que:'Estado de Terraform en una cuenta de Azure Storage (backend azurerm): registra lo aprovisionado y bloquea para evitar aplicaciones simultáneas.',
+  cfg:['Cuenta de almacenamiento y contenedor privados, dedicados al estado.','Autenticación con Entra ID (use_azuread_auth) y OIDC; rol recomendado: Storage Blob Data Contributor sobre el contenedor.','El estado puede contener valores sensibles: restringe el acceso y habilita versionado y retención (recomendación del taller).','Una clave (key) por pila de Terraform.','No guardes el estado en el repositorio.'],
+  ref:['tfBackend']},
+ entra:{t:'Entra ID · grupos y service principal',tag:'Identidad',
+  que:'Grupos de Entra para las personas (roles de workspace) y un service principal para el CI/CD que se autentica con identidad federada (OIDC): el job intercambia su token por uno de Entra, sin contraseñas guardadas.',
+  cfg:[{gh:'Registrar la app y añadir credenciales federadas: emisor token.actions.githubusercontent.com, audiencia api://AzureADTokenExchange y un subject por entorno, rama, PR o tag; debe coincidir exactamente con el workflow.',ado:'Crear una service connection de Azure Resource Manager con workload identity federation; Terraform puede usar AzureCLI@2 (FABRIC_USE_CLI) o el ID de la service connection.'},'Tenant setting «Service principals can call Fabric public APIs», limitado a un grupo de seguridad que incluya al SP.','Rol del SP en cada workspace: Contributor como mínimo para publicar; Admin para conectar Git.','Limitación: no todas las APIs ni ítems de Fabric admiten service principals; una llamada que dependa de un ítem no soportado falla.','Verificar: la conexión Git que guarda Fabric usa su propia credencial (PAT en GitHub; en Azure DevOps, service principal con secreto). La documentación consultada no describe federación para ella.','Verificar: crear workspaces, conexiones o pipelines con service principal puede requerir otros tenant settings.'],
+  ref:{gh:['wifTrust','idSupport','tenantDev'],ado:['adoArm','idSupport','tenantDev']}},
+ cap:{t:'Capacidad de Fabric',tag:'Infraestructura',
+  que:'Capacidad (SKU F) que respalda los workspaces. Terraform la referencia con data fabric_capacity y la asigna con capacity_id.',
+  cfg:['La capacidad se aprovisiona en Azure (Microsoft.Fabric/capacities); el provider no admite la capacidad de prueba.','Separa Test y Prod en capacidades distintas si harás pruebas de carga.','Dimensiona Test de forma parecida a Prod.','Permisos para asignar workspaces a la capacidad.','Si quien ejecuta no puede listar capacidades, el recurso workspace permite omitir la validación de estado (skip_capacity_state_validation), con el riesgo que la documentación describe.'],
+  ref:['tfWs','best']}
+};
+
+/* Ítems: [categoría, nombre, git, dp, cicd, nota]  (2 = soportado, 1 = vista previa, 0 = no figura) */
+var ITEMS=[
+ ['Ingeniería de datos','Environment',2,2,1,'fabric-cicd: los recursos del ambiente no se despliegan; con bibliotecas, la primera publicación puede tardar 20+ min.'],
+ ['Ingeniería de datos','API for GraphQL',2,2,1,'fabric-cicd: los cambios de la consulta original no se controlan en código; las conexiones se parametrizan.'],
+ ['Ingeniería de datos','Lakehouse',2,2,1,'Viaja la definición, no los datos. fabric-cicd: los esquemas solo se despliegan si tienen shortcut; publicar shortcuts y unpublish están desactivados por defecto.'],
+ ['Ingeniería de datos','Notebook',2,2,1,'fabric-cicd: apunta al lakehouse original salvo que lo parametrices; los recursos del notebook no se despliegan. DP: regla de lakehouse por defecto.'],
+ ['Ingeniería de datos','Spark Job Definition',2,2,1,''],
+ ['Ingeniería de datos','User Data Functions',2,2,1,''],
+ ['Ciencia de datos','Machine learning experiment',1,1,1,'Vista previa en Git y en Deployment pipelines.'],
+ ['Ciencia de datos','Machine learning model',1,1,0,'Vista previa en Git y en Deployment pipelines.'],
+ ['Ciencia de datos','Data Agent',2,2,1,''],
+ ['Data Factory','Copy Job',2,2,1,'fabric-cicd: la conexión se configura manualmente tras el primer despliegue.'],
+ ['Data Factory','Dataflow Gen2',2,2,1,'fabric-cicd: el primer despliegue requiere publicar y refrescar manualmente; las conexiones no están bajo control de código.'],
+ ['Data Factory','Pipeline',2,2,1,'fabric-cicd: las conexiones no están bajo control de código; las actividades que apuntan a ítems de otro workspace requieren parametrización.'],
+ ['Data Factory','Mirrored database',2,2,1,''],
+ ['Data Factory','Mount ADF',2,2,1,''],
+ ['Data Factory','Mirrored Snowflake',1,1,0,'Vista previa.'],
+ ['Data Factory','Apache Airflow job',1,1,1,'Vista previa en Git y en Deployment pipelines.'],
+ ['Data Factory','dbt job',2,2,1,''],
+ ['Data Factory','Operations Agent',1,1,0,'Vista previa.'],
+ ['Real-Time Intelligence','Activator',2,2,1,'fabric-cicd: find_replace no se aplica; en control de código se llama Reflex.'],
+ ['Real-Time Intelligence','Eventhouse',2,2,1,'fabric-cicd: con una KQL database asociada suele hacer falta exclude_path; los datos de streaming pueden diferir entre ambientes.'],
+ ['Real-Time Intelligence','Eventstream',2,2,1,''],
+ ['Real-Time Intelligence','KQL database',2,2,1,''],
+ ['Real-Time Intelligence','KQL queryset',2,2,1,''],
+ ['Real-Time Intelligence','Real-Time Dashboard',2,2,1,''],
+ ['Real-Time Intelligence','Maps',2,2,1,''],
+ ['Real-Time Intelligence','Event Schema Set',1,1,0,'Vista previa.'],
+ ['Real-Time Intelligence','Digital twin builder',1,1,0,'Vista previa.'],
+ ['Real-Time Intelligence','Anomaly detection',1,1,0,'Vista previa.'],
+ ['Data Warehouse','Warehouse',2,2,1,'fabric-cicd: por defecto solo se despliegan los metadatos; el esquema requiere activar un feature flag y proyectos SQL.'],
+ ['Data Warehouse','Mirrored Azure Databricks Catalog',2,2,0,''],
+ ['Power BI','Semantic model',1,1,1,'Git: vista previa; no push datasets ni conexiones live a Analysis Services. DP: no copia refresh schedule, credenciales ni roles; hay que refrescar. fabric-cicd: semantic_model_binding (una conexión por modelo).'],
+ ['Power BI','Report',1,1,1,'Git: vista previa. fabric-cicd: los informes ligados a un modelo fuera del workspace requieren parametrización.'],
+ ['Power BI','Paginated report',1,1,1,'Vista previa en Git y en Deployment pipelines.'],
+ ['Power BI','Org app',2,1,0,'Deployment pipelines: vista previa.'],
+ ['Power BI','Dashboard',0,1,0,'Solo Deployment pipelines (vista previa).'],
+ ['Power BI','Dataflow (Gen1)',0,1,0,'Solo Deployment pipelines (vista previa); la API de Fabric no los soporta: usa las APIs de Power BI.'],
+ ['Bases de datos y grafos','SQL database',2,2,1,''],
+ ['Bases de datos y grafos','Cosmos DB database',1,1,1,'fabric-cicd: el primer despliegue crea la definición sin datos.'],
+ ['Bases de datos y grafos','Graph Model',2,2,1,''],
+ ['Bases de datos y grafos','Graph QuerySet',2,2,0,''],
+ ['CI/CD e IQ','Variable Library',2,2,1,'El value set activo no viaja por Git ni lo cambia un despliegue.'],
+ ['CI/CD e IQ','Deployment plan',1,1,0,'Vista previa. fabric-cicd no soporta deployment plans.'],
+ ['CI/CD e IQ','Ontology',1,1,1,'Vista previa en Git y en Deployment pipelines.'],
+ ['CI/CD e IQ','Plan (IQ)',1,1,0,'Vista previa.'],
+ ['Soluciones de industria','Healthcare / HealthCare Cohort',1,1,0,'Vista previa.']
+];
+
+var NOGO=[
+ {t:'Los datos',x:'Git guarda definiciones, no datos. Los deployment pipelines copian metadatos, no datos: tras desplegar hay que refrescar o reingestar. Revertir un ítem con datos a una versión anterior puede exigir borrar los datos o fallar.',s:['Git','DP']},
+ {t:'Permisos y ajustes del workspace',x:'Los permisos (de workspace o de ítem), la URL, el ID y los ajustes del workspace no se copian al desplegar: cada etapa tiene su propio workspace.',s:['DP']},
+ {t:'Credenciales, refrescos y roles del modelo semántico',x:'No se copian el calendario de refresco, las credenciales de las fuentes ni la asignación de roles del modelo semántico.',s:['DP']},
+ {t:'Conexiones (connections)',x:'No están bajo control de código: se crean por ambiente, y la identidad que despliega debe tener acceso. Es una de las causas más comunes de fallos en el primer despliegue.',s:['fabric-cicd']},
+ {t:'Valor activo de la Variable library',x:'El value set activo es estado del workspace: no está en Git y un despliegue no lo modifica. Tras importar a un workspace nuevo queda «Default».',s:['Git','DP']},
+ {t:'Configuración de la rama original (branch out)',x:'Al hacer branch out, los ajustes del workspace origen no se copian: revisa que el nuevo workspace cumpla las políticas de la organización.',s:['Git']},
+ {t:'Recursos de Notebook y Environment',x:'fabric-cicd no despliega los recursos de notebooks ni de ambientes (sí sus definiciones).',s:['fabric-cicd']},
+ {t:'Apps de Power BI',x:'El despliegue no actualiza el contenido ni los ajustes de la app; se actualiza por API.',s:['DP']},
+ {t:'Etiquetas de sensibilidad',x:'Git no soporta etiquetas de sensibilidad (exportar ítems con etiqueta puede estar deshabilitado). Los deployment pipelines las copian solo bajo ciertas condiciones.',s:['Git','DP']},
+ {t:'Ítems no soportados',x:'Si el workspace o la carpeta de Git tienen ítems no soportados, se pueden conectar pero se ignoran: no se guardan, no se sincronizan y tampoco se borran.',s:['Git']}
+];
+
+var LIMITS=[
+ 'Un workspace admite como máximo 1000 ítems; si la rama tiene más, la sincronización falla.',
+ 'Tamaño de commit: 25 MB (Azure DevOps con service principal), 125 MB (Azure DevOps con usuario), 50 MB combinados (GitHub). Archivo individual: 25 MB.',
+ 'Nombre de rama: 244 caracteres; ruta completa de archivo: 250 caracteres; estructura de carpetas: hasta 10 niveles.',
+ 'Solo proveedores en la nube: Azure DevOps, GitHub y GitHub Enterprise en la nube (no on-premises). Los submódulos y las nubes soberanas no están soportados.',
+ 'Deployment pipelines: de 2 a 10 etapas; el número y los nombres se fijan al crear el pipeline.',
+ 'Variable library: hasta 1000 variables y 1000 value sets, menos de 10 000 celdas y 1 MB.',
+ 'fabric-cicd: despliegue completo en cada ejecución; solo ítems con control de código y API pública de creación/actualización; Python 3.9 a 3.14.',
+ 'Terraform (provider de Fabric): no admite la capacidad de prueba; no todos los recursos soportan service principals.',
+ 'A partir del 28 de febrero de 2027, quien no tenga permisos de lectura y escritura sobre los ítems del workspace no podrá usar Git integration (según la documentación vigente).'
+];
+
+/* Comparación: [grupo, criterio, A, B, esCriterioTaller] */
+var CMP=[
+ ['Origen y trazabilidad','Fuente de verdad','El workspace Dev (Git llega solo hasta Dev); cada etapa copia el contenido de la anterior.','El repositorio: cada ambiente recibe las definiciones de un commit o tag concreto.',0],
+ ['Origen y trazabilidad','Conexión a Git','Solo el workspace Dev, conectado a la rama de integración.','Dev conectado para desarrollar; Test y Prod no necesitan conexión Git.',0],
+ ['Origen y trazabilidad','Trazabilidad','Historial de despliegues y comparación de etapas dentro de Fabric.','Tag + SHA del commit y los registros del job de CI/CD.',0],
+ ['Mecanismo','Cómo se ejecuta','UI de Fabric o API Deploy Stage Content (con sondeo de la operación), orquestada desde Actions o Pipelines.','Script Python (publish_all_items o deploy_with_config) o «fab deploy», ejecutado por tu CI/CD.',0],
+ ['Mecanismo','Qué se despliega','Ítems soportados por Deployment pipelines, emparejados entre etapas (pairing); sobrescribe el ítem pareado.','Ítems con control de código y API pública de creación/actualización; despliegue completo en cada ejecución, sin diffs.',0],
+ ['Configuración','Valores por ambiente','Deployment rules (fuentes de datos, parámetros, lakehouse por defecto), autobinding y Variable library.','parameter.yml (find_replace, key_value_replace, semantic_model_binding…), config.yml por ambiente y Variable library.',0],
+ ['Configuración','Estructura','Lineal: de 2 a 10 etapas; número y nombres fijos tras crearlo.','Libre: cualquier número de ambientes o workspaces destino (por ejemplo, uno por cliente).',0],
+ ['Gobierno','Aprobaciones','Si orquestas por API, con Environments de GitHub o Azure DevOps; en la UI, por proceso.','Environments de GitHub o Azure DevOps con aprobadores requeridos.',0],
+ ['Gobierno','Permisos adicionales','Permisos del pipeline más roles de workspace.','Rol Contributor o superior de la identidad que ejecuta en el workspace destino.',0],
+ ['Límites','Atención especial','No copia datos, permisos ni ajustes del workspace; dataflows no soportados en la API de Fabric; nueva UI y deployment plans en vista previa.','No soporta deployment plans; conexiones fuera de control de código; algunos ítems requieren parametrización o pasos manuales.',0],
+ ['Límites','Curva de aprendizaje','Baja: experiencia nativa, poco código.','Media: requiere Python, YAML y un CI/CD bien armado.',1],
+ ['Límites','Cuándo encaja','Preferencia por lo nativo, equipos con poca experiencia en herramientas DevOps, Git solo para desarrollo.','Repo como única fuente de verdad, releases por tag, scripts previos al despliegue, muchos destinos.',0]
+];
+
+/* Orientador: [texto, a|b] */
+var DECIDERS=[
+ ['Quiero una experiencia nativa de Fabric, con poco código de despliegue','a'],
+ ['Necesito que Prod reciba exactamente un commit o tag versionado','b'],
+ ['Mi equipo tiene poca experiencia con Actions o Pipelines','a'],
+ ['Necesito parametrizar o ejecutar scripts de build antes de publicar','b'],
+ ['Tengo muchos workspaces destino (por ejemplo, uno por cliente)','b'],
+ ['Quiero ver diferencias entre etapas y el historial de despliegues dentro de Fabric','a'],
+ ['Uso ítems que fabric-cicd aún no lista (por ejemplo Org app o Dashboards)','a'],
+ ['Quiero que todo despliegue nazca del repositorio','b']
+];
+
+/* Lista de verificación inicial: [grupo, [ [texto, porqué] ... ]] — texto/porqué pueden ser {gh,ado} */
+var SETUP=[
+ ['Identidades y accesos',[
+  ['Crear grupos de Entra por rol (ingenieros, revisores, consumidores, liberadores)','Los roles de workspace se asignan a grupos, no a personas sueltas.'],
+  ['Registrar el service principal del CI/CD','Una identidad no humana que llama a Azure y a las API de Fabric.'],
+  ['Habilitar «Service principals can call Fabric public APIs» para el grupo de seguridad del SP','Setting de tenant (Developer settings); sin él, las API rechazan al service principal.'],
+  ['Asignar al SP rol en cada workspace destino','Contributor como mínimo para publicar; Admin si debe conectar un workspace a Git.'],
+  [{gh:'Crear credenciales federadas en la app: una por environment (test, prod, infra), más rama main y pull_request si las usas',ado:'Crear una service connection de Azure Resource Manager con workload identity federation'},{gh:'El subject debe coincidir exactamente con el workflow (repo y environment, rama, PR o tag).',ado:'Evita secretos de cliente: la service connection emite tokens federados.'}],
+  ['Revisar los tenant settings de Git integration: sincronizar ítems con Git, GitHub si aplica y crear workspaces','Sin ellos no hay conexión Git ni branch out a un workspace nuevo.']
+ ]],
+ ['Repositorio y gobierno de rama',[
+  [{gh:'Crear el repositorio en GitHub y proteger la rama de integración (ruleset)',ado:'Crear el repositorio en Azure Repos y proteger la rama de integración (branch policies)'},'PR obligatorio, checks requeridos y sin push directo.'],
+  [{gh:'Añadir CODEOWNERS para exigir revisores por ruta',ado:'Configurar revisores requeridos por ruta en la branch policy'},'Los modelos semánticos o el código de infraestructura deberían tener dueños explícitos.'],
+  ['Definir la estructura: /workspace (ítems), /infra (Terraform), config.yml, deploy.py y los archivos de CI','fabric-cicd espera que el directorio de ítems contenga solo lo confirmado desde Fabric y parameter.yml.'],
+  ['Acordar la convención de ramas y de nombres de workspace de trabajo, con política de limpieza','Evita acumular workspaces huérfanos.'],
+  [{gh:'Crear los environments test, prod e infra con required reviewers',ado:'Crear los Environments fabric-test, fabric-prod e infra con Approvals and checks'},'Son las puertas humanas antes de Test/Prod y del apply de Terraform.']
+ ]],
+ ['Workspaces y capacidad',[
+  ['Crear los workspaces Dev, Test y Prod y asignarles capacidad (a mano o con Terraform)','Test con capacidad parecida a Prod pero distinta, para pruebas de carga.'],
+  ['Asignar roles de workspace con los grupos de Entra','Desarrolladores como Contributor en Dev y Viewer en Prod (ejemplo).'],
+  ['Conectar solo Dev a Git: proveedor, repo, rama de integración y carpeta','Solo un Admin puede conectar; en el primer sync elige la dirección si ambos lados tienen contenido.'],
+  ['Estrategia A: crear el deployment pipeline y asignar los workspaces a sus etapas','El número y los nombres de las etapas no cambian después; define deployment rules por etapa.'],
+  ['Estrategia B: guardar los workspace_id de Test y Prod en config.yml','Las claves de ambiente deben coincidir con --environment.']
+ ]],
+ ['Configuración por ambiente',[
+  ['Crear la Variable library con un value set por ambiente','Lakehouse de origen, conexiones y tamaños viven aquí, no en el código.'],
+  ['Activar y guardar el value set correcto en cada workspace','La selección activa no viaja por Git ni la cambia un despliegue.'],
+  ['Estrategia B: crear parameter.yml con find_replace / key_value_replace','Verifica que las claves coincidan con el ambiente que pasas al despliegue.'],
+  ['Crear las conexiones (connections) en cada ambiente','No están bajo control de código y la identidad que despliega debe tener acceso.']
+ ]],
+ ['Secretos y autenticación del CI',[
+  [{gh:'Guardar AZURE_CLIENT_ID, AZURE_TENANT_ID y AZURE_SUBSCRIPTION_ID como secretos o variables, y declarar permissions: id-token: write',ado:'Guardar la service connection y los variable groups (con Key Vault si hay secretos) por ambiente'},{gh:'No son contraseñas: con OIDC no hay secreto de cliente.',ado:'Con workload identity federation no hay secreto de cliente que rotar.'}],
+  [{gh:'Crear un PAT fine-grained (Contents lectura/escritura) para la conexión Git de Fabric, o usar la conexión de cada usuario',ado:'Crear la conexión de Fabric a Azure Repos con service principal (o con la cuenta del usuario)'},'La conexión Git de Fabric guarda su propia credencial: programa su rotación. Verificar si tu escenario admite federación.'],
+  ['Programar la revisión periódica de credenciales y accesos','Sin esto, una credencial vencida rompe el despliegue un viernes por la tarde.']
+ ]],
+ ['Terraform',[
+  ['Crear la cuenta de Storage y el contenedor del estado, con acceso solo por Entra ID','Rol Storage Blob Data Contributor para la identidad; versionado activado (recomendación).'],
+  [{gh:'Configurar el backend azurerm con use_oidc y el provider fabric con use_oidc',ado:'Configurar el backend azurerm con use_azuread_auth y ejecutar dentro de AzureCLI@2'},'Los secretos solo por variables de entorno; nunca en los .tf.'],
+  [{gh:'Crear el workflow: plan en el PR y apply con el environment infra',ado:'Crear el pipeline: Build validation para el plan y apply con el Environment infra'},'El apply solo tras merge y aprobación.'],
+  ['Primer apply y comprobar que un segundo plan dice «No changes»','Confirma que no hay deriva entre el código y la plataforma.']
+ ]]
+];
+
+/* Referencias: [grupo, [ [clave, título, descripción] ]] */
+var REFS=[
+ ['Git integration',[
+  ['gitIntro','Overview of Fabric Git integration','Qué es, proveedores soportados y lista de ítems soportados.'],
+  ['gitBranches','Development process in Microsoft Fabric','Desarrollo con workspaces por rama o con herramientas cliente.'],
+  ['gitAuto','Automate Git integration by using APIs','Connect, Get Status, Commit to Git y Update From Git por API, con service principal.'],
+  ['gitStart','Get started with Git integration','Conectar, confirmar, actualizar y desconectar; requisitos y tenant settings.'],
+  ['gitProcess','Git integration process','Permisos, estado de Git, ramas, límites y consideraciones.'],
+  ['gitBranched','Development process using branch workspace','Cómo funciona «Branch out», selective branching y sus limitaciones.'],
+  ['gitSp','Git Integration with Service Principal','Pasos manuales para conectar Azure DevOps con un service principal.']
+ ]],
+ ['Deployment pipelines',[
+  ['dpIntro','Overview of Fabric deployment pipelines','Etapas, pairing, método de despliegue y lista de ítems soportados.'],
+  ['dpAuto','Automate deployment pipeline by using Fabric APIs','Funciones de la API, Deploy Stage Content y limitaciones.'],
+  ['dpProc','The Microsoft Fabric deployment pipelines process','Qué propiedades se copian y cuáles no; autobinding.'],
+  ['dpRules',"Create deployment rules for Fabric's ALM",'Reglas de fuentes de datos, parámetros y lakehouse por defecto.']
+ ]],
+ ['Ciclo de vida y configuración por ambiente',[
+  ['best','Best practices for lifecycle management in Fabric','Preparación, desarrollo, prueba y producción; ramas y workspaces.'],
+  ['opts','CI/CD workflow options in Fabric','Opciones de despliegue: ramas por etapa, release compartido, deployment pipelines, ISV.'],
+  ['vlOver','Fabric Application Lifecycle Management Variable Library','Variables, value sets, ítems consumidores y límites.'],
+  ['vlCicd','Lifecycle Management of the Variable library','Variable library con Git y Deployment pipelines; value set activo.']
+ ]],
+ ['fabric-cicd',[
+  ['cicdSite','fabric-cicd (documentación)','Sitio oficial de la librería.'],
+  ['cicdRepo','microsoft/fabric-cicd (GitHub)','Código fuente, issues y versiones.'],
+  ['cicdStart','Getting started','Instalación, autenticación y estructura del directorio.'],
+  ['cicdOver','Deployment overview','Flujo de Git recomendado y filosofía de despliegue completo.'],
+  ['cicdParam','Parameterization','parameter.yml: find_replace, key_value_replace, spark_pool, semantic_model_binding.'],
+  ['cicdCfg','Configuration deployment','config.yml, deploy_with_config y «fab deploy».'],
+  ['cicdRel','Release pipeline examples','Ejemplos de GitHub Actions y Azure DevOps.'],
+  ['cicdItems','Item types','Notas por tipo de ítem: parametrización y limitaciones.']
+ ]],
+ ['Terraform',[
+  ['tfReg','Provider microsoft/fabric (Registry)','Documentación, autenticación y limitaciones conocidas.'],
+  ['tfRepo','microsoft/terraform-provider-fabric (GitHub)','Código fuente y guías de autenticación.'],
+  ['tfGit','Recurso fabric_workspace_git','Conexión workspace ↔ Git y credenciales soportadas.'],
+  ['tfWs','Recurso fabric_workspace','Workspaces, capacidad e identidad.'],
+  ['tfBackend','Backend azurerm','Estado remoto en Azure Storage, bloqueo y autenticación.']
+ ]],
+ ['Identidad y CI/CD',[
+  ['idSupport','Identity support (Fabric REST APIs)','Usuarios, service principals e identidades administradas con las API.'],
+  ['tenantDev','Developer tenant settings','Incluye «Service principals can call Fabric public APIs».'],
+  ['wif','Workload identity federation','Concepto de federación de identidades de carga de trabajo.'],
+  ['wifTrust','Configurar la confianza en un proveedor externo','Credenciales federadas en una app de Entra.'],
+  ['azLogin','azure/login (GitHub Action)','Inicio de sesión con OIDC desde GitHub Actions.'],
+  ['adoArm','Conexión de servicio de Azure Resource Manager','Service connection con workload identity federation.'],
+  ['ghEnv','GitHub Environments','Aprobaciones, secretos y variables por environment.'],
+  ['ghOwners','CODEOWNERS','Revisores por ruta en GitHub.'],
+  ['adoEnv','Environments de Azure Pipelines','Aprobaciones y checks por Environment.'],
+  ['adoPol','Branch policies de Azure Repos','Revisores, Build validation y reglas de merge.']
+ ]]
+];
+
+/* Fragmentos de código: id de <script type="text/plain"> y descripción */
+var SNIPS={
+ gh:[
+  {k:'wf',lab:'Workflow de GitHub Actions',src:'sn-gh-deploy',desc:'Un tag v* dispara el despliegue a Test; el environment prod exige aprobación. Necesitas una credencial federada por subject: repo:<org>/<repo>:environment:test y …:environment:prod.'},
+  {k:'py',lab:'deploy.py',src:'sn-py',desc:'Punto de entrada: usa la sesión iniciada por azure/login y la configuración de config.yml según --environment.'},
+  {k:'cfg',lab:'config.yml',src:'sn-cfg',desc:'Configuración de fabric-cicd por ambiente. Se ubica en la raíz del repo junto a deploy.py.'},
+  {k:'par',lab:'parameter.yml',src:'sn-param',desc:'Reemplazos por ambiente aplicados al publicar. Las claves deben coincidir con --environment.'}
+ ],
+ ado:[
+  {k:'wf',lab:'Pipeline de Azure DevOps',src:'sn-ado-deploy',desc:'Un tag v* dispara el despliegue; los Environments fabric-test y fabric-prod llevan las aprobaciones; la service connection usa workload identity federation.'},
+  {k:'py',lab:'deploy.py',src:'sn-py',desc:'Punto de entrada: usa la sesión de Azure CLI iniciada por AzureCLI@2 y la configuración de config.yml según --environment.'},
+  {k:'cfg',lab:'config.yml',src:'sn-cfg',desc:'Configuración de fabric-cicd por ambiente. Se ubica en la raíz del repo junto a deploy.py.'},
+  {k:'par',lab:'parameter.yml',src:'sn-param',desc:'Reemplazos por ambiente aplicados al publicar. Las claves deben coincidir con --environment.'}
+ ]
+};
+var TFSNIPS={
+ gh:[
+  {k:'main',lab:'main.tf',src:'sn-tf-main',git:'sn-tf-git-gh',desc:'Workspaces por ambiente con capacidad, roles con un grupo de Entra y conexión de Dev a GitHub.'},
+  {k:'be',lab:'Backend (estado remoto)',src:'sn-tf-backend-gh',desc:'Estado en Azure Storage con Entra ID y OIDC.'},
+  {k:'ci',lab:'Workflow de Terraform',src:'sn-tf-ci-gh',desc:'Plan en el PR y apply tras el merge, con el environment infra como aprobación. Credencial federada por subject (pull_request y environment:infra).'}
+ ],
+ ado:[
+  {k:'main',lab:'main.tf',src:'sn-tf-main',git:'sn-tf-git-ado',desc:'Workspaces por ambiente con capacidad, roles con un grupo de Entra y conexión de Dev a Azure Repos.'},
+  {k:'be',lab:'Backend (estado remoto)',src:'sn-tf-backend-ado',desc:'Estado en Azure Storage autenticado con Entra ID mediante la sesión de Azure CLI.'},
+  {k:'ci',lab:'Pipeline de Terraform',src:'sn-tf-ci-ado',desc:'Plan como Build validation y apply en main, con el Environment infra como aprobación. Ilustrativo: ajusta nombres y agente.'}
+ ]
+};
+
+/* ===== utilidades ===== */
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+var NS='http://www.w3.org/2000/svg';
+var REDUCED=false;
+try{REDUCED=window.matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
+
+var S={prov:'gh',theme:'light',tab:'flow',step:0,playing:false,spd:1,el:0,last:0,chk:[],nodeChk:{},cmpF:'Todos',itemF:'Todos',itemQ:'',dec:{},snip:'wf',tfs:'main',drawer:null,hashSelf:false};
+function pick(v){
+ if(v&&typeof v==='object'&&!Array.isArray(v)&&('gh' in v||'ado' in v)){return v[S.prov]}
+ return v;
+}
+function arr(v){v=pick(v);return Array.isArray(v)?v:[v]}
+function urlFor(k){return U[k]||k}
+function fmt(s){s=String(s);var m=s.match(/^Verificar:\s*(.*)$/);return m?'<span class="pill ver">verificar</span> '+esc(m[1]):esc(s)}
+
+/* ===== hash (tema, proveedor, pestaña, paso y casillas) ===== */
+var TOTAL_CHK=0;SETUP.forEach(function(g){TOTAL_CHK+=g[1].length});
+for(var _i=0;_i<TOTAL_CHK;_i++){S.chk.push(0)}
+function encChk(){var o='';for(var i=0;i<S.chk.length;i+=4){var n=0;for(var j=0;j<4;j++){n=n*2+(S.chk[i+j]?1:0)}o+=n.toString(16)}return o}
+function decChk(h){for(var i=0;i<S.chk.length;i++){S.chk[i]=0}
+ for(var k=0;k<h.length;k++){var n=parseInt(h.charAt(k),16);if(isNaN(n))continue;for(var j=0;j<4;j++){var idx=k*4+j;if(idx<S.chk.length){S.chk[idx]=(n>>(3-j))&1}}}}
+function readHash(){
+ var h=(location.hash||'').replace(/^#/,'');if(!h)return;
+ h.split('&').forEach(function(p){var kv=p.split('=');var k=kv[0],v=decodeURIComponent(kv[1]||'');
+  if(k==='tema'&&(v==='dark'||v==='light'))S.theme=v;
+  else if(k==='prov'&&(v==='gh'||v==='ado'))S.prov=v;
+  else if(k==='tab'&&/^(flow|estr|setup|viaja|refs)$/.test(v))S.tab=v;
+  else if(k==='paso'){var n=parseInt(v,10);if(n>=1&&n<=N_STEPS)S.step=n-1}
+  else if(k==='chk')decChk(v);
+ });
+}
+function writeHash(){
+ var h='tema='+S.theme+'&prov='+S.prov+'&tab='+S.tab+'&paso='+(S.step+1)+'&chk='+encChk();
+ S.hashSelf=true;try{history.replaceState(null,'','#'+h)}catch(e){try{location.hash=h}catch(e2){}}
+ setTimeout(function(){S.hashSelf=false},50);
+}
+
+/* ===== diagrama ===== */
+function nodeLabel(n){
+ var o={t:n.t,s:n.s||''};var l=(LAB[S.prov]||{})[n.id];
+ if(l){if(l.t)o.t=l.t;if(l.s!==undefined)o.s=l.s}
+ return o;
+}
+function buildDiagram(){
+ var h='<defs>';
+ ['base','code','ci','deploy','infra','id','cfg'].forEach(function(k){
+  h+='<marker id="ah-'+k+'" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path class="mk-'+k+'" d="M0,0 L10,5 L0,10 z"/></marker>';
+ });
+ h+='</defs>';
+ ZONES.forEach(function(z){
+  h+='<rect class="zone" id="z-'+z.id+'" x="'+z.x+'" y="'+z.y+'" width="'+z.w+'" height="'+z.h+'" rx="14"/>';
+  h+='<text class="zlabel" x="'+(z.x+14)+'" y="'+(z.y+18)+'">'+esc(z.t)+'</text>';
+ });
+ EDGES.forEach(function(e){
+  h+='<path class="edge k-'+e.k+(e.bi?' bi':'')+(e.soft?' soft':'')+'" id="e-'+e.id+'" d="'+e.d+'"/>';
+ });
+ EDGES.forEach(function(e){
+  if(e.l)h+='<text class="elabel" id="el-'+e.id+'" x="'+e.l[0]+'" y="'+e.l[1]+'" text-anchor="'+e.l[2]+'">'+esc(e.l[3])+'</text>';
+ });
+ NODES.forEach(function(n){
+  var lb=nodeLabel(n);
+  if(n.gate){
+   h+='<g class="node gate" data-id="'+n.id+'" tabindex="0" role="button" aria-label="Detalles de '+esc(lb.t)+'">';
+   h+='<circle class="nb" cx="'+n.cx+'" cy="'+n.cy+'" r="'+n.r+'"/><circle class="hl" cx="'+n.cx+'" cy="'+n.cy+'" r="'+n.r+'"/>';
+   h+='<text class="nt" x="'+n.cx+'" y="'+(n.cy+5)+'" text-anchor="middle">✔</text>';
+   h+='<text class="ng" x="'+n.cx+'" y="'+(n.cy+n.r+14)+'" text-anchor="middle">merge</text></g>';
+   return;
+  }
+  h+='<g class="node'+(n.pill?' pillnode':'')+'" data-id="'+n.id+'" tabindex="0" role="button" aria-label="Detalles de '+esc(lb.t)+'">';
+  h+='<rect class="nb" x="'+n.x+'" y="'+n.y+'" width="'+n.w+'" height="'+n.h+'" rx="'+(n.pill?14:10)+'"/>';
+  h+='<rect class="hl" x="'+n.x+'" y="'+n.y+'" width="'+n.w+'" height="'+n.h+'" rx="'+(n.pill?14:10)+'"/>';
+  if(!n.pill)h+='<rect class="sk-'+n.sk+'" x="'+n.x+'" y="'+(n.y+8)+'" width="4" height="'+(n.h-16)+'" rx="2"/>';
+  else h+='<circle class="sk-'+n.sk+'" cx="'+(n.x+14)+'" cy="'+(n.y+n.h/2)+'" r="4"/>';
+  var tx=n.x+(n.pill?26:14);
+  if(n.pill){h+='<text class="nt" x="'+tx+'" y="'+(n.y+n.h/2+4)+'">'+esc(lb.t)+'</text>'}
+  else{
+   var lines=lb.s?lb.s.split('\n'):[];
+   var ty=n.y+(lines.length>1?20:24);
+   h+='<text class="nt" x="'+tx+'" y="'+ty+'">'+esc(lb.t)+'</text>';
+   lines.forEach(function(ln,i){h+='<text class="ns" x="'+tx+'" y="'+(ty+15+i*12.5)+'">'+esc(ln)+'</text>'});
+  }
+  h+='</g>';
+ });
+ /* leyenda */
+ var lg=[['code','Código · definiciones'],['ci','Validación · aprobación'],['deploy','Despliegue'],['infra','Infraestructura'],['id','Identidad (OIDC)'],['cfg','Configuración por ambiente']];
+ h+='<text class="lg-h" x="800" y="520">Qué viaja (color del paquete)</text>';
+ lg.forEach(function(it,i){var cx=806+(i%2)*205,cy=540+Math.floor(i/2)*22;
+  h+='<circle class="lg-dot k-'+it[0]+'" cx="'+cx+'" cy="'+cy+'" r="5"/><text class="lg-t" x="'+(cx+12)+'" y="'+(cy+4)+'">'+esc(it[1])+'</text>'});
+ h+='<g id="pk"></g>';
+ $('#diag').innerHTML=h;
+ EDGES.forEach(function(e){e.len=$('#e-'+e.id).getTotalLength()});
+}
+
+function applyState(){
+ var litN={},litE={},litZ={},onN={},onE={},onZ={};
+ for(var i=0;i<=S.step;i++){
+  var st=STEPS[i];
+  st.nodes.forEach(function(n){litN[n]=1;if(i===S.step)onN[n]=1});
+  st.edges.forEach(function(e){litE[e]=1;if(i===S.step)onE[e]=1});
+  (st.zone||[]).forEach(function(z){litZ[z]=1;if(i===S.step)onZ[z]=1});
+ }
+ $$('.node').forEach(function(g){var id=g.getAttribute('data-id');g.classList.toggle('lit',!!litN[id]);g.classList.toggle('on',!!onN[id])});
+ EDGES.forEach(function(e){var p=$('#e-'+e.id);p.classList.toggle('lit',!!litE[e.id]);p.classList.toggle('on',!!onE[e.id]&&!REDUCED);
+  var l=$('#el-'+e.id);if(l)l.classList.toggle('lit',!!litE[e.id])});
+ ZONES.forEach(function(z){$('#z-'+z.id).classList.toggle('on',!!onZ[z.id])});
+}
+
+/* ===== paquetes que viajan por las flechas ===== */
+function updatePackets(){
+ var g=$('#pk');if(!g)return;
+ var st=STEPS[S.step],ids=st.edges;
+ if(!ids.length){g.innerHTML='';return}
+ var n=ids.length,D=TRAVEL_MS*0.75,stag=n>1?(TRAVEL_MS-D)/(n-1):0;
+ var out='';
+ ids.forEach(function(id,i){
+  var e=EDGES.filter(function(x){return x.id===id})[0];if(!e)return;
+  var p=REDUCED?0.5:(S.el-i*stag)/D;
+  if(p<=0||p>=1)return;
+  var path=$('#e-'+id);var pt=path.getPointAtLength(e.len*p);
+  out+='<g class="pkt k-'+e.k+'" transform="translate('+pt.x.toFixed(1)+','+pt.y.toFixed(1)+')"><circle r="6.5"/><text y="-11">'+esc(e.pk||'')+'</text></g>';
+ });
+ g.innerHTML=out;
+}
+
+/* ===== reproductor ===== */
+function tick(ts){
+ if(!S.last)S.last=ts;var dt=Math.min(ts-S.last,100);S.last=ts;
+ if(S.playing){S.el+=dt*S.spd}
+ else if(S.el<TRAVEL_MS){S.el+=dt*S.spd}
+ if(S.playing&&S.el>=STEP_MS){
+  if(S.step<N_STEPS-1){goStep(S.step+1,false)}else{setPlaying(false)}
+ }
+ updatePackets();
+ requestAnimationFrame(tick);
+}
+function setPlaying(v){
+ S.playing=v;var b=$('#bPlay');
+ b.innerHTML=v?'&#10074;&#10074;':'&#9654;';b.setAttribute('aria-label',v?'Pausar':'Reproducir');
+ if(!v&&S.el<TRAVEL_MS){S.el=TRAVEL_MS}
+ if(v&&S.step>=N_STEPS-1&&S.el>=STEP_MS){goStep(0,false)}
+}
+function goStep(i,manual){
+ S.step=Math.max(0,Math.min(N_STEPS-1,i));S.el=0;
+ if(REDUCED){S.el=TRAVEL_MS}
+ applyState();renderSide();renderTimeline();updatePackets();
+ writeHash();
+}
+function renderTimeline(){
+ var tl=$('#timeline');
+ if(!tl.firstChild){
+  var h='<div class="tl-track"><div class="tl-fill" id="tlFill"></div></div>';
+  for(var i=0;i<N_STEPS;i++){
+   h+='<button type="button" class="tl-dot" data-i="'+i+'" style="left:calc(11px + (100% - 22px) * '+i+' / '+(N_STEPS-1)+')" title="Paso '+(i+1)+': '+esc(STEPS[i].t)+'" aria-label="Ir al paso '+(i+1)+': '+esc(STEPS[i].t)+'">'+(i+1)+'</button>';
+  }
+  tl.innerHTML=h;
+ }
+ $('#tlFill').style.width=(S.step/(N_STEPS-1)*100)+'%';
+ $$('.tl-dot',tl).forEach(function(b){var i=+b.getAttribute('data-i');b.classList.toggle('cur',i===S.step);b.classList.toggle('done',i<S.step);
+  if(i===S.step)b.setAttribute('aria-current','step');else b.removeAttribute('aria-current')});
+}
+function renderSide(){
+ var st=STEPS[S.step];var h='';
+ h+='<div class="step-h"><span class="step-n">Paso '+(S.step+1)+' de '+N_STEPS+'</span></div>';
+ h+='<div class="step-t">'+esc(st.t)+'</div>';
+ h+='<div class="side-lbl">Qué pasa en este paso</div><p>'+esc(pick(st.d))+'</p>';
+ h+='<div class="side-lbl">Detalles técnicos</div><ul class="tight kv">'+st.b.map(function(x){return '<li>'+fmt(pick(x))+'</li>'}).join('')+'</ul>';
+ h+='<div class="side-lbl">Componentes que participan (clic para abrir)</div><div class="chips">';
+ st.nodes.forEach(function(id){var inf=INFO[id];if(inf&&inf.alias)id=inf.alias;inf=INFO[id];
+  if(!inf)return;h+='<button type="button" class="chip" data-open="'+id+'">'+esc(pick(inf.t))+'</button>'});
+ h+='</div>';
+ h+='<div class="side-lbl">Referencias del paso</div>'+st.ref.map(function(k){return '<div class="hint"><a href="'+urlFor(k)+'" target="_blank" rel="noopener noreferrer">'+esc(urlFor(k))+'</a></div>'}).join('');
+ $('#sidePanel').innerHTML=h;
+}
+function renderKpis(){
+ var k=[['Pasos del flujo','14',''],['Ambientes','3','Dev · Test · Prod'],['Vías de promoción','2','A y B'],['Regla de oro','1 ↔ 1','workspace ↔ rama'],['Proveedor activo',PROV[S.prov].name,PROV[S.prov].short]];
+ $('#flowKpis').innerHTML=k.map(function(x){return '<div class="card kpi"><div class="lbl">'+x[0]+'</div><div class="val">'+x[1]+(x[2]?' <small>'+x[2]+'</small>':'')+'</div></div>'}).join('');
+}
+
+/* ===== resaltado simple de código ===== */
+function hl(src){
+ return src.split('\n').map(function(line){
+  var cm='',code=line,m=line.match(/(^|\s)#(?!\{)/);
+  if(m){var i=m.index+m[1].length;code=line.slice(0,i);cm=line.slice(i)}
+  var strs=[];
+  code=code.replace(/"[^"]*"|'[^']*'/g,function(s){strs.push(s);return '\u0001'+(strs.length-1)+'\u0001'});
+  code=esc(code).replace(/^(\s*(?:-\s+)?)([A-Za-z_][\w.\-\/]*)(\s*[:=])/,function(a,b,c,d){return b+'<span class="ky">'+c+'</span>'+d});
+  code=code.replace(/\u0001(\d+)\u0001/g,function(a,n){return '<span class="st">'+esc(strs[n])+'</span>'});
+  return code+(cm?'<span class="cm">'+esc(cm)+'</span>':'');
+ }).join('\n');
+}
+function snipText(id){var el=document.getElementById(id);return el?el.textContent.replace(/^\n/,'').replace(/\s+$/,'')+'\n':''}
+function copyText(btn,txt){
+ var done=function(){btn.classList.add('copied');var o=btn.textContent;btn.textContent='Copiado';setTimeout(function(){btn.classList.remove('copied');btn.textContent='Copiar'},1400)};
+ try{
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(txt).then(done,function(){fallbackCopy(txt,done)});return}
+ }catch(e){}
+ fallbackCopy(txt,done);
+}
+function fallbackCopy(txt,done){
+ try{var ta=document.createElement('textarea');ta.value=txt;ta.setAttribute('readonly','');ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);done()}catch(e){}
+}
+
+/* ===== estrategias ===== */
+function renderStrategies(){
+ var cats=['Todos'];CMP.forEach(function(r){if(cats.indexOf(r[0])<0)cats.push(r[0])});
+ $('#cmpFilters').innerHTML=cats.map(function(c){return '<button type="button" class="chip'+(S.cmpF===c?' active':'')+'" data-cmpf="'+esc(c)+'">'+esc(c)+'</button>'}).join('');
+ $('#cmpBody').innerHTML=CMP.filter(function(r){return S.cmpF==='Todos'||r[0]===S.cmpF}).map(function(r){
+  return '<tr><td>'+esc(r[1])+(r[4]?' <span class="pill ver">criterio del taller</span>':'')+'</td><td class="a">'+esc(r[2])+'</td><td class="b">'+esc(r[3])+'</td></tr>'}).join('');
+ $('#decChips').innerHTML=DECIDERS.map(function(d,i){return '<button type="button" class="chip'+(S.dec[i]?' active':'')+'" data-dec="'+i+'" aria-pressed="'+(S.dec[i]?'true':'false')+'">'+esc(d[0])+'</button>'}).join('');
+ var a=0,b=0;DECIDERS.forEach(function(d,i){if(S.dec[i]){if(d[1]==='a')a++;else b++}});
+ $('#tallyA').textContent='A: '+a;$('#tallyB').textContent='B: '+b;
+ var t=a+b;$('#tbA').style.width=(t?a/t*100:0)+'%';$('#tbB').style.width=(t?b/t*100:0)+'%';
+ var msg='Marca las frases que describen a tu equipo.';
+ if(t){msg=a>b?'Tus respuestas se inclinan hacia la estrategia A (Deployment pipelines).':b>a?'Tus respuestas se inclinan hacia la estrategia B (fabric-cicd).':'Empate: considera un enfoque híbrido y decide por ítem y por ambiente.'}
+ $('#decMsg').textContent=msg+' Orientativo: la documentación indica que muchas organizaciones combinan opciones.';
+ renderSnips();
+}
+function renderSnips(){
+ var list=SNIPS[S.prov];
+ if(!list.some(function(x){return x.k===S.snip}))S.snip=list[0].k;
+ $('#snipTitle').textContent='Ejemplo mínimo · estrategia B con fabric-cicd · '+PROV[S.prov].name;
+ $('#snipSub').textContent='Fragmentos de partida basados en los ejemplos de la documentación de fabric-cicd. Reemplaza nombres, GUID y service connections por los tuyos; los GUID mostrados son sintéticos.';
+ $('#snipTabs').innerHTML=list.map(function(x){return '<button type="button" class="subtab'+(S.snip===x.k?' active':'')+'" data-snip="'+x.k+'">'+esc(x.lab)+'</button>'}).join('');
+ var cur=list.filter(function(x){return x.k===S.snip})[0];
+ var txt=snipText(cur.src);
+ $('#snipCode').innerHTML=hl(txt);$('#snipCode').setAttribute('data-raw',txt);
+ $('#snipHint').textContent=cur.desc;
+}
+
+/* ===== configuración inicial ===== */
+function renderSetup(){
+ var idx=0,h='';
+ SETUP.forEach(function(g,gi){
+  var done=0,items='';
+  g[1].forEach(function(it){
+   var i=idx++;if(S.chk[i])done++;
+   items+='<label class="chk'+(S.chk[i]?' done':'')+'"><input type="checkbox" data-c="'+i+'"'+(S.chk[i]?' checked':'')+'><span class="tx">'+esc(pick(it[0]))+'<span class="why">'+esc(pick(it[1]))+'</span></span></label>';
+  });
+  h+='<div class="card"><div class="gh"><span class="gn">'+(gi+1)+'</span><h2 style="margin:0">'+esc(g[0])+'</h2><span class="pill info" style="margin-left:auto">'+done+' / '+g[1].length+'</span></div>'+items+'</div>';
+ });
+ $('#setupGrid').innerHTML=h;
+ updateProgress();
+ $('#setupProv').textContent=PROV[S.prov].name;
+ $('#repoTree').innerHTML=hl(snipText(S.prov==='gh'?'sn-tree-gh':'sn-tree-ado'));
+ renderTf();
+}
+function updateProgress(){
+ var n=0;S.chk.forEach(function(v){if(v)n++});
+ $('#chkDone').textContent=n;$('#chkTotal').textContent=TOTAL_CHK;$('#chkBar').style.width=(n/TOTAL_CHK*100)+'%';
+}
+function renderTf(){
+ var list=TFSNIPS[S.prov];
+ if(!list.some(function(x){return x.k===S.tfs}))S.tfs=list[0].k;
+ $('#tfTitle').textContent='Terraform: plataforma como código · '+PROV[S.prov].name;
+ $('#tfSub').textContent='Ejemplo didáctico con datos sintéticos. Terraform aprovisiona workspaces, capacidad, roles y la conexión de Dev a Git; los ítems viajan por la estrategia A o B.';
+ $('#tfTabs').innerHTML=list.map(function(x){return '<button type="button" class="subtab'+(S.tfs===x.k?' active':'')+'" data-tfs="'+x.k+'">'+esc(x.lab)+'</button>'}).join('');
+ var cur=list.filter(function(x){return x.k===S.tfs})[0];
+ var txt=snipText(cur.src);
+ if(cur.git)txt=txt.replace('%%GITBLOCK%%',snipText(cur.git).replace(/\n+$/,''));
+ $('#tfCode').innerHTML=hl(txt);$('#tfCode').setAttribute('data-raw',txt);
+ $('#tfHint').textContent=cur.desc;
+}
+
+/* ===== qué viaja ===== */
+var SYM={2:'<span class="pill ok">Sí</span>',1:'<span class="pill prev">vista previa</span>',0:'<span class="pill no">No figura</span>'};
+function renderViaja(){
+ var tot=ITEMS.length,g=0,d=0,c=0,p=0;
+ ITEMS.forEach(function(r){if(r[2])g++;if(r[3])d++;if(r[4])c++;if(r[2]===1||r[3]===1)p++});
+ $('#viajaKpis').innerHTML=[['Ítems listados',tot,''],['Con Git integration',g,'de '+tot],['Con Deployment pipelines',d,'de '+tot],['Con fabric-cicd',c,'de '+tot],['Con algo en vista previa',p,'(Git o DP)']].map(function(x){return '<div class="card kpi"><div class="lbl">'+x[0]+'</div><div class="val">'+x[1]+(x[2]?' <small>'+x[2]+'</small>':'')+'</div></div>'}).join('');
+ var fs=['Todos','Solo en Git','Solo en Deployment pipelines','Con fabric-cicd','Vista previa'];
+ $('#itemChips').innerHTML=fs.map(function(f){return '<button type="button" class="chip'+(S.itemF===f?' active':'')+'" data-itf="'+esc(f)+'">'+esc(f)+'</button>'}).join('');
+ var q=S.itemQ.toLowerCase(),rows=ITEMS.filter(function(r){
+  if(q&&(r[1]+' '+r[5]+' '+r[0]).toLowerCase().indexOf(q)<0)return false;
+  if(S.itemF==='Solo en Git')return r[2]&&!r[3];
+  if(S.itemF==='Solo en Deployment pipelines')return r[3]&&!r[2];
+  if(S.itemF==='Con fabric-cicd')return !!r[4];
+  if(S.itemF==='Vista previa')return r[2]===1||r[3]===1;
+  return true});
+ var h='',last='';
+ rows.forEach(function(r){
+  if(r[0]!==last){h+='<tr class="grp"><td colspan="5">'+esc(r[0])+'</td></tr>';last=r[0]}
+  h+='<tr><td><b>'+esc(r[1])+'</b></td><td class="c">'+SYM[r[2]]+'</td><td class="c">'+SYM[r[3]]+'</td><td class="c">'+(r[4]?SYM[2]:SYM[0])+'</td><td>'+esc(r[5])+'</td></tr>';
+ });
+ $('#itemBody').innerHTML=h||'<tr><td colspan="5" class="sub">Sin resultados.</td></tr>';
+ $('#itemCount').textContent=rows.length+' de '+tot+' ítems';
+ $('#noGrid').innerHTML=NOGO.map(function(n){return '<div class="card nocard"><h3>'+esc(n.t)+'</h3><p style="font-size:12.5px">'+esc(n.x)+'</p>'+n.s.map(function(s){return '<span class="pill info" style="margin-right:4px">'+esc(s)+'</span>'}).join('')+'</div>'}).join('');
+ $('#limitsList').innerHTML=LIMITS.map(function(l){return '<li>'+esc(l)+'</li>'}).join('');
+}
+
+/* ===== referencias ===== */
+function renderRefs(){
+ $('#refGrid').innerHTML=REFS.map(function(g){
+  return '<div class="card"><h2>'+esc(g[0])+'</h2>'+g[1].map(function(r){var u=urlFor(r[0]);
+   return '<div class="ref"><a class="t" href="'+u+'" target="_blank" rel="noopener noreferrer">'+esc(r[1])+'</a><span class="u">'+esc(u)+'</span><span class="d">'+esc(r[2])+'</span></div>'}).join('')+'</div>';
+ }).join('');
+}
+
+/* ===== panel de detalle ===== */
+function openDrawer(id){
+ var inf=INFO[id];if(!inf)return;if(inf.alias){id=inf.alias;inf=INFO[id]}
+ S.drawer=id;S.lastFocus=document.activeElement;
+ var key=id+'|'+S.prov;var chk=S.nodeChk[key]||(S.nodeChk[key]={});
+ $('#dTitle').textContent=pick(inf.t);
+ var tag=pick(inf.tag);
+ var steps=[];STEPS.forEach(function(st,i){var has=st.nodes.some(function(n){var x=INFO[n];return n===id||(x&&x.alias===id)});if(has)steps.push(i)});
+ var h='<div style="margin-bottom:8px"><span class="tag">'+esc(tag)+'</span></div>';
+ h+='<h3 style="border-top:0;padding-top:0;margin-top:6px">Qué es</h3><p>'+esc(pick(inf.que))+'</p>';
+ h+='<h3>Qué configurar (lista de verificación)</h3>';
+ arr(inf.cfg).forEach(function(c,i){var items=arr(c);var txt=pick(c);
+  h+='<label class="chk'+(chk[i]?' done':'')+'"><input type="checkbox" data-nc="'+i+'"'+(chk[i]?' checked':'')+'><span class="tx">'+fmt(txt)+'</span></label>'});
+ h+='<h3>Referencia</h3>';
+ arr(inf.ref).forEach(function(k){var u=urlFor(k);h+='<div class="urlbox">'+esc(u)+'</div><div class="hint" style="margin-bottom:6px"><a href="'+u+'" target="_blank" rel="noopener noreferrer">Abrir en una pestaña nueva</a></div>'});
+ if(steps.length){h+='<h3>Aparece en los pasos</h3><div class="chips" style="display:flex;flex-wrap:wrap;gap:6px">'+steps.map(function(i){return '<button type="button" class="chip" data-jump="'+i+'">'+(i+1)+'. '+esc(STEPS[i].t)+'</button>'}).join('')+'</div>'}
+ h+='<p class="hint" style="margin-top:14px">Las marcas de la lista solo viven en memoria mientras la página está abierta.</p>';
+ $('#dBody').innerHTML=h;
+ $('#drawer').classList.add('open');$('#drawer').setAttribute('aria-hidden','false');$('#scrim').classList.add('open');
+ $('#dClose').focus();
+}
+function closeDrawer(){
+ S.drawer=null;$('#drawer').classList.remove('open');$('#drawer').setAttribute('aria-hidden','true');$('#scrim').classList.remove('open');
+ if(S.lastFocus&&S.lastFocus.focus){try{S.lastFocus.focus()}catch(e){}}
+}
+
+/* ===== tema, proveedor, pestañas ===== */
+function applyTheme(){
+ document.documentElement.setAttribute('data-theme',S.theme);
+ $('#themeBtn').textContent=S.theme==='dark'?'Tema claro':'Tema oscuro';
+}
+function applyProv(){
+ $$('.seg button').forEach(function(b){var on=b.getAttribute('data-prov')===S.prov;b.classList.toggle('active',on);b.setAttribute('aria-pressed',on?'true':'false')});
+ buildDiagram();applyState();renderKpis();renderSide();renderStrategies();renderSetup();
+ if(S.drawer)openDrawer(S.drawer);
+}
+function applyTab(){
+ $$('.tab').forEach(function(t){var on=t.getAttribute('data-tab')===S.tab;t.classList.toggle('active',on);t.setAttribute('aria-selected',on?'true':'false')});
+ $$('.view').forEach(function(v){v.classList.toggle('active',v.id==='v-'+S.tab)});
+}
+
+/* ===== eventos ===== */
+function bind(){
+ document.addEventListener('click',function(ev){
+  var t=ev.target;
+  var node=t.closest&&t.closest('.node');if(node){openDrawer(node.getAttribute('data-id'));return}
+  var b;
+  if((b=t.closest('[data-open]'))){openDrawer(b.getAttribute('data-open'));return}
+  if((b=t.closest('[data-jump]'))){closeDrawer();S.tab='flow';applyTab();goStep(+b.getAttribute('data-jump'),true);return}
+  if((b=t.closest('.tl-dot'))){goStep(+b.getAttribute('data-i'),true);return}
+  if((b=t.closest('.tab'))){S.tab=b.getAttribute('data-tab');applyTab();writeHash();return}
+  if((b=t.closest('.seg button'))){S.prov=b.getAttribute('data-prov');applyProv();writeHash();return}
+  if((b=t.closest('[data-spd]'))){S.spd=parseFloat(b.getAttribute('data-spd'));$$('.spd button').forEach(function(x){x.classList.toggle('active',x===b)});return}
+  if((b=t.closest('[data-cmpf]'))){S.cmpF=b.getAttribute('data-cmpf');renderStrategies();return}
+  if((b=t.closest('[data-dec]'))){var i=+b.getAttribute('data-dec');S.dec[i]=!S.dec[i];renderStrategies();return}
+  if((b=t.closest('[data-snip]'))){S.snip=b.getAttribute('data-snip');renderSnips();return}
+  if((b=t.closest('[data-tfs]'))){S.tfs=b.getAttribute('data-tfs');renderTf();return}
+  if((b=t.closest('[data-itf]'))){S.itemF=b.getAttribute('data-itf');renderViaja();return}
+  if(t.id==='snipCopy'){copyText(t,$('#snipCode').getAttribute('data-raw'));return}
+  if(t.id==='tfCopy'){copyText(t,$('#tfCode').getAttribute('data-raw'));return}
+  if(t.id==='chkReset'){for(var j=0;j<S.chk.length;j++)S.chk[j]=0;renderSetup();writeHash();return}
+  if(t.id==='scrim'||t.id==='dClose'){closeDrawer();return}
+  if(t.id==='themeBtn'){S.theme=S.theme==='dark'?'light':'dark';applyTheme();writeHash();return}
+  if(t.id==='bPlay'||(t.closest&&t.closest('#bPlay'))){setPlaying(!S.playing);return}
+  if(t.id==='bNext'){setPlaying(false);goStep(S.step+1,true);return}
+  if(t.id==='bPrev'){setPlaying(false);goStep(S.step-1,true);return}
+  if(t.id==='bReset'){setPlaying(false);goStep(0,true);return}
+ });
+ document.addEventListener('change',function(ev){
+  var t=ev.target;
+  if(t.hasAttribute('data-c')){S.chk[+t.getAttribute('data-c')]=t.checked?1:0;renderSetup();writeHash();return}
+  if(t.hasAttribute('data-nc')&&S.drawer){var key=S.drawer+'|'+S.prov;S.nodeChk[key][+t.getAttribute('data-nc')]=t.checked;t.closest('.chk').classList.toggle('done',t.checked)}
+ });
+ $('#itemSearch').addEventListener('input',function(e){S.itemQ=e.target.value;renderViaja()});
+ document.addEventListener('keydown',function(ev){
+  if(ev.key==='Escape'&&S.drawer){closeDrawer();return}
+  var tag=(ev.target.tagName||'').toLowerCase();
+  if(ev.key==='Enter'||ev.key===' '){var nd=ev.target.closest&&ev.target.closest('.node');if(nd){ev.preventDefault();openDrawer(nd.getAttribute('data-id'));return}
+   if(ev.target.id==='snipCopy'||ev.target.id==='tfCopy'){ev.preventDefault();ev.target.click();return}}
+  if(S.drawer||S.tab!=='flow'||tag==='input'  ||tag==='textarea'||tag==='select')return;
+    if(ev.key===' '){if(tag==='button'||ev.target.closest('.node'))return;ev.preventDefault();setPlaying(!S.playing)}
+  else if(ev.key==='ArrowRight'){setPlaying(false);goStep(S.step+1,true)}
+  else if(ev.key==='ArrowLeft'){setPlaying(false);goStep(S.step-1,true)}
+ });
+ window.addEventListener('hashchange',function(){if(S.hashSelf)return;readHash();applyTheme();applyTab();applyProv();goStep(S.step,false)});
+}
+
+/* ===== arranque ===== */
+function init(){
+ readHash();
+ applyTheme();applyTab();
+ buildDiagram();renderTimeline();renderViaja();renderRefs();
+ applyProv();
+ setPlaying(false);
+ goStep(S.step,false);
+ bind();
+ requestAnimationFrame(tick);
+}
+init();
+
+})();
+</script>
+</body>
+</html>

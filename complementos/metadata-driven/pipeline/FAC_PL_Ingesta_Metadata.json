@@ -1,0 +1,236 @@
+{
+  "properties": {
+    "description": "Ingesta metadata-driven (demo didáctica, datos sintéticos): Lookup del catálogo -> ForEach secuencial -> Notebook genérico -> resumen de bitácora.",
+    "activities": [
+      {
+        "name": "Leer_Catalogo",
+        "type": "Lookup",
+        "description": "Lee fac_catalogo_ingesta del Lakehouse en modo Tabla (Delta directo, sin pasar por el endpoint SQL, sin conexión adicional). Ese modo no admite WHERE ni ORDER BY: el filtro de activas se aplica dentro del ForEach y el orden es el físico del catálogo. Si hace falta orden y filtro garantizados, usar la variante FAC_PL_Ingesta_Metadata.alt-notebook.json.",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.00:10:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "typeProperties": {
+          "source": {
+            "type": "LakehouseTableSource"
+          },
+          "datasetSettings": {
+            "type": "LakehouseTable",
+            "typeProperties": {
+              "schema": "{{ESQUEMA_LOOKUP}}",
+              "table": "fac_catalogo_ingesta"
+            },
+            "schema": [],
+            "linkedService": {
+              "name": "FAC_Lakehouse",
+              "properties": {
+                "type": "Lakehouse",
+                "typeProperties": {
+                  "artifactId": "{{LAKEHOUSE_ID}}",
+                  "workspaceId": "{{WORKSPACE_ID}}",
+                  "rootFolder": "Tables"
+                },
+                "annotations": []
+              }
+            },
+            "annotations": []
+          },
+          "firstRowOnly": false
+        }
+      },
+      {
+        "name": "Por_Cada_Tabla",
+        "type": "ForEach",
+        "description": "Secuencial a propósito (isSequential=true; batchCount solo aplica en modo paralelo y aquí se omite). Razones: (1) todas las iteraciones escriben en las mismas tablas Delta de control (catálogo y bitácora) y el MERGE concurrente puede chocar; (2) la capacidad del laboratorio es pequeña; (3) en el monitor las tablas se ven en orden y un fallo es fácil de aislar. Para paralelizar: isSequential=false y batchCount=N, tras revisar las dos primeras razones.",
+        "dependsOn": [
+          {
+            "activity": "Leer_Catalogo",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "typeProperties": {
+          "items": {
+            "value": "@activity('Leer_Catalogo').output.value",
+            "type": "Expression"
+          },
+          "isSequential": true,
+          "activities": [
+            {
+              "name": "Evaluar_Activa",
+              "type": "IfCondition",
+              "description": "Solo se carga si activo = 1 y, cuando se indica filtro_tabla, si coincide con la tabla destino.",
+              "dependsOn": [],
+              "typeProperties": {
+                "expression": {
+                  "value": "@and(equals(item().activo, 1), or(empty(pipeline().parameters.filtro_tabla), equals(item().tabla_destino, pipeline().parameters.filtro_tabla)))",
+                  "type": "Expression"
+                },
+                "ifTrueActivities": [
+                  {
+                    "name": "Cargar_Tabla",
+                    "type": "TridentNotebook",
+                    "description": "Invoca FAC_NB_Carga_Generica con los valores de la fila del catálogo (@item()). Un error se ve en rojo aquí; la bitácora ya quedó escrita.",
+                    "dependsOn": [],
+                    "policy": {
+                      "timeout": "0.01:00:00",
+                      "retry": 0,
+                      "retryIntervalInSeconds": 30,
+                      "secureInput": false,
+                      "secureOutput": false
+                    },
+                    "typeProperties": {
+                      "notebookId": "{{NOTEBOOK_ID_CARGA_GENERICA}}",
+                      "workspaceId": "{{WORKSPACE_ID}}",
+                      "parameters": {
+                        "tabla": {
+                          "value": {
+                            "value": "@item().tabla_destino",
+                            "type": "Expression"
+                          },
+                          "type": "string"
+                        },
+                        "ruta_origen": {
+                          "value": {
+                            "value": "@item().ruta_origen",
+                            "type": "Expression"
+                          },
+                          "type": "string"
+                        },
+                        "formato": {
+                          "value": {
+                            "value": "@item().formato",
+                            "type": "Expression"
+                          },
+                          "type": "string"
+                        },
+                        "tipo_carga": {
+                          "value": {
+                            "value": "@item().tipo_carga",
+                            "type": "Expression"
+                          },
+                          "type": "string"
+                        },
+                        "columna_marca": {
+                          "value": {
+                            "value": "@coalesce(item().columna_marca, '')",
+                            "type": "Expression"
+                          },
+                          "type": "string"
+                        },
+                        "columna_clave": {
+                          "value": {
+                            "value": "@coalesce(item().columna_clave, '')",
+                            "type": "Expression"
+                          },
+                          "type": "string"
+                        },
+                        "ultima_marca": {
+                          "value": {
+                            "value": "@coalesce(item().ultima_marca, '')",
+                            "type": "Expression"
+                          },
+                          "type": "string"
+                        },
+                        "destino": {
+                          "value": {
+                            "value": "@pipeline().parameters.destino",
+                            "type": "Expression"
+                          },
+                          "type": "string"
+                        },
+                        "run_id": {
+                          "value": {
+                            "value": "@pipeline().RunId",
+                            "type": "Expression"
+                          },
+                          "type": "string"
+                        },
+                        "forzar_completa": {
+                          "value": {
+                            "value": "@pipeline().parameters.forzar_completa",
+                            "type": "Expression"
+                          },
+                          "type": "bool"
+                        }
+                      },
+                      "sessionTag": "fac_ingesta"
+                    }
+                  }
+                ],
+                "ifFalseActivities": []
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "Resumen_Bitacora",
+        "type": "TridentNotebook",
+        "description": "Paso final: muestra la bitácora de esta corrida y la marca de agua. Se ejecuta aunque el ForEach falle (Completed) y falla si hay errores o faltan tablas, para que el pipeline no quede en verde con una carga rota.",
+        "dependsOn": [
+          {
+            "activity": "Por_Cada_Tabla",
+            "dependencyConditions": [
+              "Completed"
+            ]
+          }
+        ],
+        "policy": {
+          "timeout": "0.01:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "typeProperties": {
+          "notebookId": "{{NOTEBOOK_ID_RESUMEN_BITACORA}}",
+          "workspaceId": "{{WORKSPACE_ID}}",
+          "parameters": {
+            "run_id": {
+              "value": {
+                "value": "@pipeline().RunId",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "filtro_tabla": {
+              "value": {
+                "value": "@pipeline().parameters.filtro_tabla",
+                "type": "Expression"
+              },
+              "type": "string"
+            },
+            "destino": {
+              "value": {
+                "value": "@pipeline().parameters.destino",
+                "type": "Expression"
+              },
+              "type": "string"
+            }
+          },
+          "sessionTag": "fac_ingesta"
+        }
+      }
+    ],
+    "parameters": {
+      "forzar_completa": {
+        "type": "bool",
+        "defaultValue": false
+      },
+      "filtro_tabla": {
+        "type": "string",
+        "defaultValue": ""
+      },
+      "destino": {
+        "type": "string",
+        "defaultValue": "{{ESQUEMA}}"
+      }
+    }
+  }
+}

@@ -11,3 +11,5 @@ venv/
 Thumbs.db
 evidencias-completadas/
 logs/
+complementos/**/dist/
+complementos/**/__pycache__/

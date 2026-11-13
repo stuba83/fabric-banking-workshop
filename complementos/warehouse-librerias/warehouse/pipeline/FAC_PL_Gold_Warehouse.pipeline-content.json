@@ -1,0 +1,49 @@
+{
+  "_comentario": "Plantilla verificada en un workspace de laboratorio (nov-2026): la estructura se creó por API y el pipeline ejecutó el procedimiento. La fuente de verdad es la UI: si la creacion por API falla, cree la actividad 'Stored procedure' en el editor, seleccione la conexion al Warehouse FAC_WH_Gold y exporte/compare el JSON. Reemplace los marcadores {{...}} (deploy.ps1 lo hace con -DesplegarPipeline).",
+  "properties": {
+    "description": "Carga el oro del Warehouse FAC_WH_Gold llamando al procedimiento almacenado orquestador (actividad Stored procedure).",
+    "parameters": {
+      "p_estrategia_dimensiones": { "type": "string", "defaultValue": "MERGE" },
+      "p_simular_error": { "type": "bool", "defaultValue": false }
+    },
+    "activities": [
+      {
+        "name": "CargarGoldWarehouse",
+        "type": "SqlServerStoredProcedure",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.01:00:00",
+          "retry": 0,
+          "retryIntervalInSeconds": 30,
+          "secureInput": false,
+          "secureOutput": false
+        },
+        "typeProperties": {
+          "storedProcedureName": "[operacion].[usp_cargar_gold]",
+          "storedProcedureParameters": {
+            "estrategia_dimensiones": {
+              "value": { "value": "@pipeline().parameters.p_estrategia_dimensiones", "type": "Expression" },
+              "type": "String"
+            },
+            "simular_error": {
+              "value": { "value": "@pipeline().parameters.p_simular_error", "type": "Expression" },
+              "type": "Boolean"
+            }
+          }
+        },
+        "linkedService": {
+          "name": "{{WAREHOUSE_NAME}}",
+          "properties": {
+            "type": "DataWarehouse",
+            "typeProperties": {
+              "endpoint": "{{WAREHOUSE_ENDPOINT}}",
+              "artifactId": "{{WAREHOUSE_ID}}",
+              "workspaceId": "{{WORKSPACE_ID}}"
+            },
+            "annotations": []
+          }
+        }
+      }
+    ]
+  }
+}

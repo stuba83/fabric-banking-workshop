@@ -52,7 +52,7 @@ Llegar con respuestas breves:
 | 10–20 | Direct Lake y diseño del modelo: qué tablas entran y por qué | Entender relaciones, medidas y el papel de la tabla oro |
 | 20–35 | Demostración: modelo, relaciones, medidas y un visual | Ver el flujo completo en el editor web |
 | 35–48 | Seguridad: roles del workspace, seguridad por filas y **Probar como rol** | Entender a quién se aplica la regla y cómo se verifica |
-| 48–55 | Gobernanza: linaje, catálogo de OneLake y elementos promovidos | Leer el recorrido de los datos y señalar elementos confiables |
+| 48–55 | Gobernanza: linaje, catálogo de OneLake, dominios y elementos promovidos | Leer el recorrido de los datos y señalar elementos confiables |
 | 55–60 | Asignar accionables y decisiones por documentar | Acordar evidencias para la Sesión 5 |
 
 La creación del modelo y de los roles puede consumir más tiempo del previsto. Si algo sigue pendiente al cierre, completarlo como accionable; **en curso no equivale a completado**. La sesión no se extiende.
@@ -158,6 +158,8 @@ Guardar el reporte con el prefijo propio, por ejemplo `AB_RP_Transacciones`.
 
 ### Paso 5. Gobernanza
 
+El **catálogo de OneLake** (pestañas *Explore*, *Govern* y *Secure*; en español, Explorar, Gobernar y Proteger) y los **dominios de Fabric** son el centro del gobierno: el primero para encontrar y entender los elementos y ver su estado de gobierno, y los segundos para agrupar workspaces por área de negocio y delegar su administración. El **endoso**, el **linaje** y las **etiquetas de sensibilidad** lo complementan. En el laboratorio se practican el linaje, el catálogo y el endoso; los dominios y las etiquetas los explica el facilitador, sin ejercicio.
+
 1. **Linaje.** En el workspace, abrir la **vista de linaje** (*Lineage view*) desde la barra del workspace. Localizar el Lakehouse, los notebooks, el pipeline, el modelo y el reporte propios. Usar la flecha de la tarjeta para resaltar el linaje de un elemento. El linaje muestra **elementos y sus conexiones**, no tablas ni columnas.
 2. **Catálogo de OneLake.** Abrir el catálogo desde el panel de navegación, en la pestaña **Explore**, y encontrar el modelo propio por su prefijo. Revisar su detalle: propietario, workspace y sello de endoso.
 3. **Descripción.** En la configuración del modelo, agregar una descripción breve: qué contiene y de qué tablas se alimenta.
@@ -193,7 +195,26 @@ Las siete filas suman 72.000 transacciones y los totales de la tabla anterior. *
 
 ### Lo que no se practica en esta sesión
 
-El facilitador mencionará, sin ejercicio ni evidencia, otros controles que dependen de la versión y del tenant: la seguridad a nivel de datos en OneLake, las etiquetas de confidencialidad y el acceso de los usuarios finales a un modelo Direct Lake (con identidad propia o con una conexión de identidad fija). Tampoco se comparten elementos con personas externas al laboratorio.
+El facilitador mencionará, **sin ejercicio ni evidencia**, otros controles que dependen de la versión y del tenant. Material de estudio: [referencias complementarias](../referencias-complementarias.md#5-seguridad-del-modelo-y-consumo-s4).
+
+- **Seguridad a nivel de objeto (OLS).** Oculta tablas o columnas a un rol, como si no existieran. Se define en los roles del modelo, con la vista TMDL del editor o con Tabular Editor. Un ejemplo pequeño de TMDL (tomado de la documentación de Learn; los nombres son ilustrativos):
+
+  ```text
+  createOrReplace
+
+    role SeguridadPorObjetos
+      modelPermission: read
+
+      tablePermission Clientes
+        columnPermission Direccion
+          metadataPermission: none
+  ```
+
+  `none` deja la columna oculta para ese rol; `read` la deja visible.
+- **Consumo con permiso de compilación y App.** Con el permiso de compilación (*Build*) sobre el modelo, otras personas crean sus propios reportes sobre él: **un modelo, muchos reportes**. Una App del workspace distribuye el contenido publicado a los usuarios finales.
+- **Dónde puede vivir la seguridad en Direct Lake.** Según la documentación, en el modelo semántico (RLS y OLS), en el endpoint SQL o en la seguridad de OneLake. Conviene **elegir una** capa como fuente de verdad, para no duplicar reglas que luego se contradigan.
+- **Fabric Apps.** Una forma de publicar una aplicación de datos sobre Fabric. Está en **vista previa**: el facilitador la muestra con una demostración prearmada.
+- **Otros controles.** Las etiquetas de confidencialidad y el acceso de los usuarios finales a un modelo Direct Lake (con identidad propia o con una conexión de identidad fija). Tampoco se comparten elementos con personas externas al laboratorio.
 
 ## 6. Accionables antes de la Sesión 5
 
@@ -237,6 +258,7 @@ Un bloqueo de identidad, licencia o configuración no se resuelve ampliando la s
 - [Linaje en Fabric](https://learn.microsoft.com/en-us/fabric/governance/lineage).
 - [Catálogo de OneLake](https://learn.microsoft.com/en-us/fabric/governance/onelake-catalog-overview).
 - [Endoso de elementos](https://learn.microsoft.com/en-us/fabric/governance/endorsement-overview).
+- Complementos de estudio del facilitador, sin evidencia (más enlaces en las [referencias complementarias](../referencias-complementarias.md)): [seguridad a nivel de objeto (OLS)](https://learn.microsoft.com/en-us/fabric/security/service-admin-object-level-security), [TMDL: descripción general](https://learn.microsoft.com/en-us/analysis-services/tmdl/tmdl-overview), [vista TMDL](https://learn.microsoft.com/en-us/power-bi/transform-model/desktop-tmdl-view), [dominios](https://learn.microsoft.com/en-us/fabric/governance/domains), [etiquetas de sensibilidad](https://learn.microsoft.com/en-us/fabric/governance/information-protection) y [Fabric Apps (vista previa)](https://learn.microsoft.com/en-us/fabric/apps/overview).
 - [Diccionario del dataset](../../dataset/diccionario.md) y [guía del dataset](../../dataset/README.md).
 
 Los controles de este documento se calcularon con el dataset del repositorio, pero **los pasos en el editor web de Fabric y Power BI no se han comprobado en un tenant**: los nombres de los menús pueden variar con la versión. La creación del modelo, las relaciones, los roles y **Test as role** deben comprobarse en el tenant del participante; el repositorio no se conecta a ningún tenant ni despliega artefactos automáticamente.

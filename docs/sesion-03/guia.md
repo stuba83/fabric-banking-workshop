@@ -58,7 +58,7 @@ Llegar con respuestas breves:
 | 10–20 | Reglas de calidad y capas; Lakehouse frente a Warehouse | Entender qué se limpia, qué se aparta y por qué |
 | 20–30 | Ampliar el pipeline con la actividad `PlataSilver` | Dos actividades encadenadas con dependencia de éxito |
 | 30–45 | Ejecutar el pipeline completo y observar | Notebook de plata exitoso con sus controles |
-| 45–55 | Verificar con T-SQL y leer la tabla oro | Conteos medidos; primera respuesta a la pregunta de negocio |
+| 45–55 | Verificar con T-SQL y leer la tabla oro; demostración del facilitador: Warehouse | Conteos medidos; primera respuesta a la pregunta de negocio |
 | 55–60 | Asignar reejecución, prueba de error y decisiones por documentar | Acordar evidencias para la Sesión 4 |
 
 El arranque de Spark y la cola de capacidad pueden consumir varios minutos. No se garantiza que toda ejecución termine dentro del bloque. Si sigue en curso al cierre, conservar su identificador y completar la revisión como accionable; **en curso no equivale a completada**. La sesión no se extiende.
@@ -204,7 +204,36 @@ El endpoint no permite insertar, actualizar ni borrar. Para modificar tablas se 
 
 ### Lakehouse frente a Warehouse
 
-Ambos guardan datos Delta en OneLake. El Lakehouse se desarrolla con Spark y su endpoint SQL es de solo lectura; un Warehouse se desarrolla con T-SQL, con escritura y transacciones entre varias tablas. En esta práctica usamos el Lakehouse para transformar y el endpoint SQL para verificar. La demostración de un Warehouse queda a cargo del facilitador y **no forma parte de las evidencias** de esta sesión.
+Ambos guardan datos Delta en OneLake. El Lakehouse se desarrolla con Spark y su endpoint SQL es de solo lectura; un Warehouse se desarrolla con T-SQL, con escritura y transacciones entre varias tablas. En esta práctica usamos el Lakehouse para transformar y el endpoint SQL para verificar.
+
+> **Demostración del facilitador: Warehouse (no forma parte de las evidencias).** Es material para mostrar, no un ejercicio: los participantes no la ejecutan ni la registran. Cabe en el bloque de 45–55; lo que tarda se muestra ya ejecutado y, si el tiempo no alcanza, queda como lectura. **La sesión no se extiende.** Los archivos y los resultados observados están en [`complementos/warehouse-librerias`](../../complementos/warehouse-librerias/README-warehouse-librerias.md) (opcional; requiere una capacidad activa).
+>
+> **1. Un Warehouse que lee el Lakehouse.** Un Warehouse en el **mismo workspace**, con un esquema por dominio (por ejemplo, `clientes`, `cuentas`, `transacciones` y `operacion`), y un procedimiento almacenado de T-SQL que lee las tablas plata del Lakehouse con un nombre de tres partes (`AB_Lakehouse.dbo.ab_silver_transacciones`, con el prefijo propio). Las consultas entre bases funcionan **solo dentro del mismo workspace**.
+>
+> **2. Cargar de forma idempotente y atómica.** El procedimiento usa `MERGE` para las dimensiones (pocas filas; el origen es la verdad) y `DELETE` + `INSERT … SELECT` para el hecho (reemplazo completo de una instantánea recalculada). Ejecutarlo dos veces deja los mismos conteos: es **idempotente**. La carga del hecho y de su resumen ocurre en **una transacción** con `TRY/CATCH` y `ROLLBACK`: si algo falla a mitad, ninguna de las dos tablas cambia (**atomicidad**), algo que las nueve escrituras de Spark de esta sesión no ofrecen. Las llaves primarias de un Warehouse son metadatos (`NOT ENFORCED`): el motor no impide duplicados, así que se validan en la conciliación.
+>
+> **3. La cuenta como patrón de conciliación (paridad).** `72.360 − 288 − 72 = 72.000` no es solo un control de esta sesión: es un patrón. El procedimiento de conciliación compara conteos y sumas entre el origen (Lakehouse) y el destino (Warehouse), y reproduce la misma cuenta, para detectar una pérdida o una duplicación de filas **antes** de que llegue al reporte.
+>
+> **4. Spark o T-SQL: cuándo cada uno.** Basado en la [guía de decisión de Lakehouse y Warehouse](https://learn.microsoft.com/en-us/fabric/fundamentals/decision-guide-lakehouse-warehouse):
+>
+> | Criterio | Spark en el Lakehouse | T-SQL en el Warehouse |
+> |---|---|---|
+> | Perfil del equipo | Ingenieros de datos que trabajan con Python, PySpark o Scala | Equipos con experiencia en T-SQL y bases relacionales |
+> | Tipo de datos | Estructurados, semiestructurados y archivos en `Files` | Datos estructurados en tablas |
+> | Escritura | Spark escribe tablas Delta; el endpoint SQL del Lakehouse es de solo lectura | `INSERT`, `UPDATE`, `DELETE` y `MERGE` con T-SQL, y transacciones entre varias tablas |
+> | Encaja bien en | Transformaciones sobre archivos, volúmenes grandes y ciencia de datos | Capa de consumo modelada para SQL y BI, con procedimientos almacenados |
+>
+> La elección se hace por equipo y carga de trabajo, **no por una cifra de tiempo**: con 72.000 filas ambos son rápidos, y un tiempo medido desde un notebook mezcla cómputo, transferencia y arranque.
+>
+> **5. Compartir código entre notebooks.** Tres formas de reutilizar las mismas funciones. Las cifras son **valores observados en un workspace de laboratorio (nov-2026), sin línea base**: órdenes de magnitud, no promesas.
+>
+> | Forma | Ventaja | Límite real observado |
+> |---|---|---|
+> | `%run` o `notebookutils.notebook.run` | No requiere publicar: se guarda el notebook. Con `%run` las funciones quedan disponibles en el mismo contexto (≈1 s); con `notebook.run` solo regresa el valor de `exit()` (≈14 s, porque el hijo se ejecuta aparte) | Mismo workspace; el anidamiento de `%run` tiene límite; el notebook referido debe usar el mismo Lakehouse o ninguno |
+> | Paquete (`.whl`) en un **Environment** | Versionado y reproducible; la importación es inmediata una vez instalado (≈0,002 s) | Hay que **publicar el Environment tras cada cambio**: 4 min 24 s con un paquete mínimo (Learn indica de 3 a 6 minutos en modo Full), y suma ≈ 30 s al arranque de la sesión. **No se publica en vivo** |
+> | Módulo en **Files** (`sys.path`) | Sin publicación: se sobrescribe el archivo; importación rápida (≈0,1 a 0,3 s) | Sin versionado propio (Git del Lakehouse no guarda el contenido de Files); requiere el Lakehouse predeterminado; `sys.path` solo afecta al *driver* |
+>
+> Enlaces de estudio en la sección Referencias y en las [referencias complementarias](../referencias-complementarias.md#4-medallion-lakehouse-y-warehouse-s1-y-s3).
 
 ## 6. Accionables antes de la Sesión 4
 
@@ -242,5 +271,6 @@ Un bloqueo de identidad, capacidad o configuración no se resuelve ampliando la 
 - [SQL analytics endpoint de un Lakehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/lakehouse-sql-analytics-endpoint).
 - [Warehouse y Lakehouse: guía de decisión](https://learn.microsoft.com/en-us/fabric/fundamentals/decision-guide-lakehouse-warehouse).
 - [Diccionario del dataset](../../dataset/diccionario.md) y [guía del dataset](../../dataset/README.md).
+- Complementos de estudio del facilitador, sin evidencia ([demostración de Warehouse y bibliotecas](../../complementos/warehouse-librerias/README-warehouse-librerias.md) y [referencias complementarias](../referencias-complementarias.md)): [consultar el Warehouse y consultas entre bases](https://learn.microsoft.com/en-us/fabric/data-warehouse/query-warehouse), [superficie de T-SQL soportada](https://learn.microsoft.com/en-us/fabric/data-warehouse/tsql-surface-area), [administrar bibliotecas de Spark](https://learn.microsoft.com/en-us/fabric/data-engineering/library-management), [Environments](https://learn.microsoft.com/en-us/fabric/data-engineering/create-and-use-environment) y [ejecutar un notebook desde otro (`%run` y `notebookutils`)](https://learn.microsoft.com/en-us/fabric/data-engineering/author-execute-notebook).
 
 Los controles locales del repositorio no sustituyen la prueba de integración en el tenant del participante. La actividad Notebook, la autenticación, las escrituras Delta y el endpoint SQL deben comprobarse allí; el repositorio no se conecta a ningún tenant ni despliega artefactos automáticamente.

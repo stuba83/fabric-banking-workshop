@@ -50,6 +50,8 @@ Enfocar la lectura en capacidades de la plataforma, funciones del equipo de dato
 
 **Tiempo orientativo de lectura:** 25–40 minutos, fuera de la sesión. Completar la evaluación del módulo como autoevaluación; no se requiere certificación ni aprobar un examen oficial para participar.
 
+**Lectura opcional** (hasta 10 minutos cada una, sin evidencia): la [arquitectura medallion en un Lakehouse](https://learn.microsoft.com/en-us/fabric/onelake/onelake-medallion-lakehouse-architecture), para ver cómo se organizan las capas, y [pausar y reanudar una capacidad](https://learn.microsoft.com/en-us/fabric/enterprise/pause-resume), para entender que la capacidad es el recurso que se enciende, se comparte y se factura.
+
 Llegar con respuestas breves a estas preguntas:
 
 1. ¿Qué diferencia hay entre capacidad, workspace y Lakehouse?
@@ -71,7 +73,7 @@ No usar información de una entidad real, conexiones productivas ni datos person
 | Minutos | Actividad | Resultado |
 |---|---|---|
 | 00–10 | Repaso del pre-work y dudas consolidadas | Identificar dudas conceptuales y bloqueos ya reportados |
-| 10–20 | Mapa del recorrido: OneLake, Lakehouse, pipelines, notebooks, modelo semántico y Power BI | Entender qué hace cada componente |
+| 10–20 | Mapa del recorrido: OneLake, Lakehouse, pipelines, notebooks, modelo semántico y Power BI; opciones de organización por workspaces y capacidad | Entender qué hace cada componente |
 | 20–30 | Demostración guiada sobre el caso bancario sintético | Distinguir carpeta del workspace, Files y Tables |
 | 30–45 | Práctica individual: primeros archivos en el Lakehouse | Cada participante carga y ubica sus archivos |
 | 45–55 | Preguntas y revisión de resultados | Comprobar comprensión y resolver dudas comunes |
@@ -90,9 +92,14 @@ CSV sintéticos
   -> Reporte de Power BI
 ```
 
-Bronce, plata y oro describen etapas lógicas de tratamiento de los datos. No es obligatorio crear un workspace independiente por capa. Un pipeline orquesta tareas y movimiento de datos; un notebook permite programar lecturas y transformaciones. El modelo semántico define relaciones y medidas; el reporte presenta visualizaciones para responder preguntas del negocio.
+Bronce, plata y oro describen etapas lógicas de tratamiento de los datos, no workspaces. En el laboratorio las tres capas viven en **un solo workspace y un solo Lakehouse**. En un proyecto real también se organizan por workspace, por capa o por dominio, y los accesos directos (*shortcuts*) permiten leer datos de otro Lakehouse sin copiarlos. Un pipeline orquesta tareas y movimiento de datos; un notebook permite programar lecturas y transformaciones. El modelo semántico define relaciones y medidas; el reporte presenta visualizaciones para responder preguntas del negocio.
 
 En esta sesión solo se prepara la fuente en **Files**. Subir un CSV **no lo convierte automáticamente en una tabla Delta** ni lo deja listo para consultarlo con SQL.
+
+> **Complemento del facilitador (sin evidencia).** El facilitador puede comentar dos temas que ningún participante practica ni registra; los enlaces están en las [referencias complementarias](../referencias-complementarias.md#1-capacidad-pausa-reanudación-y-monitoreo-s1-y-s5).
+>
+> - **Pausa y reanudación de la capacidad.** Opciones: el portal de Azure (manual; pruebas y demostraciones); la API REST o `az rest` (`suspend` y `resume` sobre `Microsoft.Fabric/capacities`, con un rol de Azure sobre la capacidad); un **runbook de Azure Automation** con identidad administrada y un rol personalizado de solo pausa y reanudación, con dos programaciones (la opción que la propia documentación menciona para horarios fijos); o una Logic App, una Azure Function con temporizador o un flujo programado de GitHub Actions o Azure Pipelines que llama a la API. **Aclaración:** un notebook o un pipeline puede pausar la capacidad al terminar un lote, pero **no puede reanudar la propia**: pausada, no corre. La reanudación debe venir de fuera. Al pausar, el contenido de la capacidad deja de estar disponible.
+> - **App Capacity Metrics.** Una aplicación de Power BI que mide el consumo de la capacidad; por lo general la instala un administrador de capacidad. Qué mirar: el consumo por elemento y por operación en la página de cómputo y si la capacidad se acerca al suavizado y la limitación (*throttling*).
 
 ## 4. Práctica en vivo — primeros archivos
 
@@ -175,5 +182,6 @@ El equipo conserva las evidencias en su ubicación interna acordada y facilita a
 - [Tutorial oficial de creación de un Lakehouse](https://learn.microsoft.com/en-us/fabric/data-engineering/tutorial-build-lakehouse). Usar como referencia de navegación: el tutorial completo emplea otro dataset y otro flujo de ingesta; no es un ejercicio adicional asignado.
 - [Requisitos del laboratorio](../requisitos.md).
 - [Guía del dataset](../../dataset/README.md).
+- Complementos de estudio del facilitador, sin evidencia (más enlaces en las [referencias complementarias](../referencias-complementarias.md)): [pausar y reanudar una capacidad](https://learn.microsoft.com/en-us/fabric/enterprise/pause-resume), [App Capacity Metrics: instalación](https://learn.microsoft.com/en-us/fabric/enterprise/metrics-app-install), [arquitectura medallion en un Lakehouse](https://learn.microsoft.com/en-us/fabric/onelake/onelake-medallion-lakehouse-architecture) y [accesos directos (shortcuts) de OneLake](https://learn.microsoft.com/en-us/fabric/onelake/onelake-shortcuts).
 
 Los enlaces oficiales se consultaron al preparar esta versión; la interfaz y el contenido de Microsoft Learn pueden cambiar.
